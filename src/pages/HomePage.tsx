@@ -19,7 +19,7 @@ const HomePage = ({}: HomePageProps) => {
 
   return (
     <div>
-      <div>
+      <div >
         <Header />
       </div>
       <div>이미지 넣을 거임</div>
@@ -29,12 +29,35 @@ const HomePage = ({}: HomePageProps) => {
         <VideoCard {...dummyData2} />
         <VideoCard {...dummyData1} />
       </div>
-      <div>
-        <h1>추천 아티스트 !!!!</h1>
-        <ArtistCard />
-        <ArtistCard />
-        <ArtistCard />
-      </div>
+        <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">추천 아티스트 !!!!</h1>
+        <div className="px-4 md:px-10">
+          <div className="flex flex-wrap gap-x-[14px] gap-y-[23px] px-4 md:px-10">
+            <ArtistCard 
+              engName="IU"
+              korName="아이유"
+              imageUrl="/artist/IU.png"
+              followers={123}
+              tag="솔로"/>
+            <ArtistCard
+              engName="BTS"
+              korName="방탄소년단"
+              imageUrl="/artist/BTS.png"
+              followers={234}
+              tag="보이그룹" />
+            <ArtistCard
+              engName="aespa"
+              korName="에스파"
+              imageUrl="/artist/aespa.png"
+              followers={345}
+              tag="걸그룹" />
+            <ArtistCard
+              engName="BLACKPINK"
+              korName="블랙핑크"
+              imageUrl="/artist/BLACKPINK.png"
+              followers={456}
+              tag="걸그룹" />
+          </div>
+        </div>
       <div>
         <Footer />
       </div>
