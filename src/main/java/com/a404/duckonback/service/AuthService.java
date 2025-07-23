@@ -9,11 +9,14 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
+    private final PasswordEncoder passwordEncoder;
 
     private final UserService userService;
     private final ArtistService artistService;
@@ -24,11 +27,11 @@ public class AuthService {
         String password = loginRequest.getPassword();
 
         if ((email == null || email.isBlank()) && (userId == null || userId.isBlank())) {
-//            throw new CustomException("email 또는 userId 중 하나는 필수입니다.", HttpStatus.BAD_REQUEST);
+            throw new RuntimeException("email 또는 userId 중 하나는 필수입니다.");
         }
 
         if (password == null || password.isBlank()) {
-//            throw new CustomException("비밀번호는 필수입니다.", HttpStatus.BAD_REQUEST);
+            throw new RuntimeException("비밀번호는 필수 입력입니다.");
         }
 
         User user = null;
@@ -39,11 +42,13 @@ public class AuthService {
         }
 
         if (user == null) {
-//            throw new CustomException("존재하지 않는 사용자입니다.", HttpStatus.UNAUTHORIZED);
+            throw new RuntimeException("없는 사용자입니다.");
         }
 
         //비밀번호 일치 확인 ( 암호화 )
-
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("비밀번호 불일치");
+        }
 
         //토근 생성
         String accessToken = "";
