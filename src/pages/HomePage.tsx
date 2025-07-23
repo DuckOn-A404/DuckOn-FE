@@ -100,7 +100,7 @@ const HomePage = () => {
       </div>
 
       {/* 푸터 영역 */}
-      <div>
+      <div className="mt-20">
         <Footer />
       </div>
     </div>
