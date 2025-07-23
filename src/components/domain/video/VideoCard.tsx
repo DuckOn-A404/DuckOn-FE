@@ -1,15 +1,3 @@
-/*
-  [필요한 props 내 생각..]
-  1. LIVE 중인지 아닌지
-    LIVE면 LIVE, 뱃지 빨간색
-    아니면 예정, 뱃지 파란색
-      근데 예정이라면 몇시에 시작하는지 정보를 받고 싶음
-  2. 시청자 수
-    숫자로 보여주기(근데 천명 단위 이상이면 K이런식으로)
-  3. 아티스트 명
-  4. 방 제목
-    너무 길면 ...으로 줄여서
-*/
 import { Users } from "lucide-react";
 import { formatCompactNumber } from "../../../utils/formatters";
 
@@ -21,6 +9,15 @@ type VideoCardProps = {
   title: string;
 };
 
+/* 
+  name : VideoCard
+  summary : 방송 목록을 보여줄 때 사용하는 비디오 카드 컴포넌트, Live 여부에 따라 뱃지 등의 디자인이 변경됨
+  props
+    - isLive : 라이브 방송 여부 (방송 중/방송 예약)
+    - viewerCount : 시청자 수 (1,000 단위 이상은 K로 포매팅 됨)
+    - artistName : 방송 아티스트 이름 (아티스트 상세 페이지에서는 방장 닉네임으로 가능하도록 수정 필요)
+    - title : 방 제목
+*/
 const VideoCard = ({
   isLive,
   viewerCount,
