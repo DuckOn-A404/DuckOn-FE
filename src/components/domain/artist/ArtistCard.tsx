@@ -7,6 +7,17 @@ type ArtistCardProps = {
   tag?: string; // '솔로', '그룹' 등의 태그
 };
 
+/*
+  name: ArtistCard
+  summary: 홈 페이지에서 인기 아티스트 목록 부분과 앞 전체 아티스트 목록에서 사용이 가능한 카드. 클릭시 아티스트 상세 페이지로 넘어가게 수정할 계획
+  props:
+    engName: 아티스트 영어 이름
+    korName: 아티스트 한국 이름
+    imageUrl: 아티스트 사진
+    followers: 아티스트를 팔로우한 회원 수
+    tag?: '솔로', '그룹' 등의 태그
+*/
+
 const ArtistCard = ({ engName, korName, imageUrl, followers, tag }: ArtistCardProps) => {
   return (
     <div className="w-full max-w-[220px] rounded-2xl shadow-md overflow-hidden">
