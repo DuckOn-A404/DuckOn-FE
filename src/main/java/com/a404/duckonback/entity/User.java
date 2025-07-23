@@ -3,6 +3,8 @@ package com.a404.duckonback.entity;
 import com.a404.duckonback.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
@@ -30,7 +32,7 @@ public class User {
     private String nickname;
 
     @Column(name = "created_at")
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)

@@ -31,9 +31,9 @@ public class Artist {
     @Column(name = "img_url", columnDefinition = "TEXT")
     private String imgUrl;
 
-    @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "artist")
     private List<ArtistFollow> followers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "artist", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "artist")
     private List<Room> rooms = new ArrayList<>();
 }
