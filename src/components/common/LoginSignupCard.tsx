@@ -1,11 +1,11 @@
 type LoginSignupCardProps = {
-  message: string;
+  children: React.ReactNode
 };
 
-const LoginSignupCard = ({ message }: LoginSignupCardProps) => {
+const LoginSignupCard = ({ children }: LoginSignupCardProps) => {
   return (
-    <div>
-      <h1>{message}</h1>
+    <div className="w-[500px] min-h-[700px] bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-start">
+        {children}
     </div>
   );
 };

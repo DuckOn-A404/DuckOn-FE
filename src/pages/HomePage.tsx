@@ -1,5 +1,11 @@
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
+import { useState } from "react";
+import { type User } from "../types";
+import LoginSignupCard from "../components/common/LoginSignupCard";
+import LoginPage from "./LoginPage";
+import SignupPage from "./SignupPage";
+
 
 const HomePage = () => {
   // video-card용 dummy data
