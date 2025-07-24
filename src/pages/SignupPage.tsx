@@ -1,3 +1,5 @@
+import LoginSignupCard from "../components/common/LoginSignupCard";
+
 type SignupPageProps = {
   message: string;
 };
