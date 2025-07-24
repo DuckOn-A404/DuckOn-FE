@@ -1,5 +1,3 @@
-import Header from "../components/common/Header";
-import Footer from "../components/common/Footer";
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
 import { useState } from "react";
@@ -7,6 +5,7 @@ import { type User } from "../types";
 import LoginSignupCard from "../components/common/LoginSignupCard";
 import LoginPage from "./LoginPage";
 import SignupPage from "./SignupPage";
+
 
 const HomePage = () => {
   // video-card용 dummy data
@@ -23,38 +22,8 @@ const HomePage = () => {
     title: "블랙핑크 - 붐바야 뮤직비디오 단체관람",
   };
 
-  // header용 data
-  const [user, setUser] = useState<User | null>(null);
-
-  const handleLogin = () => {
-    console.log("로그인 시도");
-    setUser({
-      id: "123",
-      name: "홍길동",
-      email: "hong@example.com",
-    });
-  };
-
-  const handleLogout = () => {
-    console.log("로그아웃");
-    setUser(null);
-  };
-
-  const handleSignup = () => {
-    console.log("회원가입 페이지로 이동");
-  };
-
   return (
     <div>
-      {/* 헤더 영역 */}
-      <div>
-        <Header
-          user={user}
-          onLogin={handleLogin}
-          onLogout={handleLogout}
-          onSignup={handleSignup}
-        />
-      </div>
       <div>이미지 넣을 거임</div>
 
       {/* 핫한 방송 영역 */}
@@ -100,11 +69,6 @@ const HomePage = () => {
             tag="걸그룹"
           />
         </div>
-      </div>
-
-      {/* 푸터 영역 */}
-      <div className="mt-20">
-        <Footer />
       </div>
     </div>
   );
