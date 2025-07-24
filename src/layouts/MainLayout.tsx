@@ -2,27 +2,18 @@
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { type User } from "../types";
+import { useUserStore } from "../store/useUserStore";
 
 const MainLayout = () => {
-  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+  const { user, setUser } = useUserStore()  // Zustand 훅으로 전역 상태 사용
 
-  const handleLogin = () => {
-    console.log("로그인 시도");
-    setUser({
-      id: "123",
-      name: "홍길동",
-      email: "hong@example.com",
-    });
-    navigate("/login");
-  };
+  const handleLogin = () => navigate("/login")
 
   const handleLogout = () => {
-    console.log("로그아웃");
-    setUser(null);
-  };
+    localStorage.clear()  // 로컬 스토리지 지우기
+    setUser(null) // 전역 상태 초기화
+  }
 
   const handleSignup = () => {
     console.log("회원가입 페이지로 이동");
