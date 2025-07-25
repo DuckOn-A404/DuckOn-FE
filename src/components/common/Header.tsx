@@ -31,7 +31,7 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
           {user ? (
             // 로그인 상태일 때
             <>
-              <span className="text-sm font-medium">{user.name} 님</span>
+              <span className="text-sm font-medium">{user.nickname} 님</span>
               <Button onClick={onLogout} variant="secondary">
                 로그아웃
               </Button>
