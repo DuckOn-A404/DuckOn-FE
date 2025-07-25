@@ -1,74 +1,161 @@
+import { Link } from "react-router-dom";
+import { useSignupForm } from "../hooks/useSignupForm";
 import LoginSignupCard from "../components/common/LoginSignupCard";
 import InputField from "../components/common/InputField";
-import { Link } from "react-router-dom";
-import { Mail, User, MessageSquareText, LockKeyhole } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Mail,
+  User,
+  MessageSquareText,
+  LockKeyhole,
+  ArrowLeft,
+} from "lucide-react";
 
-type SignupPageProps = {};
+const SignupPage = () => {
+  const navigate = useNavigate();
+  const {
+    formData,
+    loading,
+    error,
+    handleChange,
+    handleFileChange,
+    handleSubmit,
+    emailError,
+    userIdError,
+    nicknameError,
+    handleCheckEmail,
+    handleCheckUserId,
+    handleCheckNickname,
+    passwordConfirmError,
+  } = useSignupForm();
 
-const SignupPage = ({}: SignupPageProps) => {
   const iconStyle = "w-5 h-5 text-gray-400";
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-purple-600 to-pink-500">
+    <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-purple-600 to-pink-500">
       <LoginSignupCard>
-        <div className="w-96 h-16 inline-flex flex-col justify-start items-start mb-4">
-          <div className="pb-2">
-            <div className="w-96 h-9 flex justify-center items-center">
-              <img
-                src="/logo.svg"
-                alt="Duck-On 로고"
-                className="h-full w-auto"
-              />
-            </div>
-          </div>
-          <div className="w-96 h-6 inline-flex justify-center items-center ">
-            <div className="text-center justify-center text-gray-500 text-base font-normal font-['Roboto'] leading-normal">
-              새로운 K-POP 경험을 시작하세요
-            </div>
-          </div>
+        {/* 로고 영역 */}
+        <div className="flex flex-col items-center gap-1 mb-4">
+          <img src="/logo.svg" alt="Duck-On 로고" className="h-8 w-auto" />
+          <p className="text-center text-gray-500 text-base font-normal leading-normal">
+            새로운 K-POP 경험을 시작하세요
+          </p>
         </div>
 
-        <form className="w-full flex flex-col gap-4">
-          {/* 3. icon prop에 import한 Lucide 아이콘 컴포넌트를 전달합니다. */}
-          <InputField
-            id="email"
-            label="이메일"
-            type="email"
-            placeholder="이메일을 입력하세요"
-            icon={<Mail className={iconStyle} />}
-          />
-          <InputField
-            id="userId"
-            label="아이디"
-            type="text"
-            placeholder="아이디를 입력하세요"
-            icon={<User className={iconStyle} />}
-          />
-          <InputField
-            id="nickname"
-            label="닉네임"
-            type="text"
-            placeholder="닉네임을 입력하세요"
-            icon={<MessageSquareText className={iconStyle} />}
-          />
+        {/* 회원가입 폼 영역 */}
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+          <div className="flex gap-2 items-start">
+            <div className="flex-grow">
+              <InputField
+                id="email"
+                label="이메일"
+                type="email"
+                placeholder="이메일을 입력하세요"
+                icon={<Mail className={iconStyle} />}
+                value={formData.email}
+                onChange={handleChange}
+                error={emailError}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleCheckEmail}
+              className="h-11 mt-[30px] px-4 text-sm font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap"
+            >
+              중복 확인
+            </button>
+          </div>
+          <div className="flex gap-2 items-start">
+            <div className="flex-grow">
+              <InputField
+                id="userId"
+                label="아이디"
+                type="text"
+                placeholder="아이디를 입력하세요"
+                icon={<User className={iconStyle} />}
+                value={formData.userId}
+                onChange={handleChange}
+                error={userIdError}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleCheckUserId}
+              className="h-11 mt-[30px] px-4 text-sm font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap"
+            >
+              중복 확인
+            </button>
+          </div>
+          <div className="flex gap-2 items-start">
+            <div className="flex-grow">
+              <InputField
+                id="nickname"
+                label="닉네임"
+                type="text"
+                placeholder="닉네임을 입력하세요"
+                icon={<MessageSquareText className={iconStyle} />}
+                value={formData.nickname}
+                onChange={handleChange}
+                error={nicknameError}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleCheckNickname}
+              className="h-11 mt-[30px] px-4 text-sm font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap"
+            >
+              중복 확인
+            </button>
+          </div>
           <InputField
             id="password"
             label="비밀번호"
             type="password"
             placeholder="비밀번호를 입력하세요"
             icon={<LockKeyhole className={iconStyle} />}
+            value={formData.password}
+            onChange={handleChange}
           />
           <InputField
-            id="password-confirm"
+            id="passwordConfirm"
             label="비밀번호 확인"
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
             icon={<LockKeyhole className={iconStyle} />}
+            value={formData.passwordConfirm}
+            onChange={handleChange}
+            error={passwordConfirmError}
           />
+
+          <div>
+            <label
+              htmlFor="profileImg"
+              className="text-gray-700 text-sm font-medium mb-2 flex items-center gap-2"
+            >
+              프로필 이미지 (선택)
+            </label>
+            <input
+              id="profileImg"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+            />
+          </div>
         </form>
 
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <p className="text-sm text-red-500 text-center mt-2">{error}</p>
+        )}
+
         {/* 회원가입 버튼 */}
-        <button className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold mt-5">
-          회원가입
+        <button
+          type="submit"
+          disabled={loading}
+          onClick={handleSubmit}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold mt-5"
+        >
+          {loading ? "가입 처리 중..." : "회원가입"}
         </button>
         <div className="w-full flex flex-col items-center gap-4 pt-8">
           <div className="w-full flex items-center gap-4">
@@ -142,6 +229,13 @@ const SignupPage = ({}: SignupPageProps) => {
           </Link>
         </p>
       </LoginSignupCard>
+      <div
+        className="mt-6 flex items-center gap-2 text-white cursor-pointer hover:underline"
+        onClick={() => navigate("/")}
+      >
+        <ArrowLeft size={18} />
+        <span className="text-sm">홈으로 돌아가기</span>
+      </div>
     </div>
   );
 };
