@@ -20,7 +20,7 @@ public class CustomUserPrincipal implements OAuth2User, UserDetails {
         this.attributes = attributes;
     }
 
-    public Long getid() { return user.getId(); }
+    public Long getId() { return user.getId(); }
     public UserRole getRole() { return user.getRole(); }
     public User getUser() { return user; }
 
