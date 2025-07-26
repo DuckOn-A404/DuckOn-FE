@@ -3,6 +3,7 @@ import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import MainLayout from "./layouts/MainLayout";
+import MyPage from "./pages/MyPage";
 // import "./App.css";
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
           {/* 공통 레이아웃이 적용되는 페이지들 */}
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="mypage" element={<MyPage />} />
           </Route>
 
           {/* 로그인/회원가입 등 공통 레이아웃이 필요 없는 페이지들 */}
