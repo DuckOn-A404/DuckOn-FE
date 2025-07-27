@@ -1,10 +1,13 @@
 import { Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 type ArtistCardProps = {
   engName: string;
   korName: string;
   imageUrl: string;
   followers: number;
-  tag?: string; // '솔로', '그룹' 등의 태그
+  // '솔로', '그룹' 등의 태그
+  tag?: string;
 };
 
 /*
@@ -18,12 +21,27 @@ type ArtistCardProps = {
     tag?: '솔로', '그룹' 등의 태그
 */
 
-const ArtistCard = ({ engName, korName, imageUrl, followers, tag }: ArtistCardProps) => {
+const ArtistCard = ({
+  engName,
+  korName,
+  imageUrl,
+  followers,
+  tag,
+}: ArtistCardProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/artist/${encodeURIComponent(engName)}`);
+  };
+
   return (
-    <div className="w-full max-w-[220px] rounded-2xl shadow-md overflow-hidden">
+    <div
+      className="w-full max-w-[220px] rounded-2xl shadow-md overflow-hidden"
+      onClick={handleClick}
+    >
       <div className="relative w-full aspect-[3/4]">
         <img src={imageUrl} alt={engName} className="w-full h-full object-co" />
-        
+
         {tag && (
           <span className="absolute top-2 left-2 bg-white/80 text-gray-700 text-xs font-semibold px-2 py-1 rounded-full">
             {tag}
