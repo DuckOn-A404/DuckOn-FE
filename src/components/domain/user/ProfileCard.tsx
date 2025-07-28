@@ -22,7 +22,7 @@ const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
           <img
             src={user.profileImg || "/default_image.png"}
             alt="프로필 이미지"
-            className="w-24 h-24"
+            className="w-24 h-24 object-cover rounded-full"
           />
 
           <div className="mt-4 flex gap-6 text-center">
@@ -44,19 +44,19 @@ const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
         {/* 오른쪽: 사용자 정보 */}
         <div className="flex-1 text-sm grid gap-4">
           <div className="flex">
-            <div className="w-24 text-gray-500 font-medium">이메일</div>
+            <div className="w-32 text-gray-500 font-medium">이메일</div>
             <div>{user.email}</div>
           </div>
           <div className="flex">
-            <div className="w-24 text-gray-500 font-medium">아이디</div>
+            <div className="w-32 text-gray-500 font-medium">아이디</div>
             <div>{user.userId}</div>
           </div>
           <div className="flex">
-            <div className="w-24 text-gray-500 font-medium">닉네임</div>
+            <div className="w-32 text-gray-500 font-medium">닉네임</div>
             <div>{user.nickname}</div>
           </div>
           <div className="flex">
-            <div className="w-24 text-gray-500 font-medium">주언어</div>
+            <div className="w-32 text-gray-500 font-medium">주언어</div>
             <div>{user.language}</div>
           </div>
         </div>
