@@ -16,7 +16,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/artist-list" element={<ArtistListPage />} />
-            <Route path="/artist/:engName" element={<ArtistDetailPage />} />
+            <Route path="/artist/:nameEn" element={<ArtistDetailPage />} />
           </Route>
 
           {/* 로그인/회원가입 등 공통 레이아웃이 필요 없는 페이지들 */}

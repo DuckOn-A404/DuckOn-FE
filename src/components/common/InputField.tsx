@@ -28,7 +28,7 @@ const InputField = ({
       {/* 필드 설명 영역 */}
       <div className="flex justify-between items-center mb-2">
         <label htmlFor={id} className="text-gray-700 text-sm font-medium">
-          {label}*
+          {label}
         </label>
         {helperText && (
           <span className="text-zinc-400 text-xs font-medium">
