@@ -8,10 +8,10 @@ import { dummyArtists } from "../mocks/artists";
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
  */
 export const getArtistList = async (page = 1, size = 10) => {
-  const response = await api.get("/api/artists/all", {
-    params: { page, size },
-  });
-  console.log("[디버그] 전체 조회 응답:", response.data);
+  // const response = await api.get("/api/artists/all", {
+  //   params: { page, size },
+  // });
+  // console.log("[디버그] 전체 조회 응답:", response.data);
 
   const startIndex = (page - 1) * size;
   const endIndex = startIndex + size;
