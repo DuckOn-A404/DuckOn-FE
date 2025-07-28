@@ -4,17 +4,20 @@ import { type MyUser } from "../types/mypage";
 import { fetchMyProfile, verifyPassword } from "../api/userService";
 import ProfileCard from "../components/domain/user/ProfileCard";
 import PasswordConfirm from "../components/common/PasswordConfirm";
+import EditProfileCard from "../components/domain/user/EditProfileCard";
 
 const MyPage = () => {
   const [user, setUser] = useState<MyUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const navigate = useNavigate()
 
   const handleConfirm = async (password: string): Promise<boolean> => {
     const isValid = await verifyPassword(password)
     if (isValid) {
       setShowModal(false)
+      setIsEditing(true)  // 수정 모드 전환
       navigate("/mypage")
       return true
     }
@@ -54,12 +57,24 @@ const MyPage = () => {
 
   return (
     <div className="px-8 py-6">
+      {!isEditing ? (
         <ProfileCard user={user} onEditClick={() => setShowModal(true)} />
-        <PasswordConfirm
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-            onConfirm={handleConfirm}
+      ) : (
+        <EditProfileCard
+          user={user}
+          onCancel = {() => setIsEditing(false)}
+          onUpdate = {(updatedUser) => {
+            setUser(updatedUser)
+            setIsEditing(false)
+          }}
         />
+      )}
+
+      <PasswordConfirm
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onConfirm={handleConfirm}
+      />
     </div>
   );
 };
