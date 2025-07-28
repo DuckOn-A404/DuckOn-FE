@@ -9,7 +9,6 @@ type HeaderProps = {
   onLogout: () => void;
 };
 
-
 /* 
 name : Header
 summary : User 객체의 존재 여부에 따라 버튼이 구성요소가 달라짐
@@ -20,12 +19,15 @@ props
 - onLogout() : 로그아웃 페이지로 이동 
 */
 const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   return (
     <header className="w-full bg-white border-b border-gray-200">
       <nav className="max-w-7xl h-16 mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
         {/* 왼쪽: 로고 */}
-        <div className="flex items-center gap-x-2">
+        <div
+          className="flex items-center gap-x-2 cursor-pointer"
+          onClick={() => navigate("/")}
+        >
           <img className="h-8" src="/logo.svg" alt="Duck On 로고" />
         </div>
 
@@ -34,8 +36,8 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
           {user ? (
             // 로그인 상태일 때
             <>
-              <span 
-                onClick={() => navigate('/mypage')}
+              <span
+                onClick={() => navigate("/mypage")}
                 className="text-sm font-medium text-gray-700 hover:text-purple-600 hover:underline transition-colors duration-200 cursor-pointer"
               >
                 {user.nickname} 님
