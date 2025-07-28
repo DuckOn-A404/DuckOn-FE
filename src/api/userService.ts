@@ -1,8 +1,9 @@
 import { api } from "./axiosInstance";
 import { type MyUser } from "../types/mypage";
+import axios from "axios";
 
 // 백엔드 미연결 시 mock 데이터 사용
-const mockUser: MyUser = {
+let mockUser: MyUser = {
     email: "test@example.com",
     userId: "testuser",
     nickname: "Mock User",
@@ -42,3 +43,41 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
   // 현재는 mock 기반 로직
   return Promise.resolve(password === mockUser.password)
 };
+
+/**
+ * 유저 프로필 수정 API
+ * 백엔드 명세에 따라 multipart/form-data 형식으로 요청
+ * profileImg는 파일 전송용이고, 나머지는 일반 string
+ * 그래도 넘어가는건 formData 형식으로 넘어가게 될것
+ * 
+ * @param formData - FormData 객체(nickname, language, oldPassword, newPassword, profileImg)
+ * @returns 백엔드에서 응답받은 수정된 유저 정보 객체
+ */
+
+export const updateUserProfile = async (formData: FormData): Promise<MyUser> => {
+  // 실제 백엔드 연동 시:
+  // const response = await api.patch("/users/profile", formData, {
+  //   headers: {
+  //     Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+  //     "Content-Type": "multipart/form-data",
+  //   },
+  // });
+  // return response.data;
+
+  // mock 데이터 기반
+  const nickname = formData.get("nickname")?.toString()
+  const language = formData.get("language")?.toString()
+  const newPassword = formData.get("newPassword")?.toString()
+  const profileImg = formData.get("profileImg") as File | null
+  
+  // 실제 상태 갱신 (mockUser 업데이트)
+  mockUser = {
+    ...mockUser,
+    ...(nickname && { nickname }),
+    ...(language && { language }),
+    ...(newPassword && { password: newPassword }),
+    ...(profileImg && { profileImg: URL.createObjectURL(profileImg) }), // 임시 preview용 URL
+  }
+
+  return Promise.resolve(mockUser)
+}
