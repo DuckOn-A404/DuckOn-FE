@@ -22,10 +22,8 @@ const SignupPage = () => {
     handleSubmit,
     emailError,
     userIdError,
-    nicknameError,
     handleCheckEmail,
     handleCheckUserId,
-    handleCheckNickname,
     passwordConfirmError,
   } = useSignupForm();
 
@@ -95,16 +93,8 @@ const SignupPage = () => {
                 icon={<MessageSquareText className={iconStyle} />}
                 value={formData.nickname}
                 onChange={handleChange}
-                error={nicknameError}
               />
             </div>
-            <button
-              type="button"
-              onClick={handleCheckNickname}
-              className="h-11 mt-[30px] px-4 text-sm font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap"
-            >
-              중복 확인
-            </button>
           </div>
           <InputField
             id="password"
