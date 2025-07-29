@@ -35,7 +35,7 @@ const ArtistCard = ({
 
   return (
     <div
-      className="w-full max-w-[220px] rounded-2xl shadow-md overflow-hidden"
+      className="w-full max-w-[220px] rounded-2xl shadow-md overflow-hidden cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
       onClick={handleClick}
     >
       <div className="relative w-full aspect-[3/4]">
