@@ -5,9 +5,12 @@ import com.a404.duckonback.dto.RoomDTO;
 import com.a404.duckonback.dto.UserDetailInfoResponseDTO;
 import com.a404.duckonback.dto.UserInfoResponseDTO;
 import com.a404.duckonback.entity.Penalty;
+import com.a404.duckonback.entity.Room;
 import com.a404.duckonback.entity.User;
 import com.a404.duckonback.exception.CustomException;
+import com.a404.duckonback.repository.RoomRepository;
 import com.a404.duckonback.repository.UserRepository;
+import com.a404.duckonback.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,32 +28,37 @@ public class UserServiceImpl implements UserService {
     private final PenaltyService penaltyService;
     private final FollowService followService;
 
+    @Override
     public User findByEmail(String email) {
         return userRepository.findByEmailWithPenalties(email)
                 .orElseThrow(() -> new CustomException("존재하지 않는 사용자입니다.", HttpStatus.UNAUTHORIZED));
     }
 
+    @Override
     public User findByUserId(String userId) {
         return userRepository.findByUserIdWithPenalties(userId)
                 .orElseThrow(() -> new CustomException("존재하지 않는 사용자입니다.", HttpStatus.UNAUTHORIZED));
     }
 
+    @Override
     public void save(User user) { userRepository.save(user);}
 
-
+    @Override
     public boolean isEmailDuplicate(String email) {
         return userRepository.existsByEmail(email);
     }
 
+    @Override
     public boolean isUserIdDuplicate(String userId) {
         return userRepository.existsByUserId(userId);
     }
 
+    @Override
     public boolean isNicknameDuplicate(String nickname) {
         return userRepository.existsByNickname(nickname);
     }
 
-
+    @Override
 //    @Transactional(readOnly = true)
     public UserDetailInfoResponseDTO getUserDetailInfo(String userId) {
         User user = userRepository.findUserDetailWithArtistFollows(userId)
@@ -103,6 +111,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    @Override
     @Transactional
     public void deleteUser(User user, String refreshToken) {
         userRepository.delete(user);
