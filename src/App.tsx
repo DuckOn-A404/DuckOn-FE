@@ -6,6 +6,7 @@ import MainLayout from "./layouts/MainLayout";
 import ArtistListPage from "./pages/ArtistListPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
 import MyPage from "./pages/MyPage";
+import LiveRoomPage from "./pages/LiveRoomPage";
 // import "./App.css";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           {/* 로그인/회원가입 등 공통 레이아웃이 필요 없는 페이지들 */}
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/live/:roomId" element={<LiveRoomPage />} />
         </Routes>
       </BrowserRouter>
     </>
