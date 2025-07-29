@@ -1,16 +1,85 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useUserStore } from "../../store/useUserStore";
+import { useArtistFollowStore } from "../../store/useArtistFollowStore";
+import { useArtistRooms } from "../../hooks/useArtistRooms";
+import {
+  followArtist,
+  unfollowArtist,
+  getArtistDetail,
+} from "../../api/artistService";
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
-import { dummyBroadcasts } from "../../mocks/broadcasts";
+import LeftSidebar from "./LeftSidebar";
+import { type Artist } from "../../types/artist";
+import { Video, CalendarDays } from "lucide-react";
 import { dummyArtists } from "../../mocks/artists";
 
 const ArtistDetailPage = () => {
   const { nameEn } = useParams<{ nameEn: string }>();
   const navigate = useNavigate();
 
-  const artist = dummyArtists.find(
-    (a) => a.nameEn.toLowerCase() === nameEn?.toLowerCase()
-  );
+  // 1. 아티스트 상세 정보와 로딩 상태를 위한 State
+  const [artist, setArtist] = useState<Artist | null>(null);
+  const [isLoadingArtist, setIsLoadingArtist] = useState(true);
+
+  const { user } = useUserStore();
+  const {
+    isFollowing: followingSet,
+    addFollow,
+    removeFollow,
+  } = useArtistFollowStore();
+
+  const isLoggedIn = !!user;
+
+  // 2. useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
+  const {
+    liveRooms,
+    upcomingRooms,
+    hasMoreLive,
+    hasMoreUpcoming,
+    isLoading: isLoadingRooms,
+    handleLoadMore,
+  } = useArtistRooms(artist?.artistId);
+
+  // 3. 최적화된 팔로우 상태 확인 (배열 순회 대신 Set 사용)
+  const isFollowing = artist ? followingSet.has(artist.artistId) : false;
+
+  // 4. 페이지 진입 시 아티스트 상세 정보 불러오기
+  useEffect(() => {
+    const fetchArtistDetail = async () => {
+      if (!nameEn) return;
+      setIsLoadingArtist(true);
+      try {
+        // 실제로는 nameEn으로 아티스트를 찾는 API가 필요하지만,
+        // 지금은 getArtistDetail(artistId)를 시뮬레이션합니다.
+        // const foundArtist = dummyArtists.find(a => a.nameEn.toLowerCase() === nameEn.toLowerCase());
+        // if (foundArtist) {
+        //   const data = await getArtistDetail(foundArtist.artistId);
+        //   setArtist(data);
+        // }
+
+        // [임시] 더미데이터로 API 시뮬레이션
+        const foundArtist = dummyArtists.find(
+          (a) => a.nameEn.toLowerCase() === nameEn.toLowerCase()
+        );
+        setArtist(foundArtist || null);
+      } catch (error) {
+        console.error("아티스트 정보를 불러오는 데 실패했습니다.", error);
+        setArtist(null);
+      } finally {
+        setIsLoadingArtist(false);
+      }
+    };
+    fetchArtistDetail();
+  }, [nameEn]);
+
+  // 5. 로딩 및 에러 상태 처리
+  if (isLoadingArtist) {
+    return (
+      <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
+    );
+  }
 
   const getDday = (dateString: string) => {
     const today = new Date();
@@ -29,41 +98,29 @@ const ArtistDetailPage = () => {
     );
   }
 
-  // 라이브 / 예정 데이터 분리
-  const liveRooms = dummyBroadcasts.filter(
-    (room) =>
-      room.isLive &&
-      (room.artistName === artist.nameKr || room.artistName === artist.nameEn)
-  );
-  const upcomingRooms = dummyBroadcasts.filter(
-    (room) =>
-      !room.isLive &&
-      (room.artistName === artist.nameKr || room.artistName === artist.nameEn)
-  );
+  // 팔로우 버튼 클릭 핸들러
+  const handleFollowToggle = async () => {
+    if (!user) return alert("로그인이 필요합니다.");
+    if (!artist) return;
+
+    try {
+      if (isFollowing) {
+        await unfollowArtist(artist.artistId);
+        removeFollow(artist.artistId);
+      } else {
+        await followArtist(artist.artistId);
+        addFollow(artist);
+      }
+    } catch (error) {
+      console.error("팔로우 처리 실패:", error);
+      alert("요청 처리에 실패했습니다.");
+    }
+  };
 
   return (
     <div className="flex w-full bg-gray-50">
       {/* 왼쪽: 팔로우 리스트 */}
-      <aside className="w-64 p-4 border-r border-gray-200">
-        <h2 className="text-lg font-bold mb-4">팔로우한 아티스트</h2>
-        <ul className="space-y-2 text-sm">
-          {["BTS", "세븐틴", "트와이스", "뉴진스"].map((name) => (
-            <li
-              key={name}
-              className="flex items-center justify-between p-2 bg-white rounded-lg shadow-sm"
-            >
-              <span className="font-medium">{name}</span>
-              <span className="text-purple-500 text-xs">15개 방</span>
-            </li>
-          ))}
-        </ul>
-        <button
-          className="mt-4 w-full bg-purple-600 text-white text-sm py-2 rounded-xl"
-          onClick={() => navigate("/artist-list")}
-        >
-          + 아티스트 팔로우
-        </button>
-      </aside>
+      <LeftSidebar />
 
       {/* 가운데: 아티스트 카드 + 라이브/예정 */}
       <main className="flex-1 p-6 space-y-10">
@@ -82,47 +139,95 @@ const ArtistDetailPage = () => {
               </p>
             </div>
           </div>
-          <div className="text-right space-y-2">
-            <p className="text-sm font-semibold">{getDday(artist.debutDate)}</p>
-            <button className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full">
-              팔로우 중
-            </button>
-          </div>
+          {isLoggedIn && ( // user 객체가 존재할 때만 이 div를 렌더링
+            <div className="text-right space-y-2">
+              {isFollowing ? (
+                // 팔로우 중일 때 (D-day와 "팔로우 중" 버튼)
+                <>
+                  <p className="text-sm font-semibold">
+                    {getDday(artist.debutDate)}
+                  </p>
+                  <button
+                    className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
+                    onClick={handleFollowToggle}
+                  >
+                    팔로우 중
+                  </button>
+                </>
+              ) : (
+                // 팔로우 중이 아닐 때 ("+ 팔로우" 버튼만)
+                <button
+                  className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
+                  onClick={handleFollowToggle}
+                >
+                  + 팔로우
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 라이브 방 */}
         <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-purple-600">라이브 방</h2>
-            <button className="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-xl text-sm font-semibold">
-              + 새 방 만들기
-            </button>
-          </div>
-          {liveRooms.length > 0 ? (
-            <div className="grid grid-cols-2 gap-6">
-              {liveRooms.map((room, i) => (
-                <VideoCard key={i} {...room} />
-              ))}
+          <div className="flex justify-between items-center mb-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-pink-50 p-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 text-white shadow">
+                <Video size={24} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">라이브 방</h2>
+                <p className="text-sm text-gray-500">
+                  {liveRooms.length}개의 방이 진행 중
+                </p>
+              </div>
             </div>
-          ) : (
-            <p className="text-gray-400 text-sm">
-              현재 진행 중인 라이브 방송이 없습니다.
-            </p>
-          )}
+            {isFollowing && (
+              <button className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform">
+                + 새 방 만들기
+              </button>
+            )}
+          </div>
+          <div className="flex justify-center">
+            {liveRooms.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                {liveRooms.map((room) => (
+                  <VideoCard key={room.roomId} {...room} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm">
+                현재 진행 중인 라이브 방송이 없습니다.
+              </p>
+            )}
+          </div>
         </section>
 
         {/* 예정된 방 */}
         <section>
-          <h2 className="text-xl font-bold text-blue-600 mb-4">예정된 방</h2>
-          {upcomingRooms.length > 0 ? (
-            <div className="grid grid-cols-2 gap-6">
-              {upcomingRooms.map((room, i) => (
-                <VideoCard key={i} {...room} />
-              ))}
+          <div className="flex items-center mb-6 rounded-2xl bg-blue-50 p-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 rounded-lg bg-blue-500 p-2 text-white shadow">
+                <CalendarDays size={24} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">예정된 방</h2>
+                <p className="text-sm text-gray-500">
+                  {upcomingRooms.length}개의 방이 예정되어 있음
+                </p>
+              </div>
             </div>
-          ) : (
-            <p className="text-gray-400 text-sm">예정된 방송이 없습니다.</p>
-          )}
+          </div>
+          <div className="flex justify-center">
+            {upcomingRooms.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+                {upcomingRooms.map((room, i) => (
+                  <VideoCard key={i} {...room} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-sm">예정된 방송이 없습니다.</p>
+            )}
+          </div>
         </section>
       </main>
 
