@@ -1,36 +1,57 @@
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
 import { dummyArtists } from "../mocks/artists";
-import { dummyBroadcasts } from "../mocks/broadcasts";
+import { dummyRooms } from "../mocks/rooms";
 
 const HomePage = () => {
+  // 더미 데이터
+  const hotRooms = dummyRooms
+    .filter((room) => room.isLive)
+    .sort((a, b) => b.viewerCount - a.viewerCount)
+    .slice(0, 3);
+
   return (
     <div>
-      <div>이미지 넣을 거임</div>
+      {/* 랜딩 사진 */}
+      <div
+        className="relative w-full h-80 bg-cover bg-center"
+        style={{ backgroundImage: "url('/hero-background.png')" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-800/70 to-transparent" />
 
-      {/* 핫한 방송 영역 */}
-      <h1 className="text-2xl font-bold px-4 mb-4">🔥 지금 핫한 방 🔥</h1>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 px-4">
-        {dummyBroadcasts
-          .filter((b) => b.isLive)
-          .sort((a, b) => b.viewerCount - a.viewerCount)
-          .slice(0, 3)
-          .map((broadcast, index) => (
-            <VideoCard key={index} {...broadcast} />
-          ))}
-      </div>
-
-      {/* 아티스트 목록 영역 */}
-      <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">
-        추천 아티스트 !!!!
-      </h1>
-      <div className="px-4 md:px-10">
-        <div className="flex flex-wrap justify-center gap-x-[14px] gap-y-[23px] px-4 md:px-10">
-          {dummyArtists.slice(0, 4).map((artist) => (
-            <ArtistCard key={artist.artistId} {...artist} />
-          ))}
+        <div className="relative h-full flex flex-col justify-center items-start text-white p-8 sm:p-12 lg:p-24">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            좋아하는 아티스트와
+            <br />
+            함께 즐기는 시간
+          </h1>
+          <p className="text-lg md:text-xl">
+            실시간으로 음악을 시청하고 팬들과 채팅으로 소통해보세요
+          </p>
         </div>
       </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+        {/* 핫한 방송 영역 */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">🔥 지금 핫한 방 🔥</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {hotRooms.map((room) => (
+              <VideoCard key={room.roomId} {...room} />
+            ))}
+          </div>
+        </section>
+
+        {/* 아티스트 목록 영역 */}
+        <section>
+          <h2 className="text-2xl font-bold mb-6">추천 아티스트</h2>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
+            {dummyArtists.slice(0, 4).map((artist) => (
+              <ArtistCard key={artist.artistId} {...artist} />
+            ))}
+          </div>
+        </section>
+      </main>
     </div>
   );
 };
