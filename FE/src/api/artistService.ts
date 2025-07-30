@@ -9,32 +9,26 @@ import { dummyRooms } from "../mocks/rooms";
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
  */
 export const getArtistList = async (page = 1, size = 10) => {
-  // const response = await api.get("/api/artists/all", {
-  //   params: { page, size },
-  // });
-  // console.log("[디버그] 전체 조회 응답:", response.data);
+  const token = localStorage.getItem("accessToken"); // 저장 방식에 따라 수정 가능
 
-  const startIndex = (page - 1) * size;
-  const endIndex = startIndex + size;
+  const response = await api.get("/api/artists", {
+    params: { page, size },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-  // 테스트용
-  const slicedData = dummyArtists.slice(startIndex, endIndex);
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  console.log("[디버그] 전체 조회 응답:", response.data);
 
-  // 테스트용 리턴
+  const artistList = response.data?.artistList ?? [];
+  const total = response.data?.totalElements ?? 0;
+
   return {
-    data: slicedData,
-    total: dummyArtists.length,
-    page,
-    size,
+    data: artistList,
+    total,
+    page: response.data.page,
+    size: response.data.size,
   };
-  // 실제 api 통신시 사용
-  // return {
-  //   data: response.data.artistList,
-  //   total: response.data.totalElements,
-  //   page: response.data.page,
-  //   size: response.data.size,
-  // };
 };
 
 /**
@@ -43,10 +37,18 @@ export const getArtistList = async (page = 1, size = 10) => {
  * @returns - 성공 시 서버로부터 받은 아티스트 검색 결과 데이터
  */
 export const searchArtists = async (keyword: string) => {
+  const token = localStorage.getItem("accessToken");
+
   const response = await api.get("/api/artists", {
     params: { keyword },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
-  return response.data.artistList;
+
+  console.log("[디버그] 검색 응답:", response.data);
+
+  return response.data.artistList ?? [];
 };
 
 /**
