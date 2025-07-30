@@ -41,6 +41,10 @@ export const useSignupForm = () => {
   const [emailError, setEmailError] = useState("");
   const [userIdError, setUserIdError] = useState("");
 
+  // 각 필드의 성공 메시지 상태
+  const [emailSuccess, setEmailSuccess] = useState("");
+  const [userIdSuccess, setUserIdSuccess] = useState("");
+
   // 각 필드의 중복확인 완료 상태
   const [emailChecked, setEmailChecked] = useState(false);
   const [userIdChecked, setUserIdChecked] = useState(false);
@@ -53,7 +57,9 @@ export const useSignupForm = () => {
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
 
   // 입력 값 변경 핸들러
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === "email") {
@@ -98,7 +104,6 @@ export const useSignupForm = () => {
       // 🔧 FormData로 변환
       const form = new FormData();
       console.log("사용자가 친 값", formData);
-      console.log("비밀번호확인 필드말고 다 ", rest);
 
       Object.entries(rest).forEach(([key, value]) => {
         if (value === null || value === undefined) return;
@@ -127,30 +132,32 @@ export const useSignupForm = () => {
 
   // 이메일 중복 확인 핸들러
   const handleCheckEmail = async () => {
+    setEmailError("");
+    setEmailSuccess("");
+
     if (!formData.email) {
       console.log(formData.email);
       setEmailError("이메일을 입력해주세요.");
       return;
     }
     try {
-      // 확인용 콘솔
-      console.log("이메일 중복 확인 요청:", formData.email);
       const res = await checkEmailExists(formData.email);
       setEmailChecked(true);
-      setEmailError(
-        res.isDuplicate
-          ? "이미 사용 중인 이메일입니다."
-          : "사용 가능한 이메일입니다."
-      );
+      if (res.isDuplicate) {
+        setEmailError("이미 사용 중인 이메일입니다.");
+      } else {
+        setEmailSuccess("사용 가능한 이메일입니다.");
+      }
     } catch (err) {
-      // 확인용 콘솔
-      console.error("이메일 중복 확인 오류:", err);
       setEmailError("중복 확인 중 오류가 발생했습니다.");
     }
   };
 
   // 아이디 중복 확인 핸들러
   const handleCheckUserId = async () => {
+    setUserIdError("");
+    setUserIdSuccess("");
+
     if (!formData.userId) {
       setUserIdError("아이디를 입력해주세요.");
       return;
@@ -159,11 +166,11 @@ export const useSignupForm = () => {
       console.log("아이디 중복 확인 요청:", formData.userId);
       const res = await checkUserIdExists(formData.userId);
       setUserIdChecked(true);
-      setUserIdError(
-        res.isDuplicate
-          ? "이미 사용 중인 아이디입니다."
-          : "사용 가능한 아이디입니다."
-      );
+      if (res.isDuplicate) {
+        setUserIdError("이미 사용 중인 아이디입니다.");
+      } else {
+        setUserIdSuccess("사용 가능한 아이디입니다.");
+      }
     } catch {
       setUserIdError("중복 확인 중 오류가 발생했습니다.");
     }
@@ -178,6 +185,8 @@ export const useSignupForm = () => {
     handleSubmit,
     emailError,
     userIdError,
+    emailSuccess,
+    userIdSuccess,
     handleCheckEmail,
     handleCheckUserId,
     emailChecked,
