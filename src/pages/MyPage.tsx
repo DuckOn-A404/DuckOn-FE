@@ -5,12 +5,16 @@ import { fetchMyProfile, verifyPassword } from "../api/userService";
 import ProfileCard from "../components/domain/user/ProfileCard";
 import PasswordConfirm from "../components/common/PasswordConfirm";
 import EditProfileCard from "../components/domain/user/EditProfileCard";
+import FollowerList from "../components/common/modal/FollowerList";
+import FollowingList from "../components/common/modal/FollowingList";
+import { mockOtherUsers } from "../mocks/otherUserMock";
 
 const MyPage = () => {
   const [user, setUser] = useState<MyUser | null>(null);
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [openList, setOpenList] = useState<"follower" | "following" | null>(null)
   const navigate = useNavigate()
 
   const handleConfirm = async (password: string): Promise<boolean> => {
@@ -58,7 +62,13 @@ const MyPage = () => {
   return (
     <div className="px-8 py-6">
       {!isEditing ? (
-        <ProfileCard user={user} onEditClick={() => setShowModal(true)} />
+        <ProfileCard 
+          user={user} 
+          onEditClick={() => setShowModal(true)} 
+          currentUserId={user.userId} // 현재 로그인한 유저 ID를 넘김
+          onFollowerClick={() => setOpenList("follower")}
+          onFollowingClick={() => setOpenList("following")}
+        />
       ) : (
         <EditProfileCard
           user={user}
@@ -75,6 +85,10 @@ const MyPage = () => {
           onClose={() => setShowModal(false)}
           onConfirm={handleConfirm}
       />
+
+      {/* 팔로워/팔로잉 모달 */}
+      {openList === "follower" && <FollowerList onClose={() => setOpenList(null)} />}
+      {/* {openList === "following" && <FollowingList onClose={() => setOpenList(null)} />} */}
     </div>
   );
 };
