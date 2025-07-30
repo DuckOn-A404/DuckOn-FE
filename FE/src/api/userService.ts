@@ -1,5 +1,6 @@
 import { api } from "./axiosInstance";
 import { type MyUser } from "../types/mypage";
+import { mockOtherUsers } from "../mocks/otherUserMock";
 import axios from "axios";
 
 // 백엔드 미연결 시 mock 데이터 사용
@@ -24,6 +25,17 @@ export const fetchMyProfile = async (): Promise<MyUser> => {
     // return response.data;
 
     return Promise.resolve(mockUser);
+}
+
+// 타 유저 정보 조회
+export const fetchOtherUserProfile = async (userId: string): Promise<MyUser> => {
+  // 실제 백엔드 연동 시:
+  // const response = await api.get<MyUser>(`/api/users/${userId}`)
+  // return response.data
+
+  const user = mockOtherUsers.find(u => u.userId === userId)
+  if (!user) throw new Error("유저를 찾을 수 없습니다.")
+  return Promise.resolve(user)
 }
 
 /**
