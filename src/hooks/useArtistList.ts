@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { type Artist } from "../types/artist";
 import { getArtistList, searchArtists } from "../api/artistService";
 
+/* useArtistList : 아티스트 목록 조회 및 검색을 관리하는 커스텀 훅
+  1. 아티스트 목록 상태 관리 (데이터, 총 개수, 로딩 상태, 다음 페이지 여부)
+  2. 검색어(searchText) 유무에 따라 전체 목록 조회 또는 검색 기능 수행
+  3. 무한 스크롤을 위한 '더 불러오기'(fetchMore) 기능 제공
+  4. 검색어 변경 시 자동으로 새로운 검색 실행
+*/
 export const useArtistList = (searchText: string) => {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
