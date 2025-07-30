@@ -3,17 +3,25 @@ import { type MyUser } from "../../../types/mypage";
 type ProfileCardProps = {
   user: MyUser;
   onEditClick: () => void;
+  currentUserId?: string  // 로그인한 유저 ID
+  onFollowerClick?: () => void
+  onFollowingClick?: () => void
 };
 
-const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
+const ProfileCard = ({ user, onEditClick, currentUserId, onFollowerClick, onFollowingClick }: ProfileCardProps) => {
   return (
     <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 정보</h1>
-        <button className="text-sm text-purple-600 font-medium hover:underline transition"
-        onClick={onEditClick}>
-          프로필 수정
-        </button>
+
+        {currentUserId === user.userId && (
+          <button
+            className="text-sm text-purple-600 font-medium hover:underline transition"
+            onClick={onEditClick}
+          >
+            프로필 수정
+          </button>
+        )}
       </div>
 
       <div className="flex gap-8 items-start">
@@ -30,13 +38,23 @@ const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
               <div className="text-lg font-bold">
                 {user.followerCount?.toLocaleString() ?? "0"}
               </div>
-              <div className="text-xs text-gray-500">팔로워</div>
+              <button
+                onClick={onFollowerClick}
+                className="text-xs text-gray-500 hover:underline cursor-pointer focus:outline-none"
+              >
+                팔로워
+              </button>
             </div>
             <div>
               <div className="text-lg font-bold">
                 {user.followingCount?.toLocaleString() ?? "0"}
               </div>
-              <div className="text-xs text-gray-500">팔로잉</div>
+              <button
+                onClick={onFollowingClick}
+                className="text-xs text-gray-500 hover:underline cursor-pointer focus:outline-none"
+              >
+                팔로잉
+              </button>
             </div>
           </div>
         </div>

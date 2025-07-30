@@ -55,9 +55,9 @@ export interface User {
   userId: string
   nickname: string
   role: 'ADMIN' | 'USER' | 'BANNED'
+  language: string
+  imgUrl: string | null
   artistList: number[]
-  bannedTill?: string
-  profileImg?: string
 }
 
 // 로그인 응답 타입
@@ -72,52 +72,58 @@ export const logIn = async (credentials: LoginRequest): Promise<LoginResponse> =
     const { email, userId, password } = credentials
 
     // ✅ 실제 백엔드 요청 (나중에 이 코드만 사용하시면 됩니다)
-    /*
-    const response = await api.post<LoginResponse>('/login/', credentials)
+  
+    const formData = new FormData()
+    if (email) formData.append("email", email)
+    if (userId) formData.append("userId", userId)
+    formData.append("password", password)
+    formData.append("imgUrl", "null") // 백엔드가 파싱할 수 있도록 기본값 포함
+
+    const response = await api.post<LoginResponse>('/api/auth/login', formData)
     const { accessToken, refreshToken, user } = response.data
 
     localStorage.setItem('accessToken', accessToken)
     localStorage.setItem('refreshToken', refreshToken)
     localStorage.setItem('user', JSON.stringify(user))
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-
-    return response.data
-    */
-
-    // ✅ 현재는 백엔드 미연결 상태이므로 mock 처리
-    const isCorrect =
-      ((email === "test@example.com" || userId === "testuser") && password === "1234")
-
-    if (!isCorrect) {
-      throw new Error("아이디 또는 비밀번호가 올바르지 않습니다.")
-    }
-
-    const response = {
-      data: {
-        accessToken: 'mock-access-token',
-        refreshToken: 'mock-refresh-token',
-        user: {
-          email: email || 'test@example.com',
-          userId: userId || 'testuser',
-          nickname: 'Mock User',
-          role: 'USER' as 'USER',
-          artistList: [1, 2, 3],
-          bannedTill: undefined,
-          profileImg: undefined
-        }
-      }
-    }
-
-    const { accessToken, refreshToken, user } = response.data
-
-    localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('refreshToken', refreshToken)
-    localStorage.setItem('user', JSON.stringify(user))
-    api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
-
     console.log('Authorization 헤더 설정 완료:', api.defaults.headers.common['Authorization'])
 
     return response.data
+  
+
+    // ✅ 현재는 백엔드 미연결 상태이므로 mock 처리
+    // const isCorrect =
+    //   ((email === "test@example.com" || userId === "testuser") && password === "1234")
+
+    // if (!isCorrect) {
+    //   throw new Error("아이디 또는 비밀번호가 올바르지 않습니다.")
+    // }
+
+    // const response = {
+    //   data: {
+    //     accessToken: 'mock-access-token',
+    //     refreshToken: 'mock-refresh-token',
+    //     user: {
+    //       email: email || 'test@example.com',
+    //       userId: userId || 'testuser',
+    //       nickname: 'Mock User',
+    //       role: 'USER' as 'USER',
+    //       artistList: [1, 2, 3],
+    //       bannedTill: undefined,
+    //       profileImg: undefined
+    //     }
+    //   }
+    // }
+
+    // const { accessToken, refreshToken, user } = response.data
+
+    // localStorage.setItem('accessToken', accessToken)
+    // localStorage.setItem('refreshToken', refreshToken)
+    // localStorage.setItem('user', JSON.stringify(user))
+    // api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`
+
+
+    // return response.data
   } catch (error) {
     console.error('로그인 실패:', error)
     throw error
