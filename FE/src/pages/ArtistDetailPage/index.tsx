@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useUserStore } from "../../store/useUserStore";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
 import { useArtistRooms } from "../../hooks/useArtistRooms";
@@ -7,21 +7,22 @@ import {
   followArtist,
   unfollowArtist,
   getArtistDetail,
+  getArtistRooms,
 } from "../../api/artistService";
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
 import { Video, CalendarDays } from "lucide-react";
-import { dummyArtists } from "../../mocks/artists";
 
 const ArtistDetailPage = () => {
-  const { nameEn } = useParams<{ nameEn: string }>();
-  const navigate = useNavigate();
+  const location = useLocation();
+  const artistId = location.state?.artistId as number | undefined;
 
   // 1. 아티스트 상세 정보와 로딩 상태를 위한 State
   const [artist, setArtist] = useState<Artist | null>(null);
-  const [isLoadingArtist, setIsLoadingArtist] = useState(true);
+  const [rooms, setRooms] = useState({ live: [], upcoming: [] });
+  const [isLoadingPage, setIsLoadingPage] = useState(true);
 
   const { user } = useUserStore();
   const {
@@ -45,37 +46,39 @@ const ArtistDetailPage = () => {
   // 3. 최적화된 팔로우 상태 확인 (배열 순회 대신 Set 사용)
   const isFollowing = artist ? followingSet.has(artist.artistId) : false;
 
-  // 4. 페이지 진입 시 아티스트 상세 정보 불러오기
+  // 4. 페이지 진입 시 아티스트 상세 정보 및 방목록 정보 병렬로 불러오기
   useEffect(() => {
-    const fetchArtistDetail = async () => {
-      if (!nameEn) return;
-      setIsLoadingArtist(true);
+    const fetchPageData = async () => {
+      if (!artistId) {
+        console.error("Artist ID가 state로 전달되지 않았습니다.");
+        setIsLoadingPage(false);
+        return;
+      }
+      setIsLoadingPage(true);
       try {
-        // 실제로는 nameEn으로 아티스트를 찾는 API가 필요하지만,
-        // 지금은 getArtistDetail(artistId)를 시뮬레이션합니다.
-        // const foundArtist = dummyArtists.find(a => a.nameEn.toLowerCase() === nameEn.toLowerCase());
-        // if (foundArtist) {
-        //   const data = await getArtistDetail(foundArtist.artistId);
-        //   setArtist(data);
-        // }
+        // 1. API 요청이 하나이므로 Promise.all을 제거하고 직접 호출합니다.
+        const artistData = await getArtistDetail(artistId);
 
-        // [임시] 더미데이터로 API 시뮬레이션
-        const foundArtist = dummyArtists.find(
-          (a) => a.nameEn.toLowerCase() === nameEn.toLowerCase()
-        );
-        setArtist(foundArtist || null);
+        // 2. 받아온 artistData로 artist 상태를 설정합니다.
+        setArtist(artistData);
+
+        // 3. roomsData 관련 로직은 나중에 구현할 때까지 주석 처리하거나 제거합니다.
+        // setRooms({
+        //   live: roomsData.roomList.filter((r) => r.isLive),
+        //   upcoming: roomsData.roomList.filter((r) => !r.isLive),
+        // });
       } catch (error) {
-        console.error("아티스트 정보를 불러오는 데 실패했습니다.", error);
+        console.error("페이지 데이터를 불러오는 데 실패했습니다.", error);
         setArtist(null);
       } finally {
-        setIsLoadingArtist(false);
+        setIsLoadingPage(false);
       }
     };
-    fetchArtistDetail();
-  }, [nameEn]);
+    fetchPageData();
+  }, [artistId]);
 
   // 5. 로딩 및 에러 상태 처리
-  if (isLoadingArtist) {
+  if (isLoadingPage) {
     return (
       <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
     );
