@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
 import { List, CheckSquare } from "lucide-react";
-import { dummyArtists } from "../../mocks/artists";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -27,25 +26,21 @@ const LeftSidebar = () => {
           <>
             <ul className="space-y-2 text-sm mb-4 flex-grow overflow-y-auto custom-scrollbar">
               {followedArtists.map((artist) => {
-                // 더 이상 dummyArtists에서 찾을 필요 없음
                 return (
                   <li
                     key={artist.artistId}
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100"
-                    // 3. 각 리스트 아이템의 onClick에 핸들러를 연결합니다.
                     onClick={() =>
                       handleArtistClick(artist.artistId, artist.nameEn)
                     }
                   >
                     <img
-                      // 스토어에 저장된 artist.imgUrl을 바로 사용합니다.
                       src={artist.imgUrl || "https://placehold.co/32x32"}
                       alt={artist.nameKr}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                     <div className="flex-1 flex justify-between items-center">
                       <span className="font-medium">{artist.nameKr}</span>
-                      {/* ... 기타 정보 ... */}
                     </div>
                   </li>
                 );

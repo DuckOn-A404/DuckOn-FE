@@ -38,7 +38,7 @@ const RightSidebar = () => {
           {selectedTab === "chat" ? <ChatTab /> : <RecommendTab />}
         </div>
 
-        {/* 3. 채팅 입력창 (채팅 탭일 때만 보임) */}
+        {/* 채팅 입력창 (채팅 탭일 때만 보임) */}
         {selectedTab === "chat" && (
           <div className="mt-4 flex items-center gap-2">
             <input

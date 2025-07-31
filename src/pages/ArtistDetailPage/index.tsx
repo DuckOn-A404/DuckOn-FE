@@ -19,7 +19,7 @@ const ArtistDetailPage = () => {
   const location = useLocation();
   const artistId = location.state?.artistId as number | undefined;
 
-  // 1. 아티스트 상세 정보와 로딩 상태를 위한 State
+  // 아티스트 상세 정보와 로딩 상태를 위한 State
   const [artist, setArtist] = useState<Artist | null>(null);
   const [rooms, setRooms] = useState({ live: [], upcoming: [] });
   const [isLoadingPage, setIsLoadingPage] = useState(true);
@@ -33,7 +33,7 @@ const ArtistDetailPage = () => {
 
   const isLoggedIn = !!user;
 
-  // 2. useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
+  // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
   const {
     liveRooms,
     upcomingRooms,
@@ -43,10 +43,10 @@ const ArtistDetailPage = () => {
     handleLoadMore,
   } = useArtistRooms(artist?.artistId);
 
-  // 3. 최적화된 팔로우 상태 확인 (배열 순회 대신 Set 사용)
+  // 최적화된 팔로우 상태 확인
   const isFollowing = artist ? followingSet.has(artist.artistId) : false;
 
-  // 4. 페이지 진입 시 아티스트 상세 정보 및 방목록 정보 병렬로 불러오기
+  // 페이지 진입 시 아티스트 상세 정보 및 방목록 정보 병렬로 불러오기
   useEffect(() => {
     const fetchPageData = async () => {
       if (!artistId) {
@@ -56,13 +56,11 @@ const ArtistDetailPage = () => {
       }
       setIsLoadingPage(true);
       try {
-        // 1. API 요청이 하나이므로 Promise.all을 제거하고 직접 호출합니다.
         const artistData = await getArtistDetail(artistId);
 
-        // 2. 받아온 artistData로 artist 상태를 설정합니다.
         setArtist(artistData);
 
-        // 3. roomsData 관련 로직은 나중에 구현할 때까지 주석 처리하거나 제거합니다.
+        // roomsData 관련 로직은 나중에
         // setRooms({
         //   live: roomsData.roomList.filter((r) => r.isLive),
         //   upcoming: roomsData.roomList.filter((r) => !r.isLive),
@@ -77,7 +75,6 @@ const ArtistDetailPage = () => {
     fetchPageData();
   }, [artistId]);
 
-  // 5. 로딩 및 에러 상태 처리
   if (isLoadingPage) {
     return (
       <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
@@ -142,10 +139,9 @@ const ArtistDetailPage = () => {
               </p>
             </div>
           </div>
-          {isLoggedIn && ( // user 객체가 존재할 때만 이 div를 렌더링
+          {isLoggedIn && (
             <div className="text-right space-y-2">
               {isFollowing ? (
-                // 팔로우 중일 때 (D-day와 "팔로우 중" 버튼)
                 <>
                   <p className="text-sm font-semibold">
                     {getDday(artist.debutDate)}
@@ -158,7 +154,7 @@ const ArtistDetailPage = () => {
                   </button>
                 </>
               ) : (
-                // 팔로우 중이 아닐 때 ("+ 팔로우" 버튼만)
+                // 팔로우 중이 아닐 때
                 <button
                   className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
                   onClick={handleFollowToggle}

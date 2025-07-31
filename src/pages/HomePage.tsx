@@ -5,7 +5,6 @@ import ArtistCard from "../components/domain/artist/ArtistCard";
 import { Link } from "react-router-dom";
 import { getRandomArtists } from "../api/artistService";
 import { type Artist } from "../types/artist";
-import { dummyArtists } from "../mocks/artists";
 import { dummyRooms } from "../mocks/rooms";
 
 const HomePage = () => {
@@ -87,7 +86,6 @@ const HomePage = () => {
             {isLoading ? (
               <p>아티스트를 불러오는 중...</p>
             ) : (
-              // 4. map 내부에서 ArtistCard에 onClick prop을 전달합니다.
               recommendedArtists.map((artist) => (
                 <ArtistCard
                   key={artist.artistId}
