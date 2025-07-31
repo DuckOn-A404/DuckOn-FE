@@ -1,5 +1,4 @@
 import { api } from "./axiosInstance";
-import { dummyArtists } from "../mocks/artists";
 import { dummyRooms } from "../mocks/rooms";
 
 /**
@@ -8,7 +7,7 @@ import { dummyRooms } from "../mocks/rooms";
  * @param size - 페이지당 아티스트 수 (기본값: 6)
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
  */
-export const getArtistList = async (page = 1, size = 10) => {
+export const getArtistList = async (page = 1, size = 12) => {
   const token = localStorage.getItem("accessToken"); // 저장 방식에 따라 수정 가능
 
   const response = await api.get("/api/artists", {
@@ -57,7 +56,14 @@ export const searchArtists = async (keyword: string) => {
  * @returns 아티스트 정보 + 로그인 유저의 팔로우 여부
  */
 export const getArtistDetail = async (artistId: number) => {
-  const response = await api.get(`/api/artists/${artistId}`);
+  const token = localStorage.getItem("accessToken");
+
+  const response = await api.get(`/api/artists/${artistId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
   return response.data;
 };
 
@@ -72,15 +78,12 @@ export const followArtist = async (artistId: number) => {
     throw new Error("로그인이 필요합니다.");
   }
 
-  const response = await api.post(
-    `/api/artists/${artistId}/follow`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await api.post(`/api/artists/${artistId}/follow`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
 
   return response.data;
 };
@@ -100,7 +103,6 @@ export const unfollowArtist = async (artistId: number) => {
   const response = await api.delete(`/api/artists/${artistId}/follow`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
     },
   });
 
@@ -120,7 +122,7 @@ export const getFollowedArtists = async (page = 1, size = 10) => {
     throw new Error("로그인이 필요합니다.");
   }
 
-  const response = await api.get("/api/users/me/artists", {
+  const response = await api.get("/api/artists/me", {
     params: { page, size },
     headers: {
       Authorization: `Bearer ${token}`,
