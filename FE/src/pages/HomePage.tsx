@@ -1,5 +1,6 @@
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
+import { Link } from "react-router-dom";
 import { dummyArtists } from "../mocks/artists";
 import { dummyRooms } from "../mocks/rooms";
 
@@ -44,7 +45,15 @@ const HomePage = () => {
 
         {/* 아티스트 목록 영역 */}
         <section>
-          <h2 className="text-2xl font-bold mb-6">추천 아티스트</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">추천 아티스트</h2>
+            <Link
+              to="/artist-list"
+              className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
+            >
+              더보기 →
+            </Link>
+          </div>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
             {dummyArtists.slice(0, 4).map((artist) => (
               <ArtistCard key={artist.artistId} {...artist} />
