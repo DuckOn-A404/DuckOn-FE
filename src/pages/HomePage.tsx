@@ -1,15 +1,44 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
 import { Link } from "react-router-dom";
+import { getRandomArtists } from "../api/artistService";
+import { type Artist } from "../types/artist";
 import { dummyArtists } from "../mocks/artists";
 import { dummyRooms } from "../mocks/rooms";
 
 const HomePage = () => {
+  const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
+
   // 더미 데이터
   const hotRooms = dummyRooms
     .filter((room) => room.isLive)
     .sort((a, b) => b.viewerCount - a.viewerCount)
     .slice(0, 3);
+
+  const handleCardClick = (artistId: number, nameEn: string) => {
+    navigate(`/artist/${nameEn}`, {
+      state: { artistId: artistId },
+    });
+  };
+
+  useEffect(() => {
+    const fetchRandomArtists = async () => {
+      try {
+        const data = await getRandomArtists(4);
+        setRecommendedArtists(data);
+      } catch (error) {
+        console.error("추천 아티스트를 불러오는 데 실패했습니다.", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRandomArtists();
+  }, []);
 
   return (
     <div>
@@ -55,9 +84,20 @@ const HomePage = () => {
             </Link>
           </div>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
-            {dummyArtists.slice(0, 4).map((artist) => (
-              <ArtistCard key={artist.artistId} {...artist} />
-            ))}
+            {isLoading ? (
+              <p>아티스트를 불러오는 중...</p>
+            ) : (
+              // 4. map 내부에서 ArtistCard에 onClick prop을 전달합니다.
+              recommendedArtists.map((artist) => (
+                <ArtistCard
+                  key={artist.artistId}
+                  {...artist}
+                  onClick={() =>
+                    handleCardClick(artist.artistId, artist.nameEn)
+                  }
+                />
+              ))
+            )}
           </div>
         </section>
       </main>

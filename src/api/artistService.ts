@@ -183,3 +183,16 @@ export const getArtistRooms = async (
     totalPages,
   };
 };
+
+/**
+ * 랜덤 아티스트 목록 조회 API 요청
+ * @param size - 조회할 아티스트 수
+ * @returns - 성공 시 서버로부터 받은 아티스트 목록 배열
+ */
+export const getRandomArtists = async (size = 4) => {
+  const response = await api.get("/api/artists/random", {
+    params: { size },
+  });
+
+  return response.data.artistList;
+};
