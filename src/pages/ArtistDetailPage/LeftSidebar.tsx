@@ -26,7 +26,7 @@ const LeftSidebar = () => {
                   (artist) => artist.artistId === followedArtist.artistId
                 );
                 const artistImgUrl =
-                  fullArtistInfo?.imgUrl || "https://via.placeholder.com/32";
+                  fullArtistInfo?.imgUrl || "https://placehold.co/32x32";
 
                 return (
                   <li
