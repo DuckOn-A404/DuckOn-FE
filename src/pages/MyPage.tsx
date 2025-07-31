@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { type MyUser } from "../types/mypage";
 import { fetchMyProfile, verifyPassword } from "../api/userService";
-import ProfileCard from "../components/domain/user/ProfileCard";
 import PasswordConfirm from "../components/common/PasswordConfirm";
 import EditProfileCard from "../components/domain/user/EditProfileCard";
 import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
-import { mockOtherUsers } from "../mocks/otherUserMock";
+import MyProfileCard from "../components/domain/user/MyProfileCard";
 
 const MyPage = () => {
-  const [user, setUser] = useState<MyUser | null>(null);
+  const [myUser, setMyUser] = useState<MyUser | null>(null);
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -43,10 +42,11 @@ const MyPage = () => {
 
   useEffect(() => {
     const loadUser = async () => {
+      setLoading(true)
       try {
         const data = await fetchMyProfile();
         console.log("받아온 사용자 정보:", data);
-        setUser(data);
+        setMyUser(data);
       } catch (error) {
         console.error("사용자 정보를 불러오지 못했습니다.", error);
       } finally {
@@ -54,28 +54,29 @@ const MyPage = () => {
       }
     };
 
+    setMyUser(null)
     loadUser();
   }, []);
 
   if (loading) return <div className="p-6">불러오는 중...</div>;
-  if (!user) return <div className="p-6 text-red-500">사용자 정보 없음</div>;
+  if (!myUser) return <div className="p-6 text-red-500">사용자 정보 없음</div>;
 
   return (
     <div className="px-8 py-6">
       {!isEditing ? (
-        <ProfileCard 
-          user={user} 
-          onEditClick={() => setShowModal(true)} 
-          currentUserId={user.userId} // 현재 로그인한 유저 ID를 넘김
+        <MyProfileCard
+          key={`mypage-${myUser.userId}`}
+          user={myUser} 
+          onEditClick={() => setShowModal(true)}
           onFollowerClick={() => setOpenList("follower")}
           onFollowingClick={() => setOpenList("following")}
         />
       ) : (
         <EditProfileCard
-          user={user}
+          user={myUser}
           onCancel = {() => setIsEditing(false)}
           onUpdate = {(updatedUser) => {
-            setUser(updatedUser)
+            setMyUser(updatedUser)
             setIsEditing(false)
           }}
         />
