@@ -45,6 +45,7 @@ const MyPage = () => {
     const loadUser = async () => {
       try {
         const data = await fetchMyProfile();
+        console.log("받아온 사용자 정보:", data);
         setUser(data);
       } catch (error) {
         console.error("사용자 정보를 불러오지 못했습니다.", error);

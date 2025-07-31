@@ -8,6 +8,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @EqualsAndHashCode
 public class ArtistFollowId implements Serializable {
-    private String user;       // User.uuid
-    private Integer artist;    // Artist.artistId
+    private Long user;       // User.id
+    private Long artist;    // Artist.artistId
 }

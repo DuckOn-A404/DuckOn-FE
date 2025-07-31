@@ -10,4 +10,6 @@ export type MyUser = {
     followerCount: number;  // 팔로워 수(나를 팔로우한 사용자 수)
     bannedTill?: string;    // 제재 당한 사용자라면 언제까지인지 날짜
     profileImg?: string;
+    roomList?: any[];
+    penaltyList: any[];
 }
