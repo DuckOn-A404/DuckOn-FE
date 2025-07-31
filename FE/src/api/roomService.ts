@@ -1,0 +1,1 @@
+// 방 생성 및 조회 API(POST /api/rooms 등)
