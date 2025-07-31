@@ -1,6 +1,7 @@
 package com.a404.duckonback.service;
 
 import com.a404.duckonback.dto.LiveRoomDTO;
+import com.a404.duckonback.entity.User;
 import com.a404.duckonback.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,16 +21,19 @@ public class RedisServiceImpl implements RedisService {
     public void saveRoomInfo(String roomId, LiveRoomDTO room) {
         String key = "room:" + roomId + ":info";
 
-        Map<String, Object> map = Map.of(
-                "title", room.getTitle(),
-                "hostId", room.getHostId(),
-                "imgUrl", room.getImgUrl(),
-                "playlist", room.getPlaylist(),
-                "currentVideoIndex", room.getCurrentVideoIndex(),
-                "currentTime", room.getCurrentTime(),
-                "isPlaying", room.isPlaying(),
-                "lastUpdated", room.getLastUpdated()
-        );
+        Map<String, Object> map = new HashMap<>();
+        map.put("title", room.getTitle());
+        map.put("hostId", room.getHostId());
+        map.put("imgUrl", room.getImgUrl());
+        map.put("playlist", room.getPlaylist());
+        map.put("currentVideoIndex", room.getCurrentVideoIndex());
+        map.put("currentTime", room.getCurrentTime());
+        map.put("isPlaying", room.isPlaying());
+        map.put("lastUpdated", room.getLastUpdated());
+        map.put("isLocked", room.isLocked());
+        map.put("entryQuestion", room.getEntryQuestion());
+        map.put("entryAnswer", room.getEntryAnswer());
+
 
         redisTemplate.opsForHash().putAll(key, map);
         redisTemplate.expire(key, Duration.ofHours(6));
@@ -43,7 +48,10 @@ public class RedisServiceImpl implements RedisService {
         String key = "room:" + roomId + ":info";
         Map<Object, Object> map = redisTemplate.opsForHash().entries(key);
 
-        if (map.isEmpty()) return null;
+        if (map.isEmpty()) {
+            throw new CustomException("Redis에 해당 roomId의 방 정보가 존재하지 않습니다.", HttpStatus.NOT_FOUND);
+        }
+
 
         return LiveRoomDTO.builder()
                 .title((String) map.get("title"))
@@ -54,15 +62,22 @@ public class RedisServiceImpl implements RedisService {
                 .currentTime((double) map.get("currentTime"))
                 .isPlaying((boolean) map.get("isPlaying"))
                 .lastUpdated((long) map.get("lastUpdated"))
+                .isLocked(Boolean.parseBoolean(map.getOrDefault("isLocked", "false").toString()))
+                .entryQuestion((String) map.getOrDefault("entryQuestion", null))
+                .entryAnswer((String) map.getOrDefault("entryAnswer", null))
                 .build();
     }
+
+
 
     public void deleteRoomInfo(Long artistId, Long roomId) {
         String roomKey = "room:" + roomId + ":info";
         String artistRoomsKey = "artist:" + artistId + ":rooms";
+        String roomUsersKey = "room:" + roomId + ":users";
 
         Boolean deleted = redisTemplate.delete(roomKey);
         Long removed = redisTemplate.opsForSet().remove(artistRoomsKey, roomId.toString());
+        Boolean deletedUsers = redisTemplate.delete(roomUsersKey);
 
         if (deleted != null && deleted == false) {
             throw new CustomException("roomId에 대한 방이 존재하지 않습니다.", HttpStatus.NOT_FOUND);
@@ -71,5 +86,14 @@ public class RedisServiceImpl implements RedisService {
         if (removed == 0) {
             throw new CustomException("해당 아티스트의 방 목록에 해당 roomId가 존재하지 않습니다.", HttpStatus.NOT_FOUND);
         }
+    }
+
+    @Override
+    public void addUserToRoom(String roomId, User user) {
+        String key = "room:" + roomId + ":users";
+        String userInfo = user.getUserId();
+
+        redisTemplate.opsForSet().add(key, userInfo);
+        redisTemplate.expire(key, Duration.ofHours(6));
     }
 }
