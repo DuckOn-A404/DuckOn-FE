@@ -35,9 +35,9 @@ deploy_be:
         git fetch origin BE/develop
         git reset --hard origin/BE/develop
 
-        docker build --no-cache -t duckonback:latest .
-        docker rm -f duckon-app || true
-        docker run -d --name duckon-app -p 8080:8080 \
+        sudo docker build --no-cache -t duckonback:latest .
+        sudo docker rm -f duckon-app || true
+        sudo docker run -d --name duckon-app -p 8080:8080 \
           -e SPRING_DATASOURCE_URL="jdbc:mysql://127.0.0.1:3306/duckon" \
           -e SPRING_DATASOURCE_USERNAME="duckon" \
           -e SPRING_DATASOURCE_PASSWORD="secret" \
