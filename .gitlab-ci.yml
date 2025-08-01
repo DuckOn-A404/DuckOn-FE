@@ -28,7 +28,7 @@ deploy_be:
     - |
       ssh ubuntu@i13a404.p.ssafy.io << EOF 
         set -e
-        cd ~/DuckOn-BE
+        cd ~/DuckOn-BE/BE
 
         git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
 
