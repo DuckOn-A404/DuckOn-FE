@@ -26,7 +26,7 @@ deploy_be:
 
   script:
     - |
-      ssh ubuntu@i13a404.p.ssafy.io << 'EOF'
+      ssh ubuntu@i13a404.p.ssafy.io << EOF 
         set -e
         cd ~/DuckOn-BE
 
