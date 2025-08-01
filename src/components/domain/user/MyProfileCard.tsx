@@ -30,7 +30,7 @@ const MyProfileCard = ({
         {/* 왼쪽: 프로필 이미지 + 팔로워 수 */}
         <div className="flex flex-col items-center w-32 shrink-0">
           <img
-            src={user.profileImg || "/default_image.png"}
+            src={user.imgUrl || "/default_image.png"}
             alt="프로필 이미지"
             className="w-24 h-24 object-cover rounded-full"
           />
