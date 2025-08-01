@@ -14,6 +14,7 @@ import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
 import { Video, CalendarDays } from "lucide-react";
+import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 
 const ArtistDetailPage = () => {
   const location = useLocation();
@@ -23,6 +24,7 @@ const ArtistDetailPage = () => {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [rooms, setRooms] = useState({ live: [], upcoming: [] });
   const [isLoadingPage, setIsLoadingPage] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const { user } = useUserStore();
   const {
@@ -181,7 +183,8 @@ const ArtistDetailPage = () => {
               </div>
             </div>
             {isFollowing && (
-              <button className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform">
+              <button onClick={() => setIsModalOpen(true)}
+                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform">
                 + 새 방 만들기
               </button>
             )}
@@ -232,6 +235,14 @@ const ArtistDetailPage = () => {
 
       {/* 오른쪽: 실시간 탭 */}
       <RightSidebar />
+
+      {/* 방 생성 모달 */}
+      <CreateRoomModal
+        isOpen = {isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        artistId={artist.artistId}
+        hostId={user?.userId ?? ""}
+      />
     </div>
   );
 };

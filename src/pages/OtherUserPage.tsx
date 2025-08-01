@@ -1,42 +1,64 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import ProfileCard from "../components/domain/user/ProfileCard";
-import { mockOtherUsers } from "../mocks/otherUserMock";
-import type { MyUser } from "../types/mypage";
+import type { OtherUser } from "../types/otherUser";
 import { fetchOtherUserProfile } from "../api/userService";
+import { followUser } from "../api/followService";
+import OtherProfileCard from "../components/domain/user/OtherProfileCard";
 
 const OtherUserPage = () => {
     const { userId } = useParams()
-    const [user, setUser] = useState<MyUser | null>(null)
+    const [otherUser, setOtherUser] = useState<OtherUser | null>(null)
 
     useEffect(() => {
-        // 백엔드 연동 예정 코드
-        /*
+        if (!userId) {
+            console.warn("userId가 존재하지 않습니다.")
+            return
+        }
+        // 백엔드 연동 코드
+        setOtherUser(null)
+
         const getUserData = async () => {
         try {
-            const data = await fetchOtherUserProfile(userId!);
-            setUser(data);
+            const data = await fetchOtherUserProfile(userId);
+            setOtherUser(data);
         } catch (err) {
             console.error("타 유저 정보 조회 실패", err);
         }
         };
         getUserData();
-        */
-
-        // 현재는 mock 데이터로 받아오기
-        const dummy = mockOtherUsers.find(u => u.userId === userId);
-        if (dummy) {
-        setUser(dummy);
-        }
     }, [userId]);
 
-    if (!user) return <div className="text-center mt-20">유저 정보를 불러오는 중입니다...</div>;
+    // 팔로우만 가능하도록 처리
+    const handleFollow = async () => {
+        if (!otherUser || otherUser.following === true) return // 이미 팔로우한 경우는 무시
+        try {
+            await followUser(otherUser.userId)   // POST /api/follow/{userId}
+            setOtherUser((prev) =>
+                prev
+                ? {
+                    ...prev,
+                    following: true,
+                    followerCount: prev.followerCount + 1,
+                    }
+                : prev
+            )
+        } catch (err) {
+        console.error("팔로우 실패", err);
+        }
+    }
+
+    if (!otherUser) 
+        return (<div className="text-center mt-20">유저 정보를 불러오는 중입니다...</div>
+        )
 
     return (
-        <div className="py-10">
-        <ProfileCard user={user} onEditClick={() => {}} />
-        </div>
-    )
-}
+    <div key={userId} className="py-10">
+      <OtherProfileCard
+        user={otherUser}
+        onToggleFollow={handleFollow}
+      />
+    </div>
+  );
+};
 
 export default OtherUserPage;
