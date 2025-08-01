@@ -3,14 +3,13 @@ import { useState } from "react";
 // 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
-import ChatPanel from "./ChatPanel";
-import PlaylistPanel from "./PlaylistPanel";
+import RightSidebar from "./RightSidebar";
 
 const LiveRoomPage = () => {
   // 오른쪽 사이드바의 활성 탭 상태만 관리합니다.
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
-  // 데이터 로딩, 에러 처리 등 모든 API 관련 로직을 제거했습니다.
+  const isHost = true;
 
   return (
     // 전체 레이아웃
@@ -23,7 +22,6 @@ const LiveRoomPage = () => {
 
       {/* 오른쪽: 사이드바 영역 */}
       <aside className="w-80 bg-gray-800 flex flex-col">
-        {/* 탭 버튼 */}
         <div className="flex border-b border-gray-700">
           <button
             onClick={() => setActiveTab("chat")}
@@ -47,10 +45,7 @@ const LiveRoomPage = () => {
           </button>
         </div>
 
-        {/* 탭 콘텐츠 */}
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === "chat" ? <ChatPanel /> : <PlaylistPanel />}
-        </div>
+        <RightSidebar selectedTab={activeTab} isHost={isHost} />
       </aside>
     </div>
   );
