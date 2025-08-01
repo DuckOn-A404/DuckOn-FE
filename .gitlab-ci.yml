@@ -44,5 +44,6 @@ deploy_be:
           -e spring.redis.host="127.0.0.1" \
           -e spring.redis.port="6379" \
           -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
+          -e JWT_REFRESH_EXPIRATION="${JWT_REFRESH_EXPIRATION}" \
           duckonback:latest
       EOF
