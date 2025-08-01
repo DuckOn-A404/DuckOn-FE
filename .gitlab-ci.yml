@@ -25,23 +25,24 @@ deploy_be:
     - chmod 600 ~/.ssh/known_hosts
 
   script:
-    # 4) EC2에 접속해서 배포 스크립트 실행
     - |
       ssh ubuntu@i13a404.p.ssafy.io << 'EOF'
         set -e
-        cd ~/DuckOn-BE                      # BE 코드가 있는 경로
+        cd ~/DuckOn-BE
+
+        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
+
         git fetch origin BE/develop
-        git reset --hard origin/BE/develop  # 강제 동기화
+        git reset --hard origin/BE/develop
+
         docker build --no-cache -t duckonback:latest .
         docker rm -f duckon-app || true
-        docker run -d \
-          --name duckon-app \
-          -p 8080:8080 \
+        docker run -d --name duckon-app -p 8080:8080 \
           -e SPRING_DATASOURCE_URL="jdbc:mysql://127.0.0.1:3306/duckon" \
           -e SPRING_DATASOURCE_USERNAME="duckon" \
           -e SPRING_DATASOURCE_PASSWORD="secret" \
           -e spring.redis.host="127.0.0.1" \
           -e spring.redis.port="6379" \
-          -e JWT_SECRET_KEY="$JWT_SECRET_KEY" \
+          -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
           duckonback:latest
       EOF
