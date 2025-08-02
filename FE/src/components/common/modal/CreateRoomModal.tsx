@@ -21,6 +21,9 @@ const CreateRoomModal = ({
   const [thumbnailImg, setThumbnailImg] = useState<File | null>(null);
 
   const handleSubmit = async () => {
+    console.log(document.cookie);  // 쿠키 인증이면
+    console.log(localStorage.getItem("accessToken"));  // JWT 인증이면
+
     const formData = new FormData();
     formData.append("artistId", artistId.toString());
     formData.append("title", title);
@@ -34,7 +37,9 @@ const CreateRoomModal = ({
     }
 
     try {
-      await CreateRoom(formData);
+      const createdRoom = await CreateRoom(formData); // 생성된 방 응답 저장
+      console.log("방 생성 응답:", createdRoom);     // 콘솔 확인용 출력
+
       alert("방이 생성되었습니다!");
       onClose();
     } catch (error) {
