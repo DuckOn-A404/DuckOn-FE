@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 
 // 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
@@ -9,7 +10,9 @@ const LiveRoomPage = () => {
   // 오른쪽 사이드바의 활성 탭 상태만 관리합니다.
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
+  // 임의로
   const isHost = true;
+  const { roomId } = useParams<{ roomId: string }>();
 
   return (
     // 전체 레이아웃
@@ -45,7 +48,7 @@ const LiveRoomPage = () => {
           </button>
         </div>
 
-        <RightSidebar selectedTab={activeTab} isHost={isHost} />
+        <RightSidebar selectedTab={activeTab} isHost={isHost} roomId={roomId} />
       </aside>
     </div>
   );

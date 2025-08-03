@@ -1,52 +1,19 @@
 import { useState } from "react";
-import { Send, MoreVertical, ShieldAlert, UserX } from "lucide-react";
+import {
+  Send,
+  MoreVertical,
+  ShieldAlert,
+  UserX,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { Popover } from "@headlessui/react";
+import { useChat } from "../../hooks/useChat";
+import { useUserStore } from "../../store/useUserStore";
 
-// 현재 사용자와 채팅 메시지에 대한 임의의(목업) 데이터를 생성합니다.
-const currentUser = {
-  id: "me", // 현재 사용자를 식별하기 위한 고유 ID
-};
-
-const mockMessages = [
-  {
-    id: 1,
-    senderId: "club_admin",
-    sender: "먼지관람클럽",
-    text: "드디어 시작이다! 🪁",
-    timestamp: "14:23",
-  },
-  {
-    id: 2,
-    senderId: "lover123",
-    sender: "NewJeansLover",
-    text: "이 부분 너무 좋아 ㅠㅠ",
-    timestamp: "14:24",
-  },
-  {
-    id: 3,
-    senderId: "me",
-    sender: "Me",
-    text: "같이 보니까 더 재밌네요!",
-    timestamp: "14:24",
-  },
-  {
-    id: 4,
-    senderId: "fanboy4",
-    sender: "다니엘최고",
-    text: "화질 좋다 👍",
-    timestamp: "14:25",
-  },
-  {
-    id: 5,
-    senderId: "rapper_h",
-    sender: "혜인덕후",
-    text: "채팅 속도 미쳐...",
-    timestamp: "14:25",
-  },
-];
-
-const ChatPanel = () => {
-  const [messages, setMessages] = useState(mockMessages);
+const ChatPanel = ({ roomId }: { roomId: string }) => {
+  const { messages, isConnected, sendMessage } = useChat(roomId);
+  const { user } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
 
   const handleReport = (senderId: string) =>
@@ -54,39 +21,48 @@ const ChatPanel = () => {
   const handleBlock = (senderId: string) =>
     alert(`${senderId}님을 차단합니다.`);
 
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      sendMessage(newMessage);
+      setNewMessage("");
+    }
+  };
+
   return (
     <div className="flex flex-col h-full text-white">
       {/* 메시지 목록 영역 */}
-      <div className="flex-1 space-y-4 p-4 overflow-y-auto">
+      <div className="flex-1 space-y-4 overflow-y-auto">
         {messages.map((msg) => (
           <div
-            key={msg.id}
+            key={msg.messageId}
             className={`flex flex-col ${
-              msg.senderId === currentUser.id ? "items-end" : "items-start"
+              msg.senderId === user?.userId ? "items-end" : "items-start"
             }`}
           >
-            {msg.senderId !== currentUser.id && (
-              <span className="text-xs text-gray-400 mb-1">{msg.sender}</span>
+            {msg.senderId !== user?.userId && (
+              <span className="text-xs text-gray-400 mb-1">
+                {msg.senderName}
+              </span>
             )}
 
             <div
               className={`flex items-end gap-2 max-w-[85%] ${
-                msg.senderId === currentUser.id ? "flex-row-reverse" : ""
+                msg.senderId === user?.userId ? "flex-row-reverse" : ""
               }`}
             >
               <div
                 // 1. 말풍선을 기준점(relative) 및 호버 그룹(group)으로 만듭니다.
                 className={`relative group px-3 py-2 rounded-lg break-words ${
-                  msg.senderId === currentUser.id
+                  msg.senderId === user?.userId
                     ? "bg-purple-600 rounded-br-none"
                     : "bg-gray-700 rounded-bl-none"
                 }`}
               >
                 {/* 메시지 텍스트 */}
-                <span>{msg.text}</span>
+                <span>{msg.content}</span>
 
-                {/* 2. Popover 컴포넌트를 말풍선 div 안으로 이동시킵니다. */}
-                {msg.senderId !== currentUser.id && (
+                {/* 2. Popover 컴포넌트 */}
+                {msg.senderId !== user?.userId && (
                   <Popover>
                     {/* 3. 버튼을 절대 위치(absolute)로 오른쪽 위에 배치합니다. */}
                     {/* 평소엔 투명했다가, group(말풍선)에 호버하면 나타납니다. */}
@@ -115,18 +91,55 @@ const ChatPanel = () => {
                   </Popover>
                 )}
               </div>
-              {/* ▲▲▲ 여기까지 수정되었습니다 ▲▲▲ */}
 
               <span className="text-xs text-gray-500 whitespace-nowrap">
-                {msg.timestamp}
+                {new Date(msg.timestamp).toLocaleTimeString("ko-KR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             </div>
           </div>
         ))}
       </div>
-
       {/* 메시지 입력 영역 */}
-      <div className="p-4 border-t border-gray-700">{/* ... */}</div>
+      <div className="py-2 border-t border-gray-700">
+        <div className="flex items-center gap-2 mb-1">
+          {/* 5. isConnected 상태에 따라 연결 상태 아이콘을 표시합니다. */}
+          {isConnected ? (
+            <Wifi size={14} className="text-green-400" />
+          ) : (
+            <WifiOff size={14} className="text-red-400" />
+          )}
+          <span
+            className={`text-xs ${
+              isConnected ? "text-gray-400" : "text-red-400"
+            }`}
+          >
+            {isConnected
+              ? "실시간 채팅에 연결됨"
+              : "연결이 끊겼습니다. 재연결 중..."}
+          </span>
+        </div>
+        <div className="relative">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            placeholder="메시지를 입력하세요..."
+            className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            disabled={!isConnected}
+          />
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
+            disabled={!newMessage.trim() || !isConnected}
+            onClick={handleSendMessage}
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
