@@ -1,17 +1,27 @@
 import { type MyUser } from "../../../types/mypage";
 
-type ProfileCardProps = {
+type MyProfileCardProps = {
   user: MyUser;
   onEditClick: () => void;
+  onFollowerClick?: () => void;
+  onFollowingClick?: () => void;
 };
 
-const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
+const MyProfileCard = ({
+  user,
+  onEditClick,
+  onFollowerClick,
+  onFollowingClick,
+}: MyProfileCardProps) => {
   return (
     <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 정보</h1>
-        <button className="text-sm text-purple-600 font-medium hover:underline transition"
-        onClick={onEditClick}>
+
+        <button
+          className="text-sm text-purple-600 font-medium hover:underline transition"
+          onClick={onEditClick}
+        >
           프로필 수정
         </button>
       </div>
@@ -20,7 +30,7 @@ const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
         {/* 왼쪽: 프로필 이미지 + 팔로워 수 */}
         <div className="flex flex-col items-center w-32 shrink-0">
           <img
-            src={user.profileImg || "/default_image.png"}
+            src={user.imgUrl || "/default_image.png"}
             alt="프로필 이미지"
             className="w-24 h-24 object-cover rounded-full"
           />
@@ -30,13 +40,23 @@ const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
               <div className="text-lg font-bold">
                 {user.followerCount?.toLocaleString() ?? "0"}
               </div>
-              <div className="text-xs text-gray-500">팔로워</div>
+              <button
+                onClick={onFollowerClick}
+                className="text-xs text-gray-500 hover:underline cursor-pointer focus:outline-none"
+              >
+                팔로워
+              </button>
             </div>
             <div>
               <div className="text-lg font-bold">
                 {user.followingCount?.toLocaleString() ?? "0"}
               </div>
-              <div className="text-xs text-gray-500">팔로잉</div>
+              <button
+                onClick={onFollowingClick}
+                className="text-xs text-gray-500 hover:underline cursor-pointer focus:outline-none"
+              >
+                팔로잉
+              </button>
             </div>
           </div>
         </div>
@@ -65,7 +85,4 @@ const ProfileCard = ({ user, onEditClick }: ProfileCardProps) => {
   );
 };
 
-
-
-
-export default ProfileCard;
+export default MyProfileCard;

@@ -5,6 +5,8 @@ import com.a404.duckonback.dto.LoginResponseDTO;
 import com.a404.duckonback.dto.SignupRequestDTO;
 import com.a404.duckonback.dto.UserDTO;
 import com.a404.duckonback.entity.User;
+import com.a404.duckonback.enums.PenaltyStatus;
+import com.a404.duckonback.enums.PenaltyType;
 import com.a404.duckonback.enums.UserRole;
 import com.a404.duckonback.exception.CustomException;
 import com.a404.duckonback.repository.UserRepository;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -27,16 +30,20 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
     private final ArtistService artistService;
-
-    private final UserRepository userRepository;
+    private final ArtistFollowService artistFollowService;
 
     private final PasswordEncoder passwordEncoder;
     private final JWTUtil jwtUtil;
 
+    @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequest) {
         String email = loginRequest.getEmail();
         String userId = loginRequest.getUserId();
         String password = loginRequest.getPassword();
+
+        if((email != null && !email.isBlank()) && (userId != null && !userId.isBlank())){
+            throw new CustomException("email 또는 userId 중 하나만 입력해야합니다.", HttpStatus.BAD_REQUEST);
+        }
 
         if ((email == null || email.isBlank()) && (userId == null || userId.isBlank())) {
             throw new CustomException("email 또는 userId 중 하나는 필수입니다.", HttpStatus.BAD_REQUEST);
@@ -55,6 +62,18 @@ public class AuthServiceImpl implements AuthService {
 
         if (user == null) {
             throw new CustomException("존재하지 않는 사용자입니다.", HttpStatus.UNAUTHORIZED);
+        }
+
+
+        LocalDateTime now = LocalDateTime.now();
+        boolean isSuspended = user.getPenalties().stream()
+                .anyMatch(p -> p.getPenaltyType() == PenaltyType.ACCOUNT_SUSPENSION
+                        && (p.getStartAt() == null || !p.getStartAt().isAfter(now))
+                        && (p.getEndAt() == null || p.getEndAt().isAfter(now))
+                        && (p.getStatus() == PenaltyStatus.ACTIVE));
+
+        if (isSuspended) {
+            throw new CustomException("계정이 정지되었습니다. 고객센터에 문의하세요.", HttpStatus.FORBIDDEN);
         }
 
         //비밀번호 일치 확인 ( 암호화 )
@@ -76,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole().name())
                 .language(user.getLanguage())
                 .imgUrl(user.getImgUrl())
-                .artistList(artistService.findAllArtistIdByUserUuid(user.getUuid()))
+                .artistList(artistService.findAllArtistIdByUserId(user.getId()))
                 .build();
 
         return LoginResponseDTO.builder()
@@ -86,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
     public ResponseEntity<?> signup(SignupRequestDTO dto){
         MultipartFile file = dto.getProfileImg();
         String imgUrl = null;
@@ -94,7 +114,6 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = User.builder()
-                .uuid(UUID.randomUUID().toString())
                 .email(dto.getEmail())
                 .userId(dto.getUserId())
                 .password(passwordEncoder.encode(dto.getPassword()))
@@ -108,12 +127,13 @@ public class AuthServiceImpl implements AuthService {
         userService.save(user);
 
         if (dto.getArtistList() != null && !dto.getArtistList().isEmpty()) {
-            artistService.followArtists(user.getUuid(), dto.getArtistList());
+            artistFollowService.followArtists(user.getId(), dto.getArtistList());
         }
 
         return ResponseEntity.ok().body("회원가입이 성공적으로 완료되었습니다!");
     }
 
+    @Override
     public String refreshAccessToken(String refreshTokenHeader){
                 // Bearer 제거
         if (!refreshTokenHeader.startsWith("Bearer ")) {
@@ -134,5 +154,16 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userService.findByUserId(userId);
         return jwtUtil.generateAccessToken(user);
+    }
+
+
+    @Override
+    public void logout(User user, String refreshToken) {
+        //String accessToken = jwtUtil.resolveCurrentToken(); // SecurityContext 기반으로 현재 accessToken 추출
+
+        //accessToken, refreshToken 블랙리스트 중복등록 방지 +등록 필요
+
+
+
     }
 }
