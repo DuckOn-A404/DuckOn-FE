@@ -6,13 +6,13 @@ import { useUserStore } from "../store/useUserStore";
 
 const MainLayout = () => {
   const navigate = useNavigate();
-  const { user, setUser } = useUserStore(); // Zustand 훅으로 전역 상태 사용
+  const { myUser, setMyUser } = useUserStore(); // Zustand 훅으로 전역 상태 사용
 
   const handleLogin = () => navigate("/login");
 
   const handleLogout = () => {
     localStorage.clear(); // 로컬 스토리지 지우기
-    setUser(null); // 전역 상태 초기화
+    setMyUser(null); // 전역 상태 초기화
   };
 
   const handleSignup = () => {
@@ -24,7 +24,7 @@ const MainLayout = () => {
     <div>
       {/* 헤더 */}
       <Header
-        user={user}
+        user={myUser}
         onLogin={handleLogin}
         onLogout={handleLogout}
         onSignup={handleSignup}

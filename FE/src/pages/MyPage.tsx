@@ -7,9 +7,10 @@ import EditProfileCard from "../components/domain/user/EditProfileCard";
 import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
+import { useUserStore } from "../store/useUserStore";
 
 const MyPage = () => {
-  const [myUser, setMyUser] = useState<MyUser | null>(null);
+  const [myUser, setMyUser] = useState<MyUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -21,7 +22,6 @@ const MyPage = () => {
     if (isValid) {
       setShowModal(false)
       setIsEditing(true)  // 수정 모드 전환
-      navigate("/mypage")
       return true
     }
     return false
@@ -54,7 +54,6 @@ const MyPage = () => {
       }
     };
 
-    setMyUser(null)
     loadUser();
   }, []);
 

@@ -5,14 +5,25 @@ import axios from "axios";
 // 현재 사용자 정보 조회
 export const fetchMyProfile = async (): Promise<MyUser> => {
     // 실제 백엔드 연동용 코드
-    const response = await api.get<MyUser>("/api/users/me")
+    // Authorization 헤더가 빠져있다면 로그인 직후가 아닌 경우에는 헤더가 사라져서 /api/users/me가 로그인 페이지 HTML을 반환
+    const token = localStorage.getItem("accessToken")
+
+    const response = await api.get<MyUser>("/api/users/me", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
     return response.data
 }
 
 // 타 유저 정보 조회
 export const fetchOtherUserProfile = async (userId: string): Promise<MyUser> => {
   // 실제 백엔드 연동 시:
-  const response = await api.get<MyUser>(`/api/users/${userId}`)
+  const response = await api.get<MyUser>(`/api/users/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+    },
+  })
   return response.data
 }
 
@@ -24,7 +35,7 @@ export const fetchOtherUserProfile = async (userId: string): Promise<MyUser> => 
 export const verifyPassword = async (password: string): Promise<boolean> => {
   // 실제 백엔드 통신(나중에 사용)
   try {
-    const response = await api.post("/api/users/verify-password", { password });
+    const response = await api.post("/api/users/me/verify-password", { password });
     return response.data.valid === true; // 서버는 { valid: true } 형태로 응답한다고 가정
   } catch (error) {
     console.error("비밀번호 검증 실패", error);
