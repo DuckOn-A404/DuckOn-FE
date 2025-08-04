@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
-import { updateUserProfile, verifyPassword } from "../../../api/userService";
+import { updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
 import axios from "axios"
 import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
@@ -22,7 +22,6 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   const [showImageOptions, setShowImageOptions] = useState(false)
   const [useDefaultImage, setUseDefaultImage] = useState(false)
 
-  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   
@@ -81,6 +80,9 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       formData.append("profileImg", profileImage);
     }
 
+    for (const [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
     try {
       const updated = await updateUserProfile(formData);
       onUpdate(updated);
@@ -88,9 +90,6 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       alert("프로필 수정 중 오류가 발생했습니다.");
     }
 
-    for (const [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
   };
 
   return (
