@@ -55,7 +55,7 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  */
 
 export const updateUserProfile = async (formData: FormData): Promise<MyUser> => {
-  const response = await api.patch("/users/profile", formData, {
+  const response = await api.patch("/api/users/me", formData, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
     },
