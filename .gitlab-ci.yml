@@ -6,7 +6,7 @@ deploy_be:
   stage: deploy
 
   only:
-    - /^BE\/CICD$/
+    - /^BE\/develop$/
 
   image: alpine:latest
 
