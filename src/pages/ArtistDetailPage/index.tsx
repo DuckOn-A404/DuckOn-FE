@@ -24,16 +24,17 @@ const ArtistDetailPage = () => {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [rooms, setRooms] = useState({ live: [], upcoming: [] });
   const [isLoadingPage, setIsLoadingPage] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { user } = useUserStore();
+  const { myUser } = useUserStore();
   const {
     isFollowing: followingSet,
     addFollow,
     removeFollow,
+    fetchFollowedArtists,
   } = useArtistFollowStore();
 
-  const isLoggedIn = !!user;
+  const isLoggedIn = !!myUser;
 
   // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
   const {
@@ -77,6 +78,13 @@ const ArtistDetailPage = () => {
     fetchPageData();
   }, [artistId]);
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
+      fetchFollowedArtists();
+    }
+  }, [isLoggedIn, fetchFollowedArtists]);
+
   if (isLoadingPage) {
     return (
       <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
@@ -102,7 +110,7 @@ const ArtistDetailPage = () => {
 
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
-    if (!user) return alert("로그인이 필요합니다.");
+    if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
     try {
@@ -183,8 +191,10 @@ const ArtistDetailPage = () => {
               </div>
             </div>
             {isFollowing && (
-              <button onClick={() => setIsModalOpen(true)}
-                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
+              >
                 + 새 방 만들기
               </button>
             )}
@@ -238,10 +248,10 @@ const ArtistDetailPage = () => {
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
-        isOpen = {isModalOpen}
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         artistId={artist.artistId}
-        hostId={user?.userId ?? ""}
+        hostId={myUser?.userId ?? ""}
       />
     </div>
   );
