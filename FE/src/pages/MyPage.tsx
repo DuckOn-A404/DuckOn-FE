@@ -25,19 +25,6 @@ const MyPage = () => {
       return true
     }
     return false
-    // try {
-    //     // 실제 백엔드 API 호출로 비밀번호 검증
-    //     const isValid = await verifyPassword(password)  // 백엔드 API 함수
-
-    //     if (isValid) {
-    //         setShowModal(false)
-    //         navigate("/mypage")
-    //     } else {
-    //         alert("비밀번호가 일치하지 않습니다.")
-    //     }
-    // } catch (error) {
-    //     console.error("비밀번호 확인 중 오류 발생:", error)
-    // }
   }
 
   useEffect(() => {
@@ -56,6 +43,21 @@ const MyPage = () => {
 
     loadUser();
   }, []);
+
+  useEffect(() => {
+    if (openList === null) {
+      const reloadProfile = async () => {
+        try {
+          const updated = await fetchMyProfile()
+          console.log("모달 닫힌 후 갱신된 사용자 정보:", updated)
+          setMyUser(updated)
+        } catch (error) {
+          console.error("사용자 정보 갱신 실패:", error)
+        }
+      }
+      reloadProfile()
+    }
+  }, [openList])
 
   if (loading) return <div className="p-6">불러오는 중...</div>;
   if (!myUser) return <div className="p-6 text-red-500">사용자 정보 없음</div>;
@@ -89,7 +91,7 @@ const MyPage = () => {
 
       {/* 팔로워/팔로잉 모달 */}
       {openList === "follower" && <FollowerList onClose={() => setOpenList(null)} />}
-      {/* {openList === "following" && <FollowingList onClose={() => setOpenList(null)} />} */}
+      {openList === "following" && <FollowingList onClose={() => setOpenList(null)} />}
     </div>
   );
 };

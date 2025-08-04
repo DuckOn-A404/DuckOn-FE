@@ -58,7 +58,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   };
 
   const handleCameraClick = () => {
-    if (previewUrl === DEFAULT_IMG || user.profileImg === null) {
+    if (previewUrl === DEFAULT_IMG || user.imgUrl === null) {
       fileInputRef.current?.click()
     } else {
       setShowImageOptions(!showImageOptions)
@@ -70,17 +70,11 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       return;
     }
 
-    if (newPassword && !(await verifyPassword(oldPassword))) {
-      alert("현재 비밀번호가 일치하지 않습니다.");
-      return;
-    }
-
     const formData = new FormData();
     formData.append("nickname", nickname);
     formData.append("language", language);
 
-    if (oldPassword && newPassword) {
-      formData.append("oldPassword", oldPassword);
+    if (newPassword) {
       formData.append("newPassword", newPassword);
     }
     if (profileImage) {
@@ -92,6 +86,10 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       onUpdate(updated);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
+    }
+
+    for (const [key, value] of formData.entries()) {
+      console.log(key, value);
     }
   };
 
@@ -141,7 +139,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 변경하기
               </button>
               {/* 기본 이미지가 아닌 경우에만 뜨기 */}
-              {user.profileImg && user.profileImg !== DEFAULT_IMG && !useDefaultImage && (
+              {user.imgUrl && user.imgUrl !== DEFAULT_IMG && !useDefaultImage && (
                 <button
                   onClick={handleResetToDefaultImage}
                   className="text-gray-500 hover:underline"
@@ -207,15 +205,6 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
 
           </div>
 
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">현재 비밀번호</div>
-            <input
-              type="password"
-              className="border px-2 py-1 rounded w-full"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-            />
-          </div>
           <div className="flex">
             <div className="w-32 text-gray-500 font-medium">새 비밀번호</div>
             <input
