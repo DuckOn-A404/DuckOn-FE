@@ -87,7 +87,60 @@ const ArtistDetailPage = () => {
 
   if (isLoadingPage) {
     return (
-      <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
+      <div className="flex w-full bg-gray-50">
+        {/* 왼쪽: 팔로우 리스트 자리 */}
+        <LeftSidebar />
+
+        {/* 가운데: 스켈레톤 */}
+        <main className="flex-1 p-6 space-y-10 animate-pulse">
+          {/* 아티스트 카드 Skeleton */}
+          <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-gray-200 rounded-2xl" />
+              <div className="space-y-3">
+                <div className="h-8 w-48 bg-gray-200 rounded" /> {/* nameKr */}
+                <div className="h-4 w-32 bg-gray-200 rounded" /> {/* nameEn */}
+                <div className="h-4 w-40 bg-gray-200 rounded" />{" "}
+                {/* debutDate */}
+              </div>
+            </div>
+            <div className="w-20 h-8 bg-gray-200 rounded-full" />
+          </div>
+
+          {/* 라이브 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* 예정된 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+        </main>
+
+        {/* 오른쪽 실시간 탭 */}
+        <RightSidebar />
+      </div>
     );
   }
 
@@ -244,7 +297,7 @@ const ArtistDetailPage = () => {
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar />
+      <RightSidebar artistId={artist.artistId} />
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
