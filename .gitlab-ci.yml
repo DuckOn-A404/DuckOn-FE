@@ -36,7 +36,6 @@ deploy_be:
 
         sudo docker build --no-cache -t duckonback:latest .
         sudo docker rm -f duckon-app || true
-        echo "→ remote sees SPRING_DATASOURCE_PASSWORD='${SPRING_DATASOURCE_PASSWORD}'"
         sudo docker run -d \
           --name duckon-app -p 8080:8080 \
           --network duckon-net \
