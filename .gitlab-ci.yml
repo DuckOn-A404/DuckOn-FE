@@ -6,7 +6,7 @@ deploy_be:
   stage: deploy
   # BE/develop 브랜치에 푸시될 때만 동작
   only:
-    - /^BE\/develop$/
+    - /^BE\/CICD$/
 
   # CI/CD 런너에서 사용하는 이미지
   image: alpine:latest
@@ -26,7 +26,7 @@ deploy_be:
 
   script:
     - |
-      ssh ubuntu@i13a404.p.ssafy.io << EOF 
+      ssh ubuntu@i13a404.p.ssafy.io <<EOF
         set -e
         cd ~/DuckOn-BE/BE
 
@@ -36,6 +36,7 @@ deploy_be:
 
         sudo docker build --no-cache -t duckonback:latest .
         sudo docker rm -f duckon-app || true
+        echo "→ remote sees SPRING_DATASOURCE_PASSWORD='${SPRING_DATASOURCE_PASSWORD}'"
         sudo docker run -d \
           --name duckon-app -p 8080:8080 \
           --network duckon-net \
