@@ -31,7 +31,6 @@ deploy_be:
         cd ~/DuckOn-BE/BE
 
         git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
-
         git fetch origin BE/develop
         git reset --hard origin/BE/develop
 
