@@ -54,7 +54,7 @@ const InputField = ({
         />
       </div>
       {/* 에러 메시지 영역 */}
-      <div className="min-h-[1rem] mt-1">
+      <div className="min-h-[1rem] mt-1.5 pl-1">
         {error && <p className="text-xs text-red-500 leading-tight">{error}</p>}
         {success && <p className="text-xs text-blue-500">{success}</p>}
       </div>
