@@ -1,6 +1,21 @@
 # .gitlab-ci.yml
 stages:
   - deploy
+  - build
+
+# Merge Request나 BE/develop 브랜치일 때 빌드/테스트
+# --------------------------------------------------
+build_and_test:
+  stage: build
+  image: gradle:8.6-jdk21 # 필요에 따라 다른 이미지로 바꿔주세요
+  only:
+    - merge_requests # MR 열릴 때만 실행
+    - /^BE\/develop$/ # BE/develop 브랜치일 때도 실행
+  script:
+    - echo "Building the project"
+    - cd $CI_PROJECT_DIR/BE
+    - chmod +x gradlew
+    - ./gradlew clean build # 테스트까지 포함
 
 deploy_be:
   stage: deploy
