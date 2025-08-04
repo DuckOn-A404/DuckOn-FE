@@ -2,11 +2,13 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { OtherUser } from "../types/otherUser";
 import { fetchOtherUserProfile } from "../api/userService";
-import { followUser } from "../api/followService";
+import { followUser } from "../api/follow/followService";
 import OtherProfileCard from "../components/domain/user/OtherProfileCard";
+import { useUserStore } from "../store/useUserStore";
 
 const OtherUserPage = () => {
     const { userId } = useParams()
+    console.log("OtherUserPage userId:", userId)
     const [otherUser, setOtherUser] = useState<OtherUser | null>(null)
 
     useEffect(() => {
@@ -20,6 +22,7 @@ const OtherUserPage = () => {
         const getUserData = async () => {
         try {
             const data = await fetchOtherUserProfile(userId);
+            console.log("타 유저 정보:", data)
             setOtherUser(data);
         } catch (err) {
             console.error("타 유저 정보 조회 실패", err);
