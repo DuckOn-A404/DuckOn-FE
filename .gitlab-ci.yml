@@ -38,13 +38,23 @@ deploy_be:
         sudo docker build --no-cache -t duckonback:latest .
         sudo docker rm -f duckon-app || true
         sudo docker run -d --name duckon-app -p 8080:8080 \
-          -e SPRING_DATASOURCE_URL="jdbc:mysql://127.0.0.1:3306/duckon" \
-          -e SPRING_DATASOURCE_USERNAME="duckon" \
-          -e SPRING_DATASOURCE_PASSWORD="secret" \
-          -e spring.redis.host="127.0.0.1" \
-          -e spring.redis.port="6379" \
-          -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
-           -e JWT_ACCESS_EXPIRATION="${JWT_ACCESS_EXPIRATION}" \
-          -e JWT_REFRESH_EXPIRATION="${JWT_REFRESH_EXPIRATION}" \
+          -e SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
+          -e SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
+          -e SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
+          -e REDIS_HOST="$SPRING_REDIS_HOST" \
+          -e REDIS_PORT="$SPRING_REDIS_PORT" \
+          -e JWT_SECRET_KEY="$JWT_SECRET_KEY" \
+          -e JWT_ACCESS_EXPIRATION="$JWT_ACCESS_EXPIRATION" \
+          -e JWT_REFRESH_EXPIRATION="$JWT_REFRESH_EXPIRATION" \
+          -e GOOGLE_ID="$GOOGLE_ID" \
+          -e GOOGLE_SECRET="GOOGLE_SECRET" \
+          -e KAKAO_ID="$KAKAO_ID" \
+          -e KAKAO_SECRET="$KAKAO_SECRET" \
+          -e NAVER_ID="$NAVER_ID" \
+          -e NAVER_SECRET="$NAVER_ID" \
+          -e S3_ACCESS_KEY="$S3_ACCESS_KEY" \
+          -e S3_SECRET_KEY="$S3_SECRET_KEY" \
+          -e S3_REGION="$S3_REGION" \
+          -e S3_BUCKET_NAME="$S3_BUCKET_NAME" \
           duckonback:latest
       EOF
