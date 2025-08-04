@@ -12,9 +12,9 @@ const LiveHeader = ({ isHost, title, hostId, participandCount, onExit }: LiveHea
   return (
     <div className="bg-black text-white px-6 py-4 flex justify-between items-center">
       <div>
-        <h2 className="text-lg font-semibold">제목임둥{title}</h2>
+        <h2 className="text-lg font-semibold">{title || "제목 없음"}</h2>
         <div className="text-sm text-gray-300 mt-1 flex items-center gap-4">
-          <span>호스트: {hostId}</span>
+          <span>호스트: {hostId || "알 수 없음"}</span>
           <span className="ml-4 flex items-center gap-1">
             <User size={16} />
             {participandCount}
