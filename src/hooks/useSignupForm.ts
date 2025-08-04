@@ -33,7 +33,7 @@ export const useSignupForm = () => {
     password: "",
     passwordConfirm: "",
     nickname: "",
-    language: "ko",
+    language: "",
     profileImg: null,
   });
 
@@ -55,6 +55,8 @@ export const useSignupForm = () => {
 
   // 비밀번호 일치 상태
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
+  // 비밀번호 8자리 이상
+  const [passwordError, setPasswordError] = useState("");
 
   // 입력 값 변경 핸들러
   const handleChange = (
@@ -71,6 +73,13 @@ export const useSignupForm = () => {
         value !== formData.password ? "비밀번호가 일치하지 않습니다." : ""
       );
     } else if (name === "password") {
+      // 8자리 미만이면 에러 메시지 설정, 이상이면 빈 문자열로 초기화
+      if (value.length > 0 && value.length < 8) {
+        setPasswordError("8자리 이상 입력해 주세요.");
+      } else {
+        setPasswordError("");
+      }
+
       setPasswordConfirmError(
         formData.passwordConfirm && value !== formData.passwordConfirm
           ? "비밀번호가 일치하지 않습니다."
@@ -91,6 +100,12 @@ export const useSignupForm = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (formData.password.length < 8) {
+      setPasswordError("비밀번호는 8자리 이상이어야 합니다.");
+      setError("입력 값을 다시 확인해주세요.");
+      return;
+    }
 
     // 비밀번호 확인 검사
     if (formData.password !== formData.passwordConfirm) {
@@ -192,5 +207,6 @@ export const useSignupForm = () => {
     emailChecked,
     userIdChecked,
     passwordConfirmError,
+    passwordError,
   };
 };

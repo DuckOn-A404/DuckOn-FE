@@ -35,6 +35,7 @@ const SignupPage = () => {
     handleCheckEmail,
     handleCheckUserId,
     passwordConfirmError,
+    passwordError,
   } = useSignupForm();
 
   const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
@@ -99,7 +100,7 @@ const SignupPage = () => {
                 value={formData.userId}
                 onChange={handleChange}
                 error={userIdError}
-                success={emailSuccess}
+                success={userIdSuccess}
               />
             </div>
             <button
@@ -131,6 +132,7 @@ const SignupPage = () => {
             icon={<LockKeyhole className={iconStyle} />}
             value={formData.password}
             onChange={handleChange}
+            error={passwordError}
           />
           <InputField
             id="passwordConfirm"
@@ -179,7 +181,7 @@ const SignupPage = () => {
           onClick={handleSubmit}
           className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold mt-5"
         >
-          {loading ? "가입 처리 중..." : "회원가입"}
+          회원가입
         </button>
 
         {/* 기타 */}
@@ -194,7 +196,7 @@ const SignupPage = () => {
         </p>
       </LoginSignupCard>
       <div
-        className="mt-6 flex items-center gap-2 text-white cursor-pointer hover:underline"
+        className="my-6 flex items-center gap-2 text-white cursor-pointer hover:underline"
         onClick={() => navigate("/")}
       >
         <ArrowLeft size={18} />
