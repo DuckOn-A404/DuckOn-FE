@@ -37,7 +37,9 @@ deploy_be:
 
         sudo docker build --no-cache -t duckonback:latest .
         sudo docker rm -f duckon-app || true
-        sudo docker run -d --name duckon-app -p 8080:8080 \
+        sudo docker run -d \
+          --name duckon-app -p 8080:8080 \
+          --network duckon-net \
           -e SPRING_DATASOURCE_URL="$SPRING_DATASOURCE_URL" \
           -e SPRING_DATASOURCE_USERNAME="$SPRING_DATASOURCE_USERNAME" \
           -e SPRING_DATASOURCE_PASSWORD="$SPRING_DATASOURCE_PASSWORD" \
