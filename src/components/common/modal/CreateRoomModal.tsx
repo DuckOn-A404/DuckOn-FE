@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CreateRoom } from "../../../api/roomService";
+import { useNavigate } from "react-router-dom";
 
 type CreateRoomModalProps = {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const CreateRoomModal = ({
   const [entryQuestion, setEntryQuestion] = useState("");
   const [entryAnswer, setEntryAnswer] = useState("");
   const [thumbnailImg, setThumbnailImg] = useState<File | null>(null);
+
+  const navigate = useNavigate()
 
   const handleSubmit = async () => {
     console.log(document.cookie);  // 쿠키 인증이면
@@ -42,6 +45,8 @@ const CreateRoomModal = ({
 
       alert("방이 생성되었습니다!");
       onClose();
+      // 생성한 방으로 이동
+      navigate(`/live/${createdRoom.roomId}`)
     } catch (error) {
       console.error("방 생성 실패:", error);
       alert("방 생성에 실패했습니다.");

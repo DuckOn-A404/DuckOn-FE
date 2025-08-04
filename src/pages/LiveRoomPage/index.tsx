@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { fetchRoomById } from "../../api/roomService";
+import { useUserStore } from "../../store/useUserStore";
 
 // 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
@@ -7,16 +10,40 @@ import ChatPanel from "./ChatPanel";
 import PlaylistPanel from "./PlaylistPanel";
 
 const LiveRoomPage = () => {
+  const { roomId } = useParams()
+  const { myUser } = useUserStore()
+  const myUserId = myUser?.userId
+  const [room, setRoom] = useState<any>(null)
+
   // 오른쪽 사이드바의 활성 탭 상태만 관리합니다.
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
-  // 데이터 로딩, 에러 처리 등 모든 API 관련 로직을 제거했습니다.
+  useEffect(() => {
+    const loadRoom = async () => {
+      if(!roomId) return
+      try {
+        const roomData = await fetchRoomById(roomId)
+        setRoom(roomData)
+      } catch (error) {
+        console.error("방 정보 불러오기 실패:", error)
+      }
+    }
+    loadRoom()
+  }, [roomId])
+
+  if (!room) return <div>로딩 중...</div>
 
   return (
     // 전체 레이아웃
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* 상단 헤더 */}
-      <LiveHeader />
+      <LiveHeader 
+        isHost={room.hostId === myUserId}
+        title={room.title}
+        hostId={room.hostId}
+        participandCount={room.participants?.length || 0}
+        onExit={() => window.history.back()}/>
+
 
       {/* 본문: 영상 + 사이드바 */}
       <div className="flex flex-1 overflow-hidden">
