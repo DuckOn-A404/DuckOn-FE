@@ -55,11 +55,9 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  */
 
 export const updateUserProfile = async (formData: FormData): Promise<MyUser> => {
-  // 실제 백엔드 연동 시:
   const response = await api.patch("/users/profile", formData, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-      "Content-Type": "multipart/form-data",
     },
   });
   return response.data;
