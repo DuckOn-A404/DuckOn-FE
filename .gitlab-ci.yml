@@ -8,7 +8,6 @@ deploy_be:
   only:
     - /^BE\/CICD$/
 
-  # CI/CD 런너에서 사용하는 이미지
   image: alpine:latest
 
   before_script:
