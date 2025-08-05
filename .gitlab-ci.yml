@@ -71,5 +71,9 @@ deploy_be:
           -e S3_SECRET_KEY="${S3_SECRET_KEY}" \
           -e S3_REGION="${S3_REGION}" \
           -e S3_BUCKET_NAME="${S3_BUCKET_NAME}" \
+          -e MONGO_DB_URL="${MONGO_DB_URL}" \
+          -e MONGO_DB_NAME="${MONGO_DB_NAME}" \
+          -e MONGO_DB_USERNAME="${MONGO_DB_USERNAME}" \
+          -e MONGO_DB_PASSWORD="${MONGO_DB_PASSWORD}" \
           duckonback:latest
       EOF
