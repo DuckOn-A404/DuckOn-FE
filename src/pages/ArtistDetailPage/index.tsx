@@ -7,7 +7,6 @@ import {
   followArtist,
   unfollowArtist,
   getArtistDetail,
-  getArtistRooms,
 } from "../../api/artistService";
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
@@ -22,7 +21,7 @@ const ArtistDetailPage = () => {
 
   // 아티스트 상세 정보와 로딩 상태를 위한 State
   const [artist, setArtist] = useState<Artist | null>(null);
-  const [rooms, setRooms] = useState({ live: [], upcoming: [] });
+  // const [rooms, setRooms] = useState({ live: [], upcoming: [] });
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -37,14 +36,7 @@ const ArtistDetailPage = () => {
   const isLoggedIn = !!myUser;
 
   // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
-  const {
-    liveRooms,
-    upcomingRooms,
-    hasMoreLive,
-    hasMoreUpcoming,
-    isLoading: isLoadingRooms,
-    handleLoadMore,
-  } = useArtistRooms(artist?.artistId);
+  const { liveRooms, upcomingRooms } = useArtistRooms(artist?.artistId);
 
   // 최적화된 팔로우 상태 확인
   const isFollowing = artist ? followingSet.has(artist.artistId) : false;
@@ -85,7 +77,7 @@ const ArtistDetailPage = () => {
     }
   }, [isLoggedIn, fetchFollowedArtists]);
 
-  if (isLoadingPage) {
+  if (isLoadingPage || !artist) {
     return (
       <div className="flex w-full bg-gray-50">
         {/* 왼쪽: 팔로우 리스트 자리 */}
@@ -139,7 +131,7 @@ const ArtistDetailPage = () => {
         </main>
 
         {/* 오른쪽 실시간 탭 */}
-        <RightSidebar />
+        {artist && <RightSidebar artistId={artist.artistId} />}
       </div>
     );
   }
@@ -297,7 +289,7 @@ const ArtistDetailPage = () => {
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar artistId={artist.artistId} />
+      <RightSidebar artistId={artist!.artistId} />
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
