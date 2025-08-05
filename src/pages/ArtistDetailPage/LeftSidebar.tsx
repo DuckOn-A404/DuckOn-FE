@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { List, CheckSquare } from "lucide-react";
+import { List } from "lucide-react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
