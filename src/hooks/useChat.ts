@@ -14,10 +14,10 @@ export const useChat = (roomId: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const stompClientRef = useRef<Client | null>(null);
-  const { user } = useUserStore();
+  const { myUser } = useUserStore();
 
   useEffect(() => {
-    if (!roomId || !user) return;
+    if (!roomId || !myUser) return;
 
     // --- 1. 이전 대화 기록 불러오기 ---
     const fetchHistory = async () => {
@@ -50,9 +50,9 @@ export const useChat = (roomId: string) => {
       // 2-2. 입장 메시지 전송
       const enterMessage = {
         roomId,
-        senderId: user.userId,
-        senderName: user.nickname,
-        content: `${user.nickname}님이 입장했습니다.`,
+        senderId: myUser.userId,
+        senderName: myUser.nickname,
+        content: `${myUser.nickname}님이 입장했습니다.`,
       };
       client.publish({
         destination: `/app/chat/enter`,
@@ -76,18 +76,18 @@ export const useChat = (roomId: string) => {
         client.deactivate();
       }
     };
-  }, [roomId, user]);
+  }, [roomId, myUser]);
 
   /**
    * 채팅 메시지를 서버로 전송하는 함수
    * @param content - 보낼 메시지 내용
    */
   const sendMessage = (content: string) => {
-    if (stompClientRef.current && isConnected && user) {
+    if (stompClientRef.current && isConnected && myUser) {
       const chatMessage = {
         roomId,
-        senderId: user.userId,
-        senderName: user.nickname,
+        senderId: myUser.userId,
+        senderName: myUser.nickname,
         content,
       };
       stompClientRef.current.publish({
