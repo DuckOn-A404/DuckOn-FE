@@ -51,7 +51,12 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
     formData.append("hostId", hostId);
     formData.append("locked", locked.toString());
     formData.append("videoId", videoId);
-    formData.append("thumbnailImg", thumbnailPreview || "");
+    
+    if (thumbnailPreview) {
+      const blob = await fetch(thumbnailPreview).then(res => res.blob())
+      const file = new File([blob], "thumbnail.jpg", {type: blob.type})
+      formData.append("thumbnailImg", file)
+    }
 
     if (locked) {
       formData.append("entryQuestion", entryQuestion);
