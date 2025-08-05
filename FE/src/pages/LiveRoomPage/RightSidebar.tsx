@@ -14,7 +14,7 @@ const RightSidebar = ({
   return (
     <div className="flex-grow overflow-y-auto p-4">
       {selectedTab === "chat" ? (
-        <ChatPanel roomId={roomId} />
+        <ChatPanel roomId={roomId!} />
       ) : (
         <PlaylistPanel isHost={isHost} />
       )}
