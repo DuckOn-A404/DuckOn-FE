@@ -42,16 +42,12 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
               >
                 {user.nickname} 님
               </span>
-              <Button onClick={onLogout} variant="secondary">
-                로그아웃
-              </Button>
+              <Button onClick={onLogout}>로그아웃</Button>
             </>
           ) : (
             // 로그아웃 상태일 때
             <>
-              <Button onClick={onLogin} variant="secondary">
-                로그인
-              </Button>
+              <Button onClick={onLogin}>로그인</Button>
               <Button onClick={onSignup}>회원가입</Button>
             </>
           )}
