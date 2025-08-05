@@ -7,7 +7,7 @@ import { api } from "./axiosInstance";
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
  */
 export const getArtistList = async (page = 1, size = 12) => {
-  const token = localStorage.getItem("accessToken"); // 저장 방식에 따라 수정 가능
+  const token = localStorage.getItem("accessToken");
 
   const response = await api.get("/api/artists", {
     params: { page, size },

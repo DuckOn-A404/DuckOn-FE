@@ -1,12 +1,32 @@
-import type { ChatMessage } from "../../types/artistChat";
-import { useUserStore } from "../../store/useUserStore"; // 현재 유저 정보를 가져오기 위함
+import type { artistChatMessage } from "../../types/artistChat";
+import { useUserStore } from "../../store/useUserStore";
 
 type ChatTabProps = {
-  messages: ChatMessage[];
+  messages: artistChatMessage[];
 };
 
 const ArtistChatTab = ({ messages }: ChatTabProps) => {
-  const { myUser } = useUserStore(); // 내 아이디를 가져와서 내 메시지인지 구분
+  const { myUser } = useUserStore();
+
+  console.log("ArtistChatTab이 받은 messages:", messages);
+
+  if (!Array.isArray(messages)) {
+    console.error(
+      "ArtistChatTab이 배열이 아닌 messages prop을 받았습니다:",
+      messages
+    );
+    return (
+      <div className="p-4 text-sm text-gray-500">채팅을 불러오는 중...</div>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-sm text-gray-400">아직 채팅 메시지가 없습니다.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -37,7 +57,7 @@ const ArtistChatTab = ({ messages }: ChatTabProps) => {
                 {msg.content}
               </div>
               <span className="text-xs text-gray-400 mt-1">
-                {new Date(msg.timestamp).toLocaleTimeString("ko-KR", {
+                {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}
