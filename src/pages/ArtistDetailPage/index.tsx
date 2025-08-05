@@ -7,13 +7,12 @@ import {
   followArtist,
   unfollowArtist,
   getArtistDetail,
-  getArtistRooms,
 } from "../../api/artistService";
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
-import { Video, CalendarDays } from "lucide-react";
+import { Video } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 
 const ArtistDetailPage = () => {
@@ -22,7 +21,6 @@ const ArtistDetailPage = () => {
 
   // 아티스트 상세 정보와 로딩 상태를 위한 State
   const [artist, setArtist] = useState<Artist | null>(null);
-  const [rooms, setRooms] = useState({ live: [], upcoming: [] });
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -31,7 +29,6 @@ const ArtistDetailPage = () => {
     isFollowing: followingSet,
     addFollow,
     removeFollow,
-    fetchFollowedArtists,
   } = useArtistFollowStore();
 
   const isLoggedIn = !!myUser;
@@ -39,7 +36,6 @@ const ArtistDetailPage = () => {
   // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
   const {
     liveRooms,
-    upcomingRooms,
     hasMoreLive,
     hasMoreUpcoming,
     isLoading: isLoadingRooms,
@@ -78,69 +74,9 @@ const ArtistDetailPage = () => {
     fetchPageData();
   }, [artistId]);
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
-      fetchFollowedArtists();
-    }
-  }, [isLoggedIn, fetchFollowedArtists]);
-
   if (isLoadingPage) {
     return (
-      <div className="flex w-full bg-gray-50">
-        {/* 왼쪽: 팔로우 리스트 자리 */}
-        <LeftSidebar />
-
-        {/* 가운데: 스켈레톤 */}
-        <main className="flex-1 p-6 space-y-10 animate-pulse">
-          {/* 아티스트 카드 Skeleton */}
-          <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
-            <div className="flex items-center gap-6">
-              <div className="w-24 h-24 bg-gray-200 rounded-2xl" />
-              <div className="space-y-3">
-                <div className="h-8 w-48 bg-gray-200 rounded" /> {/* nameKr */}
-                <div className="h-4 w-32 bg-gray-200 rounded" /> {/* nameEn */}
-                <div className="h-4 w-40 bg-gray-200 rounded" />{" "}
-                {/* debutDate */}
-              </div>
-            </div>
-            <div className="w-20 h-8 bg-gray-200 rounded-full" />
-          </div>
-
-          {/* 라이브 방 영역 Skeleton */}
-          <div className="space-y-4">
-            <div className="h-6 w-40 bg-gray-200 rounded" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array(2)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* 예정된 방 영역 Skeleton */}
-          <div className="space-y-4">
-            <div className="h-6 w-40 bg-gray-200 rounded" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array(2)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
-                  />
-                ))}
-            </div>
-          </div>
-        </main>
-
-        {/* 오른쪽 실시간 탭 */}
-        <RightSidebar />
-      </div>
+      <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
     );
   }
 
@@ -263,34 +199,6 @@ const ArtistDetailPage = () => {
               <p className="text-gray-400 text-sm">
                 현재 진행 중인 라이브 방송이 없습니다.
               </p>
-            )}
-          </div>
-        </section>
-
-        {/* 예정된 방 */}
-        <section>
-          <div className="flex items-center mb-6 rounded-2xl bg-blue-50 p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 rounded-lg bg-blue-500 p-2 text-white shadow">
-                <CalendarDays size={24} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">예정된 방</h2>
-                <p className="text-sm text-gray-500">
-                  {upcomingRooms.length}개의 방이 예정되어 있음
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-center">
-            {upcomingRooms.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                {upcomingRooms.map((room, i) => (
-                  <VideoCard key={i} {...room} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-sm">예정된 방송이 없습니다.</p>
             )}
           </div>
         </section>
