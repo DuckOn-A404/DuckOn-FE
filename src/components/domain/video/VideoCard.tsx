@@ -3,7 +3,12 @@ import { Users } from "lucide-react";
 import { formatCompactNumber } from "../../../utils/formatters";
 import type { Room } from "../../../types/Room";
 
-type VideoCardProps = Room;
+const PLACEHOLDER_URL =
+  "https://via.placeholder.com/1280x720.png?text=Image+Not+Available";
+
+type VideoCardProps = Room & {
+  artistName?: string;
+};
 
 /* 
   name : VideoCard
@@ -16,53 +21,40 @@ type VideoCardProps = Room;
 */
 const VideoCard = ({
   roomId,
-  isLive,
-  viewerCount,
-  artistName,
   title,
   imgUrl,
+  participantCount,
+  artistName,
 }: VideoCardProps) => {
   const navigate = useNavigate();
+  const thumbnailUrl = imgUrl || PLACEHOLDER_URL;
 
   const handleCardClick = () => {
-    // roomId를 사용해 해당 라이브 방 상세 페이지로 이동
     if (roomId) {
       navigate(`/live/${roomId}`);
     }
   };
-
-  const badgeText = isLive ? "LIVE" : "예정";
-  const badgeClass = isLive
-    ? "bg-red-500 text-white"
-    : "bg-blue-500 text-white";
 
   return (
     <div
       className="w-full max-w-sm cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
       onClick={handleCardClick}
     >
-      <div className="w-full max-w-sm h-auto bg-white rounded-2xl shadow-sm outline outline-1 outline-gray-100 overflow-hidden flex flex-col">
-        <div className="w-full aspect-video relative">
+      <div className="w-full h-auto bg-white rounded-2xl shadow-sm outline outline-1 outline-gray-100 overflow-hidden flex flex-col">
+        <div className="w-full relative aspect-[16/9]">
           <img
             className="w-full h-full object-cover"
-            src={imgUrl}
+            src={thumbnailUrl}
             alt={`${title} 썸네일`}
           />
-          <div
-            className={`absolute top-3 left-3 px-2 h-6 inline-flex items-center gap-x-1.5 rounded-full text-xs font-bold text-white ${badgeClass}`}
-          >
-            <div className="w-2 h-2 bg-white rounded-full" />
-            <span>{badgeText}</span>
-          </div>
-
-          <div className="absolute right-3 bottom-3 w-16 h-6 inline-flex justify-center items-center gap-x-1 rounded bg-black/70 text-xs text-white">
+          <div className="absolute right-3 bottom-3 w-auto min-w-[4rem] h-6 inline-flex justify-center items-center gap-x-1 px-2 rounded bg-black/70 text-xs text-white">
             <Users className="h-3 w-3" />
-            <span>{formatCompactNumber(viewerCount)}</span>
+            <span>{formatCompactNumber(participantCount)}</span>
           </div>
         </div>
 
         <div className="w-full p-4 flex flex-col">
-          <div className="pb-1 text-purple-600 text-sm font-medium">
+          <div className="pb-1 text-purple-600 text-sm font-medium truncate">
             {artistName}
           </div>
           <div className="w-full text-gray-900 text-sm font-bold truncate">
