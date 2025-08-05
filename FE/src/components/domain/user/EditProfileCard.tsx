@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
-import { Camera } from "lucide-react";
-import axios from "axios"
+import { Camera, Trash2 } from "lucide-react";
 import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
-import { LockKeyhole } from "lucide-react";
 
 export type EditProfileCardProps = {
   user: MyUser;
@@ -19,9 +17,8 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   const [language, setLanguage] = useState(user.language);
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl || DEFAULT_IMG)
   const [showImageOptions, setShowImageOptions] = useState(false)
-  const [useDefaultImage, setUseDefaultImage] = useState(false)
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,15 +44,15 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
     if (file) {
       setProfileImage(file)
       setPreviewUrl(URL.createObjectURL(file))
-      setUseDefaultImage(false)
       setShowImageOptions(false)
+    } else {
+      console.log("파일 선택 취소됨 또는 파일 없음")
     }
   }
 
   const handleResetToDefaultImage = () => {
-    setProfileImage(null);
     setPreviewUrl(DEFAULT_IMG);
-    setUseDefaultImage(true)
+    setProfileImage(null);
     setShowImageOptions(false);
   };
 
@@ -76,6 +73,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
 
     if (newPassword && newPassword.length < 8) {
       setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.")
+      return
     }
 
     const formData = new FormData();
@@ -89,9 +87,6 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       formData.append("profileImg", profileImage);
     }
 
-    for (const [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
     try {
       await updateUserProfile(formData)
       const updated = await fetchMyProfile()  // 다시 내 정보 불러오기
@@ -179,7 +174,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 변경하기
               </button>
               {/* 기본 이미지가 아닌 경우에만 뜨기 */}
-              {user.imgUrl && user.imgUrl !== DEFAULT_IMG && !useDefaultImage && (
+              {user.imgUrl && user.imgUrl !== DEFAULT_IMG && (
                 <button
                   onClick={handleResetToDefaultImage}
                   className="text-gray-500 hover:underline"
