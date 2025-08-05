@@ -38,6 +38,7 @@ const ArtistDetailPage = () => {
     liveRooms,
     hasMoreLive,
     isLoading: isLoadingRooms,
+    error: roomsError,
     handleLoadMore,
   } = useArtistRooms(artist?.artistId);
 
@@ -166,6 +167,7 @@ const ArtistDetailPage = () => {
 
         {/* 라이브 방 */}
         <section>
+          {/* 섹션 헤더: 타이틀과 '새 방 만들기' 버튼 */}
           <div className="flex justify-between items-center mb-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-pink-50 p-4 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 text-white shadow">
@@ -187,17 +189,41 @@ const ArtistDetailPage = () => {
               </button>
             )}
           </div>
-          <div className="flex justify-center">
-            {liveRooms.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                {liveRooms.map((room) => (
-                  <VideoCard key={room.roomId} {...room} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-sm">
-                현재 진행 중인 라이브 방송이 없습니다.
-              </p>
+
+          {/* 방 목록 표시 영역 */}
+          <div className="mt-6 flex flex-col items-center gap-8">
+            {/* 1. 로딩 중일 때 표시 */}
+            {isLoadingRooms && <p>방송 목록을 불러오는 중...</p>}
+
+            {/* 2. 에러 발생 시 표시 */}
+            {roomsError && <p className="text-red-500">{roomsError}</p>}
+
+            {/* 3. 로딩도 아니고 에러도 아닐 때 목록 또는 빈 메시지 표시 */}
+            {!isLoadingRooms && !roomsError && (
+              <>
+                {liveRooms.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 w-full">
+                    {liveRooms.map((room) => (
+                      <VideoCard key={room.roomId} {...room} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    현재 진행 중인 라이브 방송이 없습니다.
+                  </p>
+                )}
+              </>
+            )}
+
+            {/* 4. 더 보여줄 방이 있을 때만 '더보기' 버튼 표시 */}
+            {hasMoreLive && (
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingRooms}
+                className="mt-4 px-6 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                더보기
+              </button>
             )}
           </div>
         </section>

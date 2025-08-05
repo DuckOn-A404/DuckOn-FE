@@ -19,9 +19,15 @@ export const CreateRoom = async (formData: FormData) => {
  * @returns 방 목록 배열
  */
 export const getRoomsByArtist = async (artistId: number): Promise<Room[]> => {
+  // 지금 로그인 상태에서만 리스트가 불러와지네,,,,
+  const token = localStorage.getItem("accessToken");
+
   const response = await api.get(`/api/rooms`, {
     params: {
       artistId,
+    },
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
     },
   });
 
