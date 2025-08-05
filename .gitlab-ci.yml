@@ -26,7 +26,10 @@ build_and_test_be:
 # --------------------------------------------------
 build_and_test_fe:
   stage: build
-  image: node:18-alpine
+  image: node:20-alpine
+  variables:
+    # Ensure devDependencies (typescript, @types/*) actually get installed
+    NODE_ENV: development
   variables:
     VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
   rules:
@@ -135,7 +138,7 @@ deploy_fe:
 
         # FE 코드 갱신
         cd ~/DuckOn-BE/FE
-        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/.../S13P11A404.git
+        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
         git fetch origin FE/develop
         git reset --hard origin/FE/develop
 
@@ -145,10 +148,10 @@ deploy_fe:
           --no-cache \
           -t duckon-front:latest \
           .
-        sudo docker build --no-cache -t duckon-front:latest .
         sudo docker rm -f duckon-front || true
         sudo docker run -d \
-          --name duckon-front -p 80:80 \
+          --name duckon-front \
+          -p 80:80 \
           --network duckon-net \
           duckon-front:latest
       EOF
