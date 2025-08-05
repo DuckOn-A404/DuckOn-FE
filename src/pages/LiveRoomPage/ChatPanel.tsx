@@ -13,7 +13,7 @@ import { useUserStore } from "../../store/useUserStore";
 
 const ChatPanel = ({ roomId }: { roomId: string }) => {
   const { messages, isConnected, sendMessage } = useChat(roomId);
-  const { user } = useUserStore();
+  const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
 
   const handleReport = (senderId: string) =>
@@ -36,10 +36,10 @@ const ChatPanel = ({ roomId }: { roomId: string }) => {
           <div
             key={msg.messageId}
             className={`flex flex-col ${
-              msg.senderId === user?.userId ? "items-end" : "items-start"
+              msg.senderId === myUser?.userId ? "items-end" : "items-start"
             }`}
           >
-            {msg.senderId !== user?.userId && (
+            {msg.senderId !== myUser?.userId && (
               <span className="text-xs text-gray-400 mb-1">
                 {msg.senderName}
               </span>
@@ -47,13 +47,13 @@ const ChatPanel = ({ roomId }: { roomId: string }) => {
 
             <div
               className={`flex items-end gap-2 max-w-[85%] ${
-                msg.senderId === user?.userId ? "flex-row-reverse" : ""
+                msg.senderId === myUser?.userId ? "flex-row-reverse" : ""
               }`}
             >
               <div
                 // 1. 말풍선을 기준점(relative) 및 호버 그룹(group)으로 만듭니다.
                 className={`relative group px-3 py-2 rounded-lg break-words ${
-                  msg.senderId === user?.userId
+                  msg.senderId === myUser?.userId
                     ? "bg-purple-600 rounded-br-none"
                     : "bg-gray-700 rounded-bl-none"
                 }`}
@@ -62,7 +62,7 @@ const ChatPanel = ({ roomId }: { roomId: string }) => {
                 <span>{msg.content}</span>
 
                 {/* 2. Popover 컴포넌트 */}
-                {msg.senderId !== user?.userId && (
+                {msg.senderId !== myUser?.userId && (
                   <Popover>
                     {/* 3. 버튼을 절대 위치(absolute)로 오른쪽 위에 배치합니다. */}
                     {/* 평소엔 투명했다가, group(말풍선)에 호버하면 나타납니다. */}
