@@ -71,7 +71,7 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
         {/* 채팅 입력창 (채팅 탭일 때만 보임) */}
         {selectedTab === "chat" && (
           <>
-            {/* 3-1. 로그인했고, 팔로우 중일 때만 입력창을 표시합니다. */}
+            {/* 로그인했고, 팔로우 중일 때만 입력창을 표시합니다. */}
             {isLoggedIn && isUserFollowing ? (
               <div className="mt-4 flex items-center gap-2">
                 <input
@@ -91,25 +91,36 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
                 </button>
               </div>
             ) : (
-              // 3-2. 로그아웃 상태거나, 팔로우 중이 아닐 때 안내 메시지를 표시합니다.
-              <div className="mt-4 p-3 text-center rounded-lg bg-gray-100 flex items-center justify-center gap-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-gray-500"
-                >
-                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-                </svg>
-                <p className="text-xs font-medium text-gray-600">
-                  아티스트를 팔로우하고 채팅에 참여하세요!
-                </p>
+              // 로그아웃 상태거나, 팔로우 중이 아닐 때 안내 메시지를 표시합니다.
+              <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                    {/* 잠금 아이콘으로 변경 */}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-gray-500"
+                    >
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">
+                      팔로우 전용 채팅
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      아티스트를 팔로우하고 대화에 참여하세요.
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </>
