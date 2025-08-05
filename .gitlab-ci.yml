@@ -3,21 +3,26 @@ stages:
   - build
   - deploy
 
-# Merge Request나 BE/develop 브랜치일 때 빌드/테스트
+# BE 빌드/테스트
 # --------------------------------------------------
-build_and_test:
+build_and_test_be:
   stage: build
   image: gradle:8.6-jdk21 # 필요에 따라 다른 이미지로 바꿔주세요
-  only:
-    - merge_requests # MR 열릴 때만 실행
-    - /^BE\/develop$/ # BE/develop 브랜치일 때도 실행
+  rules:
+    # BE/develop 브랜치에 푸시됐을 때
+    - if: '$CI_COMMIT_BRANCH =~ /^BE\/develop$/'
+      when: always
+    # MR 타겟이 BE/develop 일 때
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "BE/develop"'
+      when: always
+    - when: never
   script:
     - echo "Building the project"
     - cd $CI_PROJECT_DIR/BE
     - chmod +x gradlew
     - ./gradlew clean build # 테스트까지 포함
 
-# FE 빌드·테스트
+# FE 빌드/테스트
 # --------------------------------------------------
 build_and_test_fe:
   stage: build
@@ -27,6 +32,14 @@ build_and_test_fe:
     - /^FE\/develop$/
   variables:
     VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
+    rules:
+      # FE/develop 브랜치에 푸시됐을 때
+      - if: '$CI_COMMIT_BRANCH =~ /^FE\/develop$/'
+        when: always
+      # MR 타겟이 FE/develop 일 때
+      - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "FE/develop"'
+        when: always
+      - when: never
   script:
     - cd FE
     - npm ci
@@ -36,6 +49,8 @@ build_and_test_fe:
       - FE/dist
     expire_in: 1 hour
 
+# BE 배포
+# --------------------------------------------------
 deploy_be:
   stage: deploy
 
