@@ -28,9 +28,9 @@ export const useArtistList = (searchText: string) => {
         setHasMore(false);
       } else {
         setArtists((prev) => {
-          const existingIds = new Set(prev.map((a) => a.artistId));
+          const existingIds = new Set(prev.map((a: Artist) => a.artistId));
           const newArtists = res.data.filter(
-            (a) => !existingIds.has(a.artistId)
+            (a: Artist) => !existingIds.has(a.artistId)
           );
           return [...prev, ...newArtists];
         });

@@ -1,0 +1,79 @@
+# .gitlab-ci.yml
+stages:
+  - build
+  - deploy
+
+# Merge Request나 BE/develop 브랜치일 때 빌드/테스트
+# --------------------------------------------------
+build_and_test:
+  stage: build
+  image: gradle:8.6-jdk21 # 필요에 따라 다른 이미지로 바꿔주세요
+  only:
+    - merge_requests # MR 열릴 때만 실행
+    - /^BE\/develop$/ # BE/develop 브랜치일 때도 실행
+  script:
+    - echo "Building the project"
+    - cd $CI_PROJECT_DIR/BE
+    - chmod +x gradlew
+    - ./gradlew clean build # 테스트까지 포함
+
+deploy_be:
+  stage: deploy
+
+  only:
+    - /^BE\/develop$/
+
+  image: alpine:latest
+
+  before_script:
+    # 1) ssh-agent 실행
+    - apk add --no-cache openssh git # Alpine에 ssh/git 설치
+    - eval $(ssh-agent -s)
+
+    # 2) 변수에 저장된 프라이빗 키를 ssh-agent에 추가
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+
+    # 3) known_hosts 세팅 (호스트 키 검증)
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+
+  script:
+    - |
+      ssh ubuntu@i13a404.p.ssafy.io <<EOF
+        set -e
+        cd ~/DuckOn-BE/BE
+
+        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
+        git fetch origin BE/develop
+        git reset --hard origin/BE/develop
+
+        sudo docker build --no-cache -t duckonback:latest .
+        sudo docker rm -f duckon-app || true
+        sudo docker run -d \
+          --name duckon-app -p 8080:8080 \
+          --network duckon-net \
+          -e SPRING_DATASOURCE_URL="${SPRING_DATASOURCE_URL}" \
+          -e SPRING_DATASOURCE_USERNAME="${SPRING_DATASOURCE_USERNAME}" \
+          -e SPRING_DATASOURCE_PASSWORD="${SPRING_DATASOURCE_PASSWORD}" \
+          -e REDIS_HOST="${SPRING_REDIS_HOST}" \
+          -e REDIS_PORT="${SPRING_REDIS_PORT}" \
+          -e JWT_SECRET_KEY="${JWT_SECRET_KEY}" \
+          -e JWT_ACCESS_EXPIRATION="${JWT_ACCESS_EXPIRATION}" \
+          -e JWT_REFRESH_EXPIRATION="${JWT_REFRESH_EXPIRATION}" \
+          -e GOOGLE_ID="${GOOGLE_ID}" \
+          -e GOOGLE_SECRET="${GOOGLE_SECRET}" \
+          -e KAKAO_ID="${KAKAO_ID}" \
+          -e KAKAO_SECRET="${KAKAO_SECRET}" \
+          -e NAVER_ID="${NAVER_ID}" \
+          -e NAVER_SECRET="${NAVER_SECRET}" \
+          -e S3_ACCESS_KEY="${S3_ACCESS_KEY}" \
+          -e S3_SECRET_KEY="${S3_SECRET_KEY}" \
+          -e S3_REGION="${S3_REGION}" \
+          -e S3_BUCKET_NAME="${S3_BUCKET_NAME}" \
+          -e MONGO_DB_URL="${MONGO_DB_URL}" \
+          -e MONGO_DB_NAME="${MONGO_DB_NAME}" \
+          -e MONGO_DB_USERNAME="${MONGO_DB_USERNAME}" \
+          -e MONGO_DB_PASSWORD="${MONGO_DB_PASSWORD}" \
+          duckonback:latest
+      EOF

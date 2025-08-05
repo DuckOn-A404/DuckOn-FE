@@ -23,14 +23,18 @@ const ArtistDetailPage = () => {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const { myUser } = useUserStore();
   const { myUser } = useUserStore();
   const {
     isFollowing: followingSet,
     addFollow,
     removeFollow,
+    fetchFollowedArtists,
   } = useArtistFollowStore();
 
+  const isLoggedIn = !!myUser;
   const isLoggedIn = !!myUser;
 
   // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
@@ -74,9 +78,69 @@ const ArtistDetailPage = () => {
     fetchPageData();
   }, [artistId]);
 
-  if (isLoadingPage) {
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
+      fetchFollowedArtists();
+    }
+  }, [isLoggedIn, fetchFollowedArtists]);
+
+  if (isLoadingPage || !artist) {
     return (
-      <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
+      <div className="flex w-full bg-gray-50">
+        {/* 왼쪽: 팔로우 리스트 자리 */}
+        <LeftSidebar />
+
+        {/* 가운데: 스켈레톤 */}
+        <main className="flex-1 p-6 space-y-10 animate-pulse">
+          {/* 아티스트 카드 Skeleton */}
+          <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-gray-200 rounded-2xl" />
+              <div className="space-y-3">
+                <div className="h-8 w-48 bg-gray-200 rounded" /> {/* nameKr */}
+                <div className="h-4 w-32 bg-gray-200 rounded" /> {/* nameEn */}
+                <div className="h-4 w-40 bg-gray-200 rounded" />{" "}
+                {/* debutDate */}
+              </div>
+            </div>
+            <div className="w-20 h-8 bg-gray-200 rounded-full" />
+          </div>
+
+          {/* 라이브 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* 예정된 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+        </main>
+
+        {/* 오른쪽 실시간 탭 */}
+        {artist && <RightSidebar artistId={artist.artistId} />}
+      </div>
     );
   }
 
@@ -99,6 +163,7 @@ const ArtistDetailPage = () => {
 
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
+    if (!myUser) return alert("로그인이 필요합니다.");
     if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
@@ -185,6 +250,10 @@ const ArtistDetailPage = () => {
                 onClick={() => setIsModalOpen(true)}
                 className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
               >
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
+              >
                 + 새 방 만들기
               </button>
             )}
@@ -230,13 +299,15 @@ const ArtistDetailPage = () => {
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar />
+      <RightSidebar artistId={artist!.artistId} />
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
         isOpen={isModalOpen}
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         artistId={artist.artistId}
+        hostId={myUser?.userId ?? ""}
         hostId={myUser?.userId ?? ""}
       />
     </div>
