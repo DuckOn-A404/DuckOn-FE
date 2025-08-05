@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
-import { updateUserProfile } from "../../../api/userService";
+import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
 import axios from "axios"
 import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
+import { LockKeyhole } from "lucide-react";
 
 export type EditProfileCardProps = {
   user: MyUser;
@@ -24,6 +25,8 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPasswordError, setNewPasswordError] = useState("")
+  const [confirmPasswordError, setConfirmPasswordError] = useState("")
   
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -65,8 +68,14 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   }
   const handleSubmit = async () => {
     if (newPassword && newPassword !== confirmPassword) {
-      alert("새 비밀번호와 확인이 일치하지 않습니다.");
+      setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
       return;
+    } else {
+      setConfirmPasswordError("")
+    }
+
+    if (newPassword && newPassword.length < 8) {
+      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.")
     }
 
     const formData = new FormData();
@@ -84,13 +93,45 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       console.log(key, value);
     }
     try {
-      const updated = await updateUserProfile(formData);
-      onUpdate(updated);
+      await updateUserProfile(formData)
+      const updated = await fetchMyProfile()  // 다시 내 정보 불러오기
+      console.log("업데이트 후 응답:", updated)
+      onUpdate(updated)
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
     }
 
+  }
+
+  const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setNewPassword(val)
+
+    if (val && val.length < 8) {
+      setNewPasswordError("8자리 이상 입력해 주세요.");
+    } else {
+      setNewPasswordError("");
+    }
+
+    // 비밀번호 확인값이 존재하고 일치하지 않으면 에러
+    if (confirmPassword && val !== confirmPassword) {
+      setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
+    } else {
+      setConfirmPasswordError("");
+    } 
+  }
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setConfirmPassword(val);
+
+    if (newPassword && newPassword !== val) {
+      setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
+    } else {
+      setConfirmPasswordError("");
+    }
   };
+
 
   return (
     <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
@@ -204,23 +245,38 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
 
           </div>
 
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">새 비밀번호</div>
-            <input
-              type="password"
-              className="border px-2 py-1 rounded w-full"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
+          <div className="flex items-start">
+            <div className="w-32 text-gray-500 font-medium pt-2">새 비밀번호</div>
+            
+            {/* 입력 필드와 에러 메시지를 세로로 쌓음 */}
+            <div className="flex flex-col w-full">
+              <input
+                type="password"
+                className="border px-2 py-1 rounded"
+                value={newPassword}
+                onChange={handleNewPasswordChange}
+              />
+              {newPasswordError && (
+                <p className="text-red-500 text-xs mt-1">{newPasswordError}</p>
+              )}
+            </div>
           </div>
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">비밀번호 확인</div>
-            <input
-              type="password"
-              className="border px-2 py-1 rounded w-full"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
+
+          <div className="flex items-start">
+            <div className="w-32 text-gray-500 font-medium pt-2">비밀번호 확인</div>
+            
+            {/* 입력 필드와 에러 메시지를 세로로 쌓음 */}
+            <div className="flex flex-col w-full">
+              <input
+                type="password"
+                className="border px-2 py-1 rounded"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+              />
+              {confirmPasswordError && (
+                <p className="text-red-500 text-xs mt-1">{confirmPasswordError}</p>
+              )}
+            </div>
           </div>
         </div>
       </div>
