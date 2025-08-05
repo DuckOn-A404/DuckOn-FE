@@ -5,15 +5,14 @@
  * @param {number} count - 포맷할 숫자
  * @returns {string} - 변환된 문자열 (예: 999, 1.2K, 1,234,567)
  */
-export const formatCompactNumber = (count: number): string => {
-  if (count >= 1000000) {
-    return count.toLocaleString("en-US");
+export function formatCompactNumber(num: number | undefined | null) {
+  if (!num) {
+    return "0";
   }
-  if (count >= 1000) {
-    const thousands = (count / 1000).toFixed(1);
-    return (
-      (thousands.endsWith(".0") ? thousands.slice(0, -2) : thousands) + "K"
-    );
+
+  if (num >= 10000) {
+    return `${(num / 10000).toFixed(1).replace(/\.0$/, "")}만`;
   }
-  return count.toString();
-};
+
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
