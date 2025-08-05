@@ -40,7 +40,7 @@ type PlaylistPanelProps = {
 };
 
 const PlaylistPanel = ({ isHost }: PlaylistPanelProps) => {
-  const [playlist, setPlaylist] = useState(mockPlaylist);
+  const [playlist] = useState(mockPlaylist);
 
   return (
     <div className="flex flex-col h-full">
