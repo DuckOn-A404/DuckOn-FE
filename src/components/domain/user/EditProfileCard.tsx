@@ -2,33 +2,38 @@ import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
-import axios from "axios"
-import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
-import { LockKeyhole } from "lucide-react";
+import {
+  fetchLanguages,
+  type LanguageOption,
+} from "../../../api/languageSelect";
 
 export type EditProfileCardProps = {
   user: MyUser;
   onCancel: () => void;
   onUpdate: (updatedUser: MyUser) => void;
-}
+};
 
-const DEFAULT_IMG = "/default_image.png"
+const DEFAULT_IMG = "/default_image.png";
 
-const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => {
+const EditProfileCard = ({
+  user,
+  onCancel,
+  onUpdate,
+}: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
   const [language, setLanguage] = useState(user.language);
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [showImageOptions, setShowImageOptions] = useState(false)
-  const [useDefaultImage, setUseDefaultImage] = useState(false)
+  const [showImageOptions, setShowImageOptions] = useState(false);
+  const [useDefaultImage, setUseDefaultImage] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [newPasswordError, setNewPasswordError] = useState("")
-  const [confirmPasswordError, setConfirmPasswordError] = useState("")
-  
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [confirmPasswordError, setConfirmPasswordError] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     const loadLanguages = async () => {
@@ -39,43 +44,43 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   }, []);
 
   const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setProfileImage(file)
-      setPreviewUrl(URL.createObjectURL(file))
-      setUseDefaultImage(false)
-      setShowImageOptions(false)
+      setProfileImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setUseDefaultImage(false);
+      setShowImageOptions(false);
     }
-  }
+  };
 
   const handleResetToDefaultImage = () => {
     setProfileImage(null);
     setPreviewUrl(DEFAULT_IMG);
-    setUseDefaultImage(true)
+    setUseDefaultImage(true);
     setShowImageOptions(false);
   };
 
   const handleCameraClick = () => {
     if (previewUrl === DEFAULT_IMG || user.imgUrl === null) {
-      fileInputRef.current?.click()
+      fileInputRef.current?.click();
     } else {
-      setShowImageOptions(!showImageOptions)
+      setShowImageOptions(!showImageOptions);
     }
-  }
+  };
   const handleSubmit = async () => {
     if (newPassword && newPassword !== confirmPassword) {
       setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
       return;
     } else {
-      setConfirmPasswordError("")
+      setConfirmPasswordError("");
     }
 
     if (newPassword && newPassword.length < 8) {
-      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.")
+      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
     }
 
     const formData = new FormData();
@@ -93,19 +98,18 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       console.log(key, value);
     }
     try {
-      await updateUserProfile(formData)
-      const updated = await fetchMyProfile()  // 다시 내 정보 불러오기
-      console.log("업데이트 후 응답:", updated)
-      onUpdate(updated)
+      await updateUserProfile(formData);
+      const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
+      console.log("업데이트 후 응답:", updated);
+      onUpdate(updated);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
     }
-
-  }
+  };
 
   const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setNewPassword(val)
+    const val = e.target.value;
+    setNewPassword(val);
 
     if (val && val.length < 8) {
       setNewPasswordError("8자리 이상 입력해 주세요.");
@@ -118,10 +122,12 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
     } else {
       setConfirmPasswordError("");
-    } 
-  }
+    }
+  };
 
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const val = e.target.value;
     setConfirmPassword(val);
 
@@ -131,7 +137,6 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       setConfirmPasswordError("");
     }
   };
-
 
   return (
     <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
@@ -157,7 +162,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
         <div className="flex flex-col items-center w-32 shrink-0">
           <div className="relative">
             <img
-              src={previewUrl || DEFAULT_IMG }
+              src={previewUrl || DEFAULT_IMG}
               alt="프로필 이미지"
               className="w-24 h-24 rounded-full object-cover"
             />
@@ -179,14 +184,16 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 변경하기
               </button>
               {/* 기본 이미지가 아닌 경우에만 뜨기 */}
-              {user.imgUrl && user.imgUrl !== DEFAULT_IMG && !useDefaultImage && (
-                <button
-                  onClick={handleResetToDefaultImage}
-                  className="text-gray-500 hover:underline"
-                >
-                  기본 이미지로 변경
-                </button>
-              )}
+              {user.imgUrl &&
+                user.imgUrl !== DEFAULT_IMG &&
+                !useDefaultImage && (
+                  <button
+                    onClick={handleResetToDefaultImage}
+                    className="text-gray-500 hover:underline"
+                  >
+                    기본 이미지로 변경
+                  </button>
+                )}
             </div>
           )}
           <input
@@ -195,7 +202,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
             accept="image/*"
             onChange={handleImageChange}
             className="hidden"
-          /> 
+          />
           <div className="mt-4 flex gap-6 text-center">
             <div>
               <div className="text-lg font-bold">
@@ -242,12 +249,13 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 </option>
               ))}
             </select>
-
           </div>
 
           <div className="flex items-start">
-            <div className="w-32 text-gray-500 font-medium pt-2">새 비밀번호</div>
-            
+            <div className="w-32 text-gray-500 font-medium pt-2">
+              새 비밀번호
+            </div>
+
             {/* 입력 필드와 에러 메시지를 세로로 쌓음 */}
             <div className="flex flex-col w-full">
               <input
@@ -263,8 +271,10 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
           </div>
 
           <div className="flex items-start">
-            <div className="w-32 text-gray-500 font-medium pt-2">비밀번호 확인</div>
-            
+            <div className="w-32 text-gray-500 font-medium pt-2">
+              비밀번호 확인
+            </div>
+
             {/* 입력 필드와 에러 메시지를 세로로 쌓음 */}
             <div className="flex flex-col w-full">
               <input
@@ -274,7 +284,9 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 onChange={handleConfirmPasswordChange}
               />
               {confirmPasswordError && (
-                <p className="text-red-500 text-xs mt-1">{confirmPasswordError}</p>
+                <p className="text-red-500 text-xs mt-1">
+                  {confirmPasswordError}
+                </p>
               )}
             </div>
           </div>
