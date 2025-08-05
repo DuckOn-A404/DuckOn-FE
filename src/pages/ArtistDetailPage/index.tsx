@@ -23,9 +23,7 @@ const ArtistDetailPage = () => {
   const [artist, setArtist] = useState<Artist | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { myUser } = useUserStore();
   const { myUser } = useUserStore();
   const {
     isFollowing: followingSet,
@@ -34,7 +32,6 @@ const ArtistDetailPage = () => {
     fetchFollowedArtists,
   } = useArtistFollowStore();
 
-  const isLoggedIn = !!myUser;
   const isLoggedIn = !!myUser;
 
   // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
@@ -246,10 +243,6 @@ const ArtistDetailPage = () => {
               </div>
             </div>
             {isFollowing && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
-              >
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
