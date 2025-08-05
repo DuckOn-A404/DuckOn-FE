@@ -33,10 +33,17 @@ export const fetchOtherUserProfile = async (userId: string): Promise<MyUser> => 
  * @returns 성공 시 true, 실패 시 예외 발생
  */
 export const verifyPassword = async (password: string): Promise<boolean> => {
-  // 실제 백엔드 통신(나중에 사용)
   try {
-    const response = await api.post("/api/users/me/verify-password", { password });
-    return response.data.valid === true; // 서버는 { valid: true } 형태로 응답한다고 가정
+    const token = localStorage.getItem("accessToken") || ""
+    const response = await api.post("/api/users/me/verify-password", 
+      { password },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // 토큰 반드시 포함해줄것 -> 새로고침시 매번 오류 발생 수정 위해
+        },
+      }
+    );
+    return response.data.valid === true
   } catch (error) {
     console.error("비밀번호 검증 실패", error);
     throw error;
@@ -55,7 +62,7 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  */
 
 export const updateUserProfile = async (formData: FormData): Promise<MyUser> => {
-  const response = await api.patch("/users/profile", formData, {
+  const response = await api.patch("/api/users/me", formData, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
     },
