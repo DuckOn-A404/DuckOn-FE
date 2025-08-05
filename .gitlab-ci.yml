@@ -26,7 +26,10 @@ build_and_test_be:
 # --------------------------------------------------
 build_and_test_fe:
   stage: build
-  image: node:18-alpine
+  image: node:20-alpine
+  variables:
+    # Ensure devDependencies (typescript, @types/*) actually get installed
+    NODE_ENV: development
   variables:
     VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
   rules:
