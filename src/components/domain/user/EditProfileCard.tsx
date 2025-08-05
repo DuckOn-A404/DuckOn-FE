@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
-import { Camera, Trash2 } from "lucide-react";
+import { Camera } from "lucide-react";
 import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
+import { useUserStore } from "../../../store/useUserStore";
 
 export type EditProfileCardProps = {
   user: MyUser;
@@ -67,6 +68,7 @@ const EditProfileCard = ({
       setShowImageOptions(!showImageOptions);
     }
   };
+
   const handleSubmit = async () => {
     if (newPassword && newPassword !== confirmPassword) {
       setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
@@ -94,7 +96,10 @@ const EditProfileCard = ({
     try {
       await updateUserProfile(formData);
       const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
-      console.log("업데이트 후 응답:", updated);
+      useUserStore.getState().setMyUser({
+        ...updated,
+        artistList: updated.artistList ?? [],
+      })
       onUpdate(updated);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
