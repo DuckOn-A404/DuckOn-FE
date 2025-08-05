@@ -7,46 +7,46 @@ import {
   followArtist,
   unfollowArtist,
   getArtistDetail,
-  getArtistRooms,
 } from "../../api/artistService";
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
-import { Video, CalendarDays } from "lucide-react";
+import { Video } from "lucide-react";
+import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 
 const ArtistDetailPage = () => {
   const location = useLocation();
   const artistId = location.state?.artistId as number | undefined;
 
-  // 1. 아티스트 상세 정보와 로딩 상태를 위한 State
+  // 아티스트 상세 정보와 로딩 상태를 위한 State
   const [artist, setArtist] = useState<Artist | null>(null);
-  const [rooms, setRooms] = useState({ live: [], upcoming: [] });
   const [isLoadingPage, setIsLoadingPage] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { user } = useUserStore();
+  const { myUser } = useUserStore();
   const {
     isFollowing: followingSet,
     addFollow,
     removeFollow,
+    fetchFollowedArtists,
   } = useArtistFollowStore();
 
-  const isLoggedIn = !!user;
+  const isLoggedIn = !!myUser;
 
-  // 2. useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
+  // useArtistRooms 훅을 사용하여 방 목록 관련 로직 모두 위임
   const {
     liveRooms,
-    upcomingRooms,
     hasMoreLive,
-    hasMoreUpcoming,
     isLoading: isLoadingRooms,
+    error: roomsError,
     handleLoadMore,
   } = useArtistRooms(artist?.artistId);
 
-  // 3. 최적화된 팔로우 상태 확인 (배열 순회 대신 Set 사용)
+  // 최적화된 팔로우 상태 확인
   const isFollowing = artist ? followingSet.has(artist.artistId) : false;
 
-  // 4. 페이지 진입 시 아티스트 상세 정보 및 방목록 정보 병렬로 불러오기
+  // 페이지 진입 시 아티스트 상세 정보 및 방목록 정보 병렬로 불러오기
   useEffect(() => {
     const fetchPageData = async () => {
       if (!artistId) {
@@ -56,13 +56,11 @@ const ArtistDetailPage = () => {
       }
       setIsLoadingPage(true);
       try {
-        // 1. API 요청이 하나이므로 Promise.all을 제거하고 직접 호출합니다.
         const artistData = await getArtistDetail(artistId);
 
-        // 2. 받아온 artistData로 artist 상태를 설정합니다.
         setArtist(artistData);
 
-        // 3. roomsData 관련 로직은 나중에 구현할 때까지 주석 처리하거나 제거합니다.
+        // roomsData 관련 로직은 나중에
         // setRooms({
         //   live: roomsData.roomList.filter((r) => r.isLive),
         //   upcoming: roomsData.roomList.filter((r) => !r.isLive),
@@ -77,10 +75,69 @@ const ArtistDetailPage = () => {
     fetchPageData();
   }, [artistId]);
 
-  // 5. 로딩 및 에러 상태 처리
-  if (isLoadingPage) {
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
+      fetchFollowedArtists();
+    }
+  }, [isLoggedIn, fetchFollowedArtists]);
+
+  if (isLoadingPage || !artist) {
     return (
-      <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
+      <div className="flex w-full bg-gray-50">
+        {/* 왼쪽: 팔로우 리스트 자리 */}
+        <LeftSidebar />
+
+        {/* 가운데: 스켈레톤 */}
+        <main className="flex-1 p-6 space-y-10 animate-pulse">
+          {/* 아티스트 카드 Skeleton */}
+          <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-gray-200 rounded-2xl" />
+              <div className="space-y-3">
+                <div className="h-8 w-48 bg-gray-200 rounded" /> {/* nameKr */}
+                <div className="h-4 w-32 bg-gray-200 rounded" /> {/* nameEn */}
+                <div className="h-4 w-40 bg-gray-200 rounded" />{" "}
+                {/* debutDate */}
+              </div>
+            </div>
+            <div className="w-20 h-8 bg-gray-200 rounded-full" />
+          </div>
+
+          {/* 라이브 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* 예정된 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+        </main>
+
+        {/* 오른쪽 실시간 탭 */}
+        {artist && <RightSidebar artistId={artist.artistId} />}
+      </div>
     );
   }
 
@@ -103,7 +160,8 @@ const ArtistDetailPage = () => {
 
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
-    if (!user) return alert("로그인이 필요합니다.");
+    if (!myUser) return alert("로그인이 필요합니다.");
+    if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
     try {
@@ -142,10 +200,9 @@ const ArtistDetailPage = () => {
               </p>
             </div>
           </div>
-          {isLoggedIn && ( // user 객체가 존재할 때만 이 div를 렌더링
+          {isLoggedIn && (
             <div className="text-right space-y-2">
               {isFollowing ? (
-                // 팔로우 중일 때 (D-day와 "팔로우 중" 버튼)
                 <>
                   <p className="text-sm font-semibold">
                     {getDday(artist.debutDate)}
@@ -158,7 +215,7 @@ const ArtistDetailPage = () => {
                   </button>
                 </>
               ) : (
-                // 팔로우 중이 아닐 때 ("+ 팔로우" 버튼만)
+                // 팔로우 중이 아닐 때
                 <button
                   className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
                   onClick={handleFollowToggle}
@@ -172,6 +229,7 @@ const ArtistDetailPage = () => {
 
         {/* 라이브 방 */}
         <section>
+          {/* 섹션 헤더: 타이틀과 '새 방 만들기' 버튼 */}
           <div className="flex justify-between items-center mb-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-pink-50 p-4 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 text-white shadow">
@@ -185,57 +243,64 @@ const ArtistDetailPage = () => {
               </div>
             </div>
             {isFollowing && (
-              <button className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
+              >
                 + 새 방 만들기
               </button>
             )}
           </div>
-          <div className="flex justify-center">
-            {liveRooms.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                {liveRooms.map((room) => (
-                  <VideoCard key={room.roomId} {...room} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-sm">
-                현재 진행 중인 라이브 방송이 없습니다.
-              </p>
-            )}
-          </div>
-        </section>
 
-        {/* 예정된 방 */}
-        <section>
-          <div className="flex items-center mb-6 rounded-2xl bg-blue-50 p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 rounded-lg bg-blue-500 p-2 text-white shadow">
-                <CalendarDays size={24} />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-800">예정된 방</h2>
-                <p className="text-sm text-gray-500">
-                  {upcomingRooms.length}개의 방이 예정되어 있음
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-center">
-            {upcomingRooms.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                {upcomingRooms.map((room, i) => (
-                  <VideoCard key={i} {...room} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-sm">예정된 방송이 없습니다.</p>
+          {/* 방 목록 표시 영역 */}
+          <div className="mt-6 flex flex-col items-center gap-8">
+            {/* 1. 로딩 중일 때 표시 */}
+            {isLoadingRooms && <p>방송 목록을 불러오는 중...</p>}
+
+            {/* 2. 에러 발생 시 표시 */}
+            {roomsError && <p className="text-red-500">{roomsError}</p>}
+
+            {/* 3. 로딩도 아니고 에러도 아닐 때 목록 또는 빈 메시지 표시 */}
+            {!isLoadingRooms && !roomsError && (
+              <>
+                {liveRooms.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 w-full">
+                    {liveRooms.map((room) => (
+                      <VideoCard key={room.roomId} {...room} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    현재 진행 중인 라이브 방송이 없습니다.
+                  </p>
+                )}
+              </>
+            )}
+
+            {/* 4. 더 보여줄 방이 있을 때만 '더보기' 버튼 표시 */}
+            {hasMoreLive && (
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingRooms}
+                className="mt-4 px-6 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                더보기
+              </button>
             )}
           </div>
         </section>
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar />
+      <RightSidebar artistId={artist!.artistId} />
+
+      {/* 방 생성 모달 */}
+      <CreateRoomModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        artistId={artist.artistId}
+        hostId={myUser?.userId ?? ""}
+      />
     </div>
   );
 };
