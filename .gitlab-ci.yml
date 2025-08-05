@@ -27,19 +27,16 @@ build_and_test_be:
 build_and_test_fe:
   stage: build
   image: node:18-alpine
-  only:
-    - merge_requests
-    - /^FE\/develop$/
   variables:
     VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
-    rules:
-      # FE/develop 브랜치에 푸시됐을 때
-      - if: '$CI_COMMIT_BRANCH =~ /^FE\/develop$/'
-        when: always
-      # MR 타겟이 FE/develop 일 때
-      - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "FE/develop"'
-        when: always
-      - when: never
+  rules:
+    # FE/develop 브랜치에 푸시됐을 때
+    - if: '$CI_COMMIT_BRANCH =~ /^FE\/develop$/'
+      when: always
+    # MR 타겟이 FE/develop 일 때
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "FE/develop"'
+      when: always
+    - when: never
   script:
     - cd FE
     - npm ci
