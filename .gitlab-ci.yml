@@ -135,7 +135,7 @@ deploy_fe:
 
         # FE 코드 갱신
         cd ~/DuckOn-BE/FE
-        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/.../S13P11A404.git
+        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
         git fetch origin FE/develop
         git reset --hard origin/FE/develop
 
@@ -145,10 +145,10 @@ deploy_fe:
           --no-cache \
           -t duckon-front:latest \
           .
-        sudo docker build --no-cache -t duckon-front:latest .
         sudo docker rm -f duckon-front || true
         sudo docker run -d \
-          --name duckon-front -p 80:80 \
+          --name duckon-front \
+          -p 80:80 \
           --network duckon-net \
           duckon-front:latest
       EOF
