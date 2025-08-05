@@ -1,41 +1,37 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { getRoomsByArtist } from "../api/roomService";
 import { type Room } from "../types/Room";
 
-/* useArtistRooms : 특정 아티스트의 방송 목록을 관리하는 커스텀 훅
-  1. 라이브/예정 방송 목록 상태 관리
-  2. '더보기' 버튼을 통한 페이지네이션 로직 처리
-  3. API 호출 시 로딩 상태 관리
-  4. artistId 변경에 따른 데이터 재요청 처리
-*/
+// 처음에 보여줄 방의 수
+const INITIAL_VISIBLE_COUNT = 8;
+
+/**
+ * 아티스트의 방 목록을 관리하는 커스텀 훅.
+ * API로부터 모든 방을 한 번에 받아와, 프론트엔드에서 라이브 방만 필터링하고 '더보기' 기능을 처리합니다.
+ * @param artistId - 조회할 아티스트의 ID
+ */
 export const useArtistRooms = (artistId: number | undefined) => {
-  const [liveRooms, setLiveRooms] = useState<Room[]>([]);
-  const [upcomingRooms, setUpcomingRooms] = useState<Room[]>([]);
+  const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
 
   useEffect(() => {
-    // artistId가 없으면 상태를 초기화
     if (!artistId) {
-      setLiveRooms([]);
-      setUpcomingRooms([]);
+      setAllRooms([]);
       return;
     }
 
     const fetchAllRooms = async () => {
       setIsLoading(true);
       setError(null);
+      setVisibleCount(INITIAL_VISIBLE_COUNT);
       try {
-        const allRooms = await getRoomsByArtist(artistId);
-
-        // 받아온 전체 데이터를 프론트엔드에서 직접 필터링합니다.
-        // (Room 타입에 isLive와 같은 상태값이 있다고 가정)
-        // 실제 백엔드 데이터에 맞게 이 부분을 수정해야 할 수 있습니다.
-        setLiveRooms(allRooms.filter((room) => room.isLive));
-        setUpcomingRooms(allRooms.filter((room) => !room.isLive));
+        const roomsData = await getRoomsByArtist(artistId);
+        setAllRooms(roomsData);
       } catch (err) {
-        console.error("방 목록을 불러오는 데 실패했습니다.", err);
         setError("방 목록을 불러오는 데 실패했습니다.");
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
@@ -43,6 +39,13 @@ export const useArtistRooms = (artistId: number | undefined) => {
 
     fetchAllRooms();
   }, [artistId]);
+
+  const liveRooms = useMemo(() => {
+    const now = new Date();
+    // room.startTime이 있다고 가정하고, 현재 시간보다 과거인 방만 '라이브'로 간주합니다.
+    // 백엔드 데이터 형식에 맞게 'startTime' 필드 이름은 변경해야 할 수 있습니다.
+    return allRooms.filter((room) => new Date(room.startTime) <= now);
+  }, [allRooms]);
 
   // '더보기' 버튼 핸들러
   const handleLoadMore = (status: "live" | "upcoming") => {
