@@ -1,5 +1,4 @@
 import { api } from "./axiosInstance";
-import { dummyRooms } from "../mocks/rooms";
 
 /**
  * 아티스트 목록 조회 API 요청
@@ -127,57 +126,6 @@ export const getFollowedArtists = async (page = 1, size = 10) => {
   });
 
   return response.data;
-};
-
-/**
- * 특정 아티스트의 방송 목록을 조회하는 API 함수 (현재는 더미 데이터로 시뮬레이션)
- * @param {number} artistId - 조회할 아티스트의 ID
- * @param {number} [page=1] - 조회할 페이지 번호
- * @param {number} [size=4] - 페이지당 방 개수
- * @param {'live' | 'upcoming' | 'all'} [status='all'] - 조회할 방의 상태 ('live', 'upcoming', 'all')
- * @returns {Promise<object>} 방 목록과 페이지네이션 정보를 담은 객체
- */
-export const getArtistRooms = async (
-  artistId: number,
-  page = 1,
-  size = 4,
-  status: "live" | "upcoming" | "all" = "all"
-) => {
-  console.log(
-    `[API 시뮬레이션] artistId: ${artistId}, page: ${page}, size: ${size}, status: ${status}`
-  );
-
-  // 1. artistId로 필터링
-  const artistRooms = dummyRooms.filter((room) => room.artistId === artistId);
-
-  // 2. status로 필터링
-  const statusFiltered =
-    status === "all"
-      ? artistRooms
-      : artistRooms.filter((room) =>
-          status === "live" ? room.isLive : !room.isLive
-        );
-
-  // 3. 페이지네이션 계산
-  const totalElements = statusFiltered.length;
-  const totalPages = Math.ceil(totalElements / size);
-  const startIndex = (page - 1) * size;
-  const endIndex = startIndex + size;
-
-  // 4. 현재 페이지에 해당하는 데이터만 잘라내기
-  const roomList = statusFiltered.slice(startIndex, endIndex);
-
-  // 5. 실제 API처럼 0.5초 딜레이 추가
-  await new Promise((resolve) => setTimeout(resolve, 500));
-
-  // 6. 실제 API와 동일한 형태로 응답 객체 반환
-  return {
-    roomList,
-    page,
-    size,
-    totalElements,
-    totalPages,
-  };
 };
 
 /**
