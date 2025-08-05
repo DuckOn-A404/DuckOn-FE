@@ -3,6 +3,9 @@ import { Users } from "lucide-react";
 import { formatCompactNumber } from "../../../utils/formatters";
 import type { Room } from "../../../types/Room";
 
+const PLACEHOLDER_URL =
+  "https://via.placeholder.com/1280x720.png?text=Image+Not+Available";
+
 type VideoCardProps = Room & {
   artistName?: string;
 };
@@ -24,7 +27,7 @@ const VideoCard = ({
   artistName,
 }: VideoCardProps) => {
   const navigate = useNavigate();
-  const thumbnailUrl = imgUrl;
+  const thumbnailUrl = imgUrl || PLACEHOLDER_URL;
 
   const handleCardClick = () => {
     if (roomId) {
