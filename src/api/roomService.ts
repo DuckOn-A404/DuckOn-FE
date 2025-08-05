@@ -13,6 +13,17 @@ export const CreateRoom = async (formData: FormData) => {
   return response.data;
 };
 
+// 방 정보 조회 API
+export const fetchRoomById = async (roomId: string) => {
+  const token = localStorage.getItem("accessToken");
+  const response = await api.get(`/api/rooms/${roomId}`, {
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+  });
+  return response.data;
+};
+
 /**
  * 특정 아티스트의 방 목록을 가져오는 API 함수
  * @param artistId - 조회할 아티스트의 ID
