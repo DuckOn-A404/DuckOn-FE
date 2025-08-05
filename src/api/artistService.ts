@@ -8,7 +8,7 @@ import { dummyRooms } from "../mocks/rooms";
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
  */
 export const getArtistList = async (page = 1, size = 12) => {
-  const token = localStorage.getItem("accessToken"); // 저장 방식에 따라 수정 가능
+  const token = localStorage.getItem("accessToken");
 
   const response = await api.get("/api/artists", {
     params: { page, size },
@@ -16,8 +16,6 @@ export const getArtistList = async (page = 1, size = 12) => {
       Authorization: `Bearer ${token}`,
     },
   });
-
-  console.log("[디버그] 전체 조회 응답:", response.data);
 
   const artistList = response.data?.artistList ?? [];
   const total = response.data?.totalElements ?? 0;
@@ -44,8 +42,6 @@ export const searchArtists = async (keyword: string) => {
       Authorization: `Bearer ${token}`,
     },
   });
-
-  console.log("[디버그] 검색 응답:", response.data);
 
   return response.data.artistList ?? [];
 };
