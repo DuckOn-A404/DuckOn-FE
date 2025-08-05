@@ -14,8 +14,7 @@ const HomePage = () => {
 
   // 더미 데이터
   const hotRooms = dummyRooms
-    .filter((room) => room.isLive)
-    .sort((a, b) => b.viewerCount - a.viewerCount)
+    .sort((a, b) => b.participantCount - a.participantCount)
     .slice(0, 3);
 
   const handleCardClick = (artistId: number, nameEn: string) => {
