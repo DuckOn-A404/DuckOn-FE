@@ -3,6 +3,8 @@ import ArtistChatTab from "./ArtistChatTab";
 import RecommendTab from "./RecommendTab";
 import { Send } from "lucide-react";
 import { useArtistChat } from "../../hooks/useArtistChat";
+import { useUserStore } from "../../store/useUserStore";
+import { useArtistFollowStore } from "../../store/useArtistFollowStore";
 
 type RightSidebarProps = {
   artistId: number;
@@ -10,8 +12,19 @@ type RightSidebarProps = {
 
 const RightSidebar = ({ artistId }: RightSidebarProps) => {
   const [selectedTab, setSelectedTab] = useState<"chat" | "recommend">("chat");
+
+  // 아티스트 메시지 관련 변수
   const { messages, sendMessage } = useArtistChat(String(artistId));
+
+  // 채팅 입력창 상태 관리
   const [newMessage, setNewMessage] = useState("");
+
+  // 채팅 가능 여부 판단을 위해 유저 확인
+  const { myUser } = useUserStore();
+  const { isFollowing } = useArtistFollowStore();
+
+  const isLoggedIn = !!myUser;
+  const isUserFollowing = isFollowing.has(artistId);
 
   const handleSend = () => {
     if (!newMessage.trim()) return;
@@ -57,23 +70,49 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
 
         {/* 채팅 입력창 (채팅 탭일 때만 보임) */}
         {selectedTab === "chat" && (
-          <div className="mt-4 flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="메시지를 입력하세요..."
-              className="flex-1 px-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <button
-              onClick={handleSend}
-              disabled={!newMessage.trim()}
-              className="flex-shrink-0 w-9 h-9 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex justify-center items-center"
-            >
-              <Send size={18} />
-            </button>
-          </div>
+          <>
+            {/* 3-1. 로그인했고, 팔로우 중일 때만 입력창을 표시합니다. */}
+            {isLoggedIn && isUserFollowing ? (
+              <div className="mt-4 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  placeholder="메시지를 입력하세요..."
+                  className="flex-1 px-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!newMessage.trim()}
+                  className="flex-shrink-0 w-9 h-9 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex justify-center items-center disabled:bg-gray-400"
+                >
+                  <Send size={18} />
+                </button>
+              </div>
+            ) : (
+              // 3-2. 로그아웃 상태거나, 팔로우 중이 아닐 때 안내 메시지를 표시합니다.
+              <div className="mt-4 p-3 text-center rounded-lg bg-gray-100 flex items-center justify-center gap-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-gray-500"
+                >
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+                <p className="text-xs font-medium text-gray-600">
+                  아티스트를 팔로우하고 채팅에 참여하세요!
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </aside>
