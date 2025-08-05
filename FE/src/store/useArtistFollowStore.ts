@@ -25,7 +25,7 @@ type FollowState = {
   clearFollows: () => void;
 };
 
-export const useArtistFollowStore = create<FollowState>((set, get) => ({
+export const useArtistFollowStore = create<FollowState>((set) => ({
   followedArtists: [],
   isFollowing: new Set(),
   isLoading: false,

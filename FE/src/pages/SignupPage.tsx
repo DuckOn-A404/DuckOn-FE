@@ -35,6 +35,7 @@ const SignupPage = () => {
     handleCheckEmail,
     handleCheckUserId,
     passwordConfirmError,
+    passwordError,
   } = useSignupForm();
 
   const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
@@ -99,7 +100,7 @@ const SignupPage = () => {
                 value={formData.userId}
                 onChange={handleChange}
                 error={userIdError}
-                success={emailSuccess}
+                success={userIdSuccess}
               />
             </div>
             <button
@@ -131,6 +132,7 @@ const SignupPage = () => {
             icon={<LockKeyhole className={iconStyle} />}
             value={formData.password}
             onChange={handleChange}
+            error={passwordError}
           />
           <InputField
             id="passwordConfirm"
@@ -165,22 +167,21 @@ const SignupPage = () => {
               className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
             />
           </div>
+
+          {/* 에러 메시지 표시 */}
+          {error && (
+            <p className="text-sm text-red-500 text-center mt-2">{error}</p>
+          )}
+
+          {/* 회원가입 버튼 */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold mt-5"
+          >
+            회원가입
+          </button>
         </form>
-
-        {/* 에러 메시지 표시 */}
-        {error && (
-          <p className="text-sm text-red-500 text-center mt-2">{error}</p>
-        )}
-
-        {/* 회원가입 버튼 */}
-        <button
-          type="submit"
-          disabled={loading}
-          onClick={handleSubmit}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold mt-5"
-        >
-          {loading ? "가입 처리 중..." : "회원가입"}
-        </button>
 
         {/* 기타 */}
         <p className="mt-4 text-sm text-gray-500">
@@ -194,7 +195,7 @@ const SignupPage = () => {
         </p>
       </LoginSignupCard>
       <div
-        className="mt-6 flex items-center gap-2 text-white cursor-pointer hover:underline"
+        className="my-6 flex items-center gap-2 text-white cursor-pointer hover:underline"
         onClick={() => navigate("/")}
       >
         <ArrowLeft size={18} />

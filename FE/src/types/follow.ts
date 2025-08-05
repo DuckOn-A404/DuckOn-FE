@@ -1,13 +1,6 @@
-export type FollowerUser = {
+export type FollowUser = {
     userId: string;
     nickname: string;
     profileImg: string;
-    following: boolean; // 내가 이 사람을 팔로우하는가
-}
-
-export type FollowingUser = {
-    userId: string;
-    nickname: string;
-    profileImg: string;
-    // following은 포함되지 않음
+    following?: boolean;    // 선택적으로 팔로워 목록만 해당
 }

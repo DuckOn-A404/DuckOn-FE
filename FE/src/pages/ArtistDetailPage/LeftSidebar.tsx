@@ -1,12 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { List, CheckSquare } from "lucide-react";
-import { dummyArtists } from "../../mocks/artists";
-import Button from "../../components/common/Button";
+import { List } from "lucide-react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
   const { followedArtists } = useArtistFollowStore();
+
+  const handleArtistClick = (artistId: number, nameEn: string) => {
+    navigate(`/artist/${nameEn}`, {
+      state: { artistId: artistId },
+    });
+  };
 
   return (
     <aside className="w-72 p-4">
@@ -14,39 +18,29 @@ const LeftSidebar = () => {
       <div className="bg-white rounded-2xl shadow p-4 flex flex-col min-h-[calc(100vh-6rem)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">팔로우한 아티스트</h2>
-          <List className="w-5 h-5 text-gray-500 cursor-pointer" />
+          <List className="w-5 h-5 text-gray-500" />
         </div>
 
         {followedArtists.length > 0 ? (
           // 팔로우한 아티스트가 있을 때
           <>
             <ul className="space-y-2 text-sm mb-4 flex-grow overflow-y-auto custom-scrollbar">
-              {followedArtists.map((followedArtist) => {
-                const fullArtistInfo = dummyArtists.find(
-                  (artist) => artist.artistId === followedArtist.artistId
-                );
-                const artistImgUrl =
-                  fullArtistInfo?.imgUrl || "https://via.placeholder.com/32";
-
+              {followedArtists.map((artist) => {
                 return (
                   <li
-                    key={followedArtist.artistId}
+                    key={artist.artistId}
                     className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100"
                     onClick={() =>
-                      navigate(`/artists/${followedArtist.nameEn}`)
+                      handleArtistClick(artist.artistId, artist.nameEn)
                     }
                   >
                     <img
-                      src={artistImgUrl}
-                      alt={followedArtist.nameKr}
+                      src={artist.imgUrl || "https://placehold.co/32x32"}
+                      alt={artist.nameKr}
                       className="w-8 h-8 rounded-full object-cover"
                     />
                     <div className="flex-1 flex justify-between items-center">
-                      <span className="font-medium">
-                        {followedArtist.nameKr}
-                      </span>
-                      <span className="text-purple-500 text-xs">15개 방</span>
-                      <CheckSquare className="w-4 h-4 text-purple-400" />
+                      <span className="font-medium">{artist.nameKr}</span>
                     </div>
                   </li>
                 );
