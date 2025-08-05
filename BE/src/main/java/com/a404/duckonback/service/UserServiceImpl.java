@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +24,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PenaltyService penaltyService;
     private final FollowService followService;
+    private final S3Service s3Service;
+
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -264,9 +267,25 @@ public class UserServiceImpl implements UserService {
             user.setLanguage(newUserInfo.getLanguage());
         }
 
-        if(newUserInfo.getProfileImg() != null && !newUserInfo.getProfileImg().isEmpty()) {
-            // TODO : 프로필 이미지 처리 로직 추가 필요
+        MultipartFile file = newUserInfo.getProfileImg();
+        if (file != null && !file.isEmpty()) {
+            // 이전 이미지 삭제
+            if(user.getImgUrl() != null && !user.getImgUrl().isBlank()) {
+                s3Service.deleteFile(user.getImgUrl());
+            }
+            String newImgUrl = s3Service.uploadFile(file);
+            user.setImgUrl(newImgUrl);
         }
     }
+    @Override
+    public boolean verifyPassword(String userId, String inputPassword){
+        User user = userRepository.findByUserId(userId);
+        if (user == null) {
+            throw new CustomException("사용자를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+        }
+
+        return passwordEncoder.matches(inputPassword, user.getPassword());
+    }
+
 
 }

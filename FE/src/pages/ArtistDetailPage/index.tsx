@@ -29,6 +29,7 @@ const ArtistDetailPage = () => {
     isFollowing: followingSet,
     addFollow,
     removeFollow,
+    fetchFollowedArtists,
   } = useArtistFollowStore();
 
   const isLoggedIn = !!myUser;
@@ -37,8 +38,8 @@ const ArtistDetailPage = () => {
   const {
     liveRooms,
     hasMoreLive,
-    hasMoreUpcoming,
     isLoading: isLoadingRooms,
+    error: roomsError,
     handleLoadMore,
   } = useArtistRooms(artist?.artistId);
 
@@ -74,9 +75,69 @@ const ArtistDetailPage = () => {
     fetchPageData();
   }, [artistId]);
 
-  if (isLoadingPage) {
+  useEffect(() => {
+    if (isLoggedIn) {
+      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
+      fetchFollowedArtists();
+    }
+  }, [isLoggedIn, fetchFollowedArtists]);
+
+  if (isLoadingPage || !artist) {
     return (
-      <div className="p-10 text-center">아티스트 정보를 불러오는 중...</div>
+      <div className="flex w-full bg-gray-50">
+        {/* 왼쪽: 팔로우 리스트 자리 */}
+        <LeftSidebar />
+
+        {/* 가운데: 스켈레톤 */}
+        <main className="flex-1 p-6 space-y-10 animate-pulse">
+          {/* 아티스트 카드 Skeleton */}
+          <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 bg-gray-200 rounded-2xl" />
+              <div className="space-y-3">
+                <div className="h-8 w-48 bg-gray-200 rounded" /> {/* nameKr */}
+                <div className="h-4 w-32 bg-gray-200 rounded" /> {/* nameEn */}
+                <div className="h-4 w-40 bg-gray-200 rounded" />{" "}
+                {/* debutDate */}
+              </div>
+            </div>
+            <div className="w-20 h-8 bg-gray-200 rounded-full" />
+          </div>
+
+          {/* 라이브 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* 예정된 방 영역 Skeleton */}
+          <div className="space-y-4">
+            <div className="h-6 w-40 bg-gray-200 rounded" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
+              {Array(2)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
+                  />
+                ))}
+            </div>
+          </div>
+        </main>
+
+        {/* 오른쪽 실시간 탭 */}
+        {artist && <RightSidebar artistId={artist.artistId} />}
+      </div>
     );
   }
 
@@ -99,6 +160,7 @@ const ArtistDetailPage = () => {
 
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
+    if (!myUser) return alert("로그인이 필요합니다.");
     if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
@@ -167,6 +229,7 @@ const ArtistDetailPage = () => {
 
         {/* 라이브 방 */}
         <section>
+          {/* 섹션 헤더: 타이틀과 '새 방 만들기' 버튼 */}
           <div className="flex justify-between items-center mb-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-pink-50 p-4 shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 text-white shadow">
@@ -188,24 +251,48 @@ const ArtistDetailPage = () => {
               </button>
             )}
           </div>
-          <div className="flex justify-center">
-            {liveRooms.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                {liveRooms.map((room) => (
-                  <VideoCard key={room.roomId} {...room} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-sm">
-                현재 진행 중인 라이브 방송이 없습니다.
-              </p>
+
+          {/* 방 목록 표시 영역 */}
+          <div className="mt-6 flex flex-col items-center gap-8">
+            {/* 1. 로딩 중일 때 표시 */}
+            {isLoadingRooms && <p>방송 목록을 불러오는 중...</p>}
+
+            {/* 2. 에러 발생 시 표시 */}
+            {roomsError && <p className="text-red-500">{roomsError}</p>}
+
+            {/* 3. 로딩도 아니고 에러도 아닐 때 목록 또는 빈 메시지 표시 */}
+            {!isLoadingRooms && !roomsError && (
+              <>
+                {liveRooms.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 w-full">
+                    {liveRooms.map((room) => (
+                      <VideoCard key={room.roomId} {...room} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">
+                    현재 진행 중인 라이브 방송이 없습니다.
+                  </p>
+                )}
+              </>
+            )}
+
+            {/* 4. 더 보여줄 방이 있을 때만 '더보기' 버튼 표시 */}
+            {hasMoreLive && (
+              <button
+                onClick={handleLoadMore}
+                disabled={isLoadingRooms}
+                className="mt-4 px-6 py-2 bg-white border border-gray-300 rounded-full text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                더보기
+              </button>
             )}
           </div>
         </section>
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar artistId={artist.artistId} />
+      <RightSidebar artistId={artist!.artistId} />
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
