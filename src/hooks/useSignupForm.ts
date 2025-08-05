@@ -90,13 +90,14 @@ export const useSignupForm = () => {
 
   // 프로필 이미지 업로드 핸들러
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, profileImg: e.target.files[0] }));
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, profileImg: file }));
     }
   };
 
   // 회원가입 폼 제출 핸들러
-  const handleSubmit = async (e: React.FormEvent<HTMLFormEvent>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError(null);

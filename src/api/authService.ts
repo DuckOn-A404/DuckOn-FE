@@ -1,6 +1,5 @@
 // 인증 관련 API 함수들
 import { api } from "./axiosInstance";
-import { type SignupData } from "../types/auth";
 
 /**
  * 회원가입 API 요청
@@ -44,33 +43,35 @@ export const checkUserIdExists = async (
 
 // 로그인 요청 타입
 export interface LoginRequest {
-  email?: string
-  userId?: string
-  password: string
+  email?: string;
+  userId?: string;
+  password: string;
 }
 
 // 로그인 응답의 사용자 정보 타입
 export interface User {
-  email: string
-  userId: string
-  nickname: string
-  role: 'ADMIN' | 'USER' | 'BANNED'
-  language: string
-  imgUrl: string | null
-  artistList: number[]
+  email: string;
+  userId: string;
+  nickname: string;
+  role: "ADMIN" | "USER" | "BANNED";
+  language: string;
+  imgUrl: string | null;
+  artistList: number[];
 }
 
 // 로그인 응답 타입
 export interface LoginResponse {
-  accessToken: string
-  refreshToken: string
-  user: User
+  accessToken: string;
+  refreshToken: string;
+  user: User;
 }
 
-export const logIn = async (credentials: LoginRequest): Promise<LoginResponse> => {
+export const logIn = async (
+  credentials: LoginRequest
+): Promise<LoginResponse> => {
   try {
-    const { email, userId, password } = credentials
-  
+    const { email, userId, password } = credentials;
+
     const response = await api.post<LoginResponse>(
       "/api/auth/login",
       { email, userId, password }, // plain JSON
@@ -87,12 +88,14 @@ export const logIn = async (credentials: LoginRequest): Promise<LoginResponse> =
     localStorage.setItem("refreshToken", refreshToken);
     localStorage.setItem("user", JSON.stringify(user));
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-    console.log(" Authorization 헤더 설정 완료:", api.defaults.headers.common["Authorization"]);
+    console.log(
+      " Authorization 헤더 설정 완료:",
+      api.defaults.headers.common["Authorization"]
+    );
 
     return response.data;
-    
   } catch (error) {
-    console.error('로그인 실패:', error)
-    throw error
+    console.error("로그인 실패:", error);
+    throw error;
   }
-}
+};
