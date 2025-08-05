@@ -74,7 +74,7 @@ const LoginPage = () => {
         </div>
 
         {/* 에러 메시지 */}
-        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+        {error && <p className="text-red-500 text-sm mb-4 text-center">아이디 또는 비밀번호를 확인해주세요.</p>}
 
         {/* 로그인 상태 유지 + 비밀번호 찾기 */}
         <div className="w-full flex justify-between items-center text-sm mb-4">
