@@ -297,10 +297,8 @@ const ArtistDetailPage = () => {
       {/* 방 생성 모달 */}
       <CreateRoomModal
         isOpen={isModalOpen}
-        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         artistId={artist.artistId}
-        hostId={myUser?.userId ?? ""}
         hostId={myUser?.userId ?? ""}
       />
     </div>
