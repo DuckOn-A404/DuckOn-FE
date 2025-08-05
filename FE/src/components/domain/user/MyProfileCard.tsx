@@ -1,34 +1,36 @@
 import { type MyUser } from "../../../types/mypage";
 
-type ProfileCardProps = {
+type MyProfileCardProps = {
   user: MyUser;
   onEditClick: () => void;
-  currentUserId?: string  // 로그인한 유저 ID
-  onFollowerClick?: () => void
-  onFollowingClick?: () => void
+  onFollowerClick?: () => void;
+  onFollowingClick?: () => void;
 };
 
-const ProfileCard = ({ user, onEditClick, currentUserId, onFollowerClick, onFollowingClick }: ProfileCardProps) => {
+const MyProfileCard = ({
+  user,
+  onEditClick,
+  onFollowerClick,
+  onFollowingClick,
+}: MyProfileCardProps) => {
   return (
     <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 정보</h1>
 
-        {currentUserId === user.userId && (
-          <button
-            className="text-sm text-purple-600 font-medium hover:underline transition"
-            onClick={onEditClick}
-          >
-            프로필 수정
-          </button>
-        )}
+        <button
+          className="text-sm text-purple-600 font-medium hover:underline transition"
+          onClick={onEditClick}
+        >
+          프로필 수정
+        </button>
       </div>
 
       <div className="flex gap-8 items-start">
         {/* 왼쪽: 프로필 이미지 + 팔로워 수 */}
         <div className="flex flex-col items-center w-32 shrink-0">
           <img
-            src={user.profileImg || "/default_image.png"}
+            src={user.imgUrl || "/default_image.png"}
             alt="프로필 이미지"
             className="w-24 h-24 object-cover rounded-full"
           />
@@ -83,7 +85,4 @@ const ProfileCard = ({ user, onEditClick, currentUserId, onFollowerClick, onFoll
   );
 };
 
-
-
-
-export default ProfileCard;
+export default MyProfileCard;

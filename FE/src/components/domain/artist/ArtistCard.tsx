@@ -1,5 +1,4 @@
 import { Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 type ArtistCardProps = {
   artistId: number;
@@ -8,6 +7,7 @@ type ArtistCardProps = {
   imgUrl: string;
   followers?: number;
   tag?: string;
+  onClick: () => void;
 };
 
 /*
@@ -26,17 +26,12 @@ const ArtistCard = ({
   imgUrl,
   followers,
   tag,
+  onClick,
 }: ArtistCardProps) => {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    navigate(`/artist/${encodeURIComponent(nameEn)}`);
-  };
-
   return (
     <div
       className="w-full max-w-[220px] rounded-2xl shadow-md overflow-hidden cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
-      onClick={handleClick}
+      onClick={onClick}
     >
       <div className="relative w-full aspect-[3/4]">
         <img src={imgUrl} alt={nameEn} className="w-full h-full object-co" />
