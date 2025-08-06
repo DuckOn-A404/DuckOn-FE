@@ -43,21 +43,21 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
         <div
           key={msg.messageId}
           className={`flex items-start gap-3 ${
-            msg.senderId === myUser?.userId ? "justify-end" : "justify-start"
+            msg.userId === myUser?.userId ? "justify-end" : "justify-start"
           }`}
         >
           {/* 이름과 말풍선 */}
           <div
             className={`flex flex-col ${
-              msg.senderId === myUser?.userId ? "items-end" : "items-start"
+              msg.userId === myUser?.userId ? "items-end" : "items-start"
             }`}
           >
             <span className="text-sm font-semibold text-gray-700 mb-1">
-              {msg.senderName}
+              {msg.userNickname}
             </span>
             <div
               className={`px-4 py-2 rounded-xl max-w-xs break-words ${
-                msg.senderId === myUser?.userId
+                msg.userId === myUser?.userId
                   ? "bg-purple-600 text-white rounded-br-none"
                   : "bg-gray-200 text-gray-800 rounded-bl-none"
               }`}
