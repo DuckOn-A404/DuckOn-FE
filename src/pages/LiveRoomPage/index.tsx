@@ -8,7 +8,7 @@ import { createStompClient } from "../../socket";
 // 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
-import RightSidebar from "./RightSidebar";
+// import RightSidebar from "./RightSidebar";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();

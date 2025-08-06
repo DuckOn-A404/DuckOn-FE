@@ -99,3 +99,13 @@ export const logIn = async (
     throw error;
   }
 };
+
+/**
+ * 소셜 로그인(쿠키 기반) 직후에 내 프로필 정보를 가져오는 전용 함수
+ */
+export const getMyProfileAfterOAuth = async () => {
+  // 이 함수는 withCredentials: true 설정에 의존하여 쿠키를 전송합니다.
+  // localStorage에서 토큰을 직접 읽지 않습니다.
+  const response = await api.get("/api/users/me");
+  return response.data;
+};
