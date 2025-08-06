@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
 import { formatCompactNumber } from "../../../utils/formatters";
-import type { Room } from "../../../types/Room";
+import { type room } from "../../../types/Room";
 
-type VideoCardProps = Room;
+const PLACEHOLDER_URL =
+  "https://via.placeholder.com/1280x720.png?text=Image+Not+Available";
 
 /* 
   name : VideoCard
@@ -14,60 +15,58 @@ type VideoCardProps = Room;
     - artistName : 방송 아티스트 이름 (아티스트 상세 페이지에서는 방장 닉네임으로 가능하도록 수정 필요)
     - title : 방 제목
 */
-const VideoCard = ({
-  roomId,
-  isLive,
-  viewerCount,
-  artistName,
-  title,
-  imgUrl,
-}: VideoCardProps) => {
+const VideoCard = (room: room) => {
   const navigate = useNavigate();
+  const thumbnailUrl = room.imgUrl || PLACEHOLDER_URL;
 
   const handleCardClick = () => {
-    // roomId를 사용해 해당 라이브 방 상세 페이지로 이동
-    if (roomId) {
-      navigate(`/live/${roomId}`);
+    if (room.roomId) {
+      navigate(`/live/${room.roomId}`);
     }
   };
 
-  const badgeText = isLive ? "LIVE" : "예정";
-  const badgeClass = isLive
-    ? "bg-red-500 text-white"
-    : "bg-blue-500 text-white";
-
   return (
     <div
-      className="w-full max-w-sm cursor-pointer transition-transform duration-300 ease-in-out hover:scale-105"
+      className="w-full max-w-sm cursor-pointer group bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-105"
       onClick={handleCardClick}
     >
-      <div className="w-full max-w-sm h-auto bg-white rounded-2xl shadow-sm outline outline-1 outline-gray-100 overflow-hidden flex flex-col">
-        <div className="w-full aspect-video relative">
-          <img
-            className="w-full h-full object-cover"
-            src={imgUrl}
-            alt={`${title} 썸네일`}
-          />
-          <div
-            className={`absolute top-3 left-3 px-2 h-6 inline-flex items-center gap-x-1.5 rounded-full text-xs font-bold text-white ${badgeClass}`}
-          >
-            <div className="w-2 h-2 bg-white rounded-full" />
-            <span>{badgeText}</span>
-          </div>
-
-          <div className="absolute right-3 bottom-3 w-16 h-6 inline-flex justify-center items-center gap-x-1 rounded bg-black/70 text-xs text-white">
-            <Users className="h-3 w-3" />
-            <span>{formatCompactNumber(viewerCount)}</span>
-          </div>
+      {/* 2. 썸네일 영역 */}
+      <div className="w-full relative aspect-[16/9] overflow-hidden">
+        <img
+          className="w-full h-full object-cover"
+          src={thumbnailUrl}
+          alt={`${room.title} 썸네일`}
+        />
+        <div className="absolute right-3 bottom-3 w-auto min-w-[4rem] h-6 inline-flex justify-center items-center gap-x-1 px-2 rounded bg-black/70 text-xs text-white">
+          <Users className="h-3 w-3" />
+          <span>{formatCompactNumber(room.participantCount)}</span>
         </div>
+      </div>
 
-        <div className="w-full p-4 flex flex-col">
-          <div className="pb-1 text-purple-600 text-sm font-medium">
-            {artistName}
-          </div>
-          <div className="w-full text-gray-900 text-sm font-bold truncate">
-            {title}
-          </div>
+      {/* 3. 정보 영역 (썸네일 아래) */}
+      <div className="w-full p-3 flex items-start gap-3">
+        {/* 방장 프로필 이미지 */}
+        <img
+          src={room.hostProfileImgUrl || "/default_image.png"}
+          alt={room.hostNickname}
+          className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+        />
+        {/* 방 제목 및 방장 닉네임 */}
+        <div className="flex-1 min-w-0">
+          {" "}
+          {/* min-w-0은 truncate가 잘 동작하게 도와줍니다. */}
+          <p
+            className="w-full text-gray-800 font-bold truncate"
+            title={room.title}
+          >
+            {room.title}
+          </p>
+          <p
+            className="w-full text-gray-500 text-sm truncate"
+            title={room.hostNickname}
+          >
+            {room.hostNickname}
+          </p>
         </div>
       </div>
     </div>

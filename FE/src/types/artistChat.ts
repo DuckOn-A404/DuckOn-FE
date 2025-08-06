@@ -1,7 +1,7 @@
-export type ChatMessage = {
+export type artistChatMessage = {
   messageId: string;
-  senderId: string;
-  senderName: string;
+  userId: string;
+  userNickname: string;
   content: string;
-  timestamp: string;
+  sentAt: string;
 };

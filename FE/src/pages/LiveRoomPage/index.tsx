@@ -1,55 +1,83 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { fetchRoomById } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
+import { Client } from "@stomp/stompjs";
+import { createStompClient } from "../../socket";
 
 // 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
-import ChatPanel from "./ChatPanel";
-import PlaylistPanel from "./PlaylistPanel";
+// import RightSidebar from "./RightSidebar";
 
 const LiveRoomPage = () => {
-  const { roomId } = useParams()
-  const { myUser } = useUserStore()
-  const myUserId = myUser?.userId
-  const [room, setRoom] = useState<any>(null)
+  const { roomId } = useParams();
+  const { myUser } = useUserStore();
+  const myUserId = myUser?.userId;
+  const [room, setRoom] = useState<any>(null);
+  const navigate = useNavigate();
+  const [stompClient, setStompClient] = useState<Client | null>(null)
+
+  const handleExit = () => {
+    navigate(-1);
+  };
 
   // 오른쪽 사이드바의 활성 탭 상태만 관리합니다.
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
+  const isHost = room?.hostId === myUserId
+  
+  useEffect(() => {
+    if (!myUser) return
+
+    const client = createStompClient(localStorage.getItem("accessToken") || "")
+    client.activate()
+    setStompClient(client)
+
+    return () => {
+      client.deactivate()
+    }
+  }, [myUser])
+
   useEffect(() => {
     const loadRoom = async () => {
-      if(!roomId) return
       try {
-        const roomData = await fetchRoomById(roomId)
-        setRoom(roomData)
+        if (!roomId) return;
+        const roomData = await fetchRoomById(roomId);
+        console.log("방 정보:", roomData);
+        setRoom(roomData);
       } catch (error) {
-        console.error("방 정보 불러오기 실패:", error)
+        console.error("방 정보 불러오기 실패:", error);
       }
-    }
-    loadRoom()
-  }, [roomId])
+    };
+    loadRoom();
+  }, [roomId]);
 
-  if (!room) return <div>로딩 중...</div>
+  if (!room || !stompClient || !myUser) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* 상단 헤더 */}
-      <LiveHeader 
+      <LiveHeader
         isHost={room.hostId === myUserId}
         title={room.title}
         hostId={room.hostId}
         participandCount={room.participants?.length || 0}
-        onExit={() => window.history.back()}/>
-
+        onExit={handleExit}
+      />
 
       {/* 본문: 영상 + 사이드바 */}
       <div className="flex flex-1 overflow-hidden">
         {/* 왼쪽: 영상 */}
         <main className="flex-1 bg-black">
-          <VideoPlayer />
+          <VideoPlayer
+            videoId={room.playlist[room.currentVideoIndex]}
+            isHost={isHost}
+            stompClient={stompClient}
+            user={myUser!}
+            roomId={room.roomId}
+          />
         </main>
 
         {/* 오른쪽: 사이드바 */}
@@ -78,10 +106,11 @@ const LiveRoomPage = () => {
             </button>
           </div>
 
-          {/* 탭 콘텐츠 */}
-          <div className="flex-1 overflow-y-auto">
-            {activeTab === "chat" ? <ChatPanel /> : <PlaylistPanel />}
-          </div>
+          {/* <RightSidebar
+            selectedTab={activeTab}
+            isHost={isHost}
+            roomId={roomId}
+          /> */}
         </aside>
       </div>
     </div>

@@ -2,10 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
-import {
-  fetchLanguages,
-  type LanguageOption,
-} from "../../../api/languageSelect";
+import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
+import { useUserStore } from "../../../store/useUserStore";
 
 export type EditProfileCardProps = {
   user: MyUser;
@@ -24,9 +22,8 @@ const EditProfileCard = ({
   const [language, setLanguage] = useState(user.language);
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [showImageOptions, setShowImageOptions] = useState(false);
-  const [useDefaultImage, setUseDefaultImage] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl || DEFAULT_IMG)
+  const [showImageOptions, setShowImageOptions] = useState(false)
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -50,17 +47,17 @@ const EditProfileCard = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfileImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setUseDefaultImage(false);
-      setShowImageOptions(false);
+      setProfileImage(file)
+      setPreviewUrl(URL.createObjectURL(file))
+      setShowImageOptions(false)
+    } else {
+      console.log("파일 선택 취소됨 또는 파일 없음")
     }
   };
 
   const handleResetToDefaultImage = () => {
-    setProfileImage(null);
     setPreviewUrl(DEFAULT_IMG);
-    setUseDefaultImage(true);
+    setProfileImage(null);
     setShowImageOptions(false);
   };
 
@@ -71,6 +68,7 @@ const EditProfileCard = ({
       setShowImageOptions(!showImageOptions);
     }
   };
+
   const handleSubmit = async () => {
     if (newPassword && newPassword !== confirmPassword) {
       setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
@@ -80,7 +78,8 @@ const EditProfileCard = ({
     }
 
     if (newPassword && newPassword.length < 8) {
-      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
+      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.")
+      return
     }
 
     const formData = new FormData();
@@ -94,13 +93,13 @@ const EditProfileCard = ({
       formData.append("profileImg", profileImage);
     }
 
-    for (const [key, value] of formData.entries()) {
-      console.log(key, value);
-    }
     try {
       await updateUserProfile(formData);
       const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
-      console.log("업데이트 후 응답:", updated);
+      useUserStore.getState().setMyUser({
+        ...updated,
+        artistList: updated.artistList ?? [],
+      })
       onUpdate(updated);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
@@ -184,16 +183,14 @@ const EditProfileCard = ({
                 변경하기
               </button>
               {/* 기본 이미지가 아닌 경우에만 뜨기 */}
-              {user.imgUrl &&
-                user.imgUrl !== DEFAULT_IMG &&
-                !useDefaultImage && (
-                  <button
-                    onClick={handleResetToDefaultImage}
-                    className="text-gray-500 hover:underline"
-                  >
-                    기본 이미지로 변경
-                  </button>
-                )}
+              {user.imgUrl && user.imgUrl !== DEFAULT_IMG && (
+                <button
+                  onClick={handleResetToDefaultImage}
+                  className="text-gray-500 hover:underline"
+                >
+                  기본 이미지로 변경
+                </button>
+              )}
             </div>
           )}
           <input
