@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getRoomsByArtist } from "../api/roomService";
-import { type Room } from "../types/Room";
+import { type room } from "../types/room";
 
 // 처음에 보여줄 방의 수
 const INITIAL_VISIBLE_COUNT = 8;
@@ -11,7 +11,7 @@ const INITIAL_VISIBLE_COUNT = 8;
  * @param artistId - 조회할 아티스트의 ID
  */
 export const useArtistRooms = (artistId: number | undefined) => {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<room[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
