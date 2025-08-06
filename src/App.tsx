@@ -33,7 +33,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/live/:roomId" element={<LiveRoomPage />} />
-          <Route path="/oauth2/success" element={<OAuth2RedirectHandler />} />
+          <Route path="oauth2/success" element={<OAuth2RedirectHandler />} />
         </Routes>
       </BrowserRouter>
     </>
