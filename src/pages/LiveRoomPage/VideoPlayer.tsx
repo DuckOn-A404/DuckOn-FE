@@ -1,60 +1,76 @@
 import React, { useEffect, useRef } from "react";
 import YouTube from "react-youtube";
-import { Socket } from "socket.io-client";
+import { Client } from "@stomp/stompjs";
+import type { User } from "../../types";
 
 type VideoPlayerProps = {
   videoId: string;
   isHost: boolean;
-  socket: Socket;
+  stompClient: Client;
+  user: User;
+  roomId: string;
 };
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, socket }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient, user, roomId }) => {
   const playerRef = useRef<YT.Player | null>(null);
 
-  // 플레이어 준비되었을 때 참조 저장
   const onPlayerReady = (event: any) => {
     playerRef.current = event.target;
   };
 
-  // 방장일 경우: 재생/일시정지/이동 이벤트 감지하여 브로드캐스트
   const onPlayerStateChange = (event: any) => {
-    if (!isHost || !playerRef.current) return;
+    if (!isHost || !playerRef.current || !stompClient.connected) return;
 
-    const player = playerRef.current;
-    const currentTime = player.getCurrentTime();
+    const currentTime = playerRef.current.getCurrentTime();
 
     switch (event.data) {
-      case 1: // 재생
-        socket.emit("video-control", { type: "play", currentTime });
+      case 1: // play
+        stompClient.publish({
+          destination: `/app/room/update`,
+          body: JSON.stringify({
+            roomId,
+            hostId: user.userId,
+            type: "play",
+            currentTime,
+          }),
+        });
         break;
-      case 2: // 일시정지
-        socket.emit("video-control", { type: "pause", currentTime });
+      case 2: // pause
+        stompClient.publish({
+          destination: `/app/room/update`,
+          body: JSON.stringify({
+            roomId,
+            hostId: user.userId,
+            type: "pause",
+            currentTime,
+          }),
+        });
         break;
     }
   };
 
-  // 참여자일 경우: 소켓으로 들어온 이벤트 수신해서 동기화
+  // 참여자: 서버에서 메시지 수신하여 재생 상태 동기화
   useEffect(() => {
-  if (!socket || isHost) return;
+    if (!stompClient.connected || isHost) return;
 
-  socket.on("video-control", ({ type, currentTime }: { type: string; currentTime: number }) => {
-    if (!playerRef.current) return;
+    const subscription = stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
+      const { type, currentTime } = JSON.parse(message.body);
+      const player = playerRef.current;
+      if (!player) return;
 
-    const player = playerRef.current;
+      if (type === "play") {
+        player.seekTo(currentTime, true);
+        player.playVideo();
+      } else if (type === "pause") {
+        player.seekTo(currentTime, true);
+        player.pauseVideo();
+      }
+    });
 
-    if (type === "play") {
-      player.seekTo(currentTime, true);
-      player.playVideo();
-    } else if (type === "pause") {
-      player.seekTo(currentTime, true);
-      player.pauseVideo();
-    }
-  });
-
-  return () => {
-    socket.off("video-control");
-  };
-}, [socket, isHost]);
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [stompClient, isHost, roomId]);
 
   return (
     <div className="w-full h-full">
