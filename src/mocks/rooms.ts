@@ -1,4 +1,4 @@
-import { type room } from "../types/room";
+import { type room } from "../types/Room";
 
 export const dummyRooms: room[] = [
   {
