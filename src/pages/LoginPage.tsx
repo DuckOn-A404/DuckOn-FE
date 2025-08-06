@@ -14,6 +14,8 @@ const LoginPage = () => {
 
   const setUser = useUserStore((state) => state.setMyUser);
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const handleLogin = async () => {
     setError("");
     const credentials = buildLoginCredentials(loginInput.trim(), password);
@@ -116,7 +118,11 @@ const LoginPage = () => {
         </div>
 
         {/* Google 로그인 */}
-        <button className="w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-xl text-sm font-medium text-gray-700 mb-3">
+        <a
+          href={`${API_BASE_URL}/oauth2/authorization/google`}
+          className="w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-xl text-sm font-medium text-gray-700 mb-3 transition-colors hover:bg-gray-50"
+        >
+          {" "}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="20"
@@ -141,29 +147,45 @@ const LoginPage = () => {
             />
           </svg>
           Google로 계속하기
-        </button>
+        </a>
 
         {/* Kakao 로그인 */}
-        <button className="w-full flex items-center justify-center gap-2 bg-yellow-400 py-3 rounded-xl text-sm font-medium text-black mb-6">
+        <a
+          href={`${API_BASE_URL}/oauth2/authorization/kakao`}
+          className="w-full flex items-center justify-center gap-2 bg-[#FEE500] py-3 rounded-xl text-sm font-medium text-black mb-3 transition-colors hover:bg-yellow-400"
+        >
           <svg
-            className="w-6 h-6"
-            viewBox="0 0 32 32"
-            fill="none"
+            className="w-5 h-5"
             xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
           >
             <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M16 4C9.373 4 4 8.81 4 14.654c0 4.148 2.59 7.766 6.356 9.496l-2.288 8.167c-.203.723.498 1.343 1.187.97l9.02-4.832c.56-.002 1.118-.02 1.67-.058C27.428 27.873 32 22.18 32 16.654 32 10.81 27.373 6 20.746 6c-1.896 0-3.692.42-5.28 1.155C14.28 4.81 12.485 4 10.515 4H16Z"
-              transform="translate(-1.4 -2.9)"
               fill="#191919"
+              d="M12 4.44c-4.24 0-7.68 2.89-7.68 6.44 0 2.43 1.58 4.54 3.84 5.62-.28 1-.58 2.11-.82 2.88-.04.13.06.27.19.27.08 0 .15-.04.19-.11l3.9-2.01c.54.08 1.1.12 1.68.12 4.24 0 7.68-2.89 7.68-6.44S16.24 4.44 12 4.44z"
             />
           </svg>
           카카오로 계속하기
-        </button>
+        </a>
+
+        {/* Naver 로그인 */}
+        <a
+          href={`${API_BASE_URL}/oauth2/authorization/naver`}
+          className="w-full flex items-center justify-center gap-2 bg-[#03C75A] py-3 rounded-xl text-sm font-medium text-white transition-colors hover:bg-green-600"
+        >
+          {/* Naver 로고 SVG */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="white"
+            className="w-4 h-4"
+          >
+            <path d="M4 4h5.5l5 6.5V4H20v16h-5.5l-5-6.5V20H4V4z" />
+          </svg>
+          네이버로 계속하기
+        </a>
 
         {/* 회원가입 안내 */}
-        <p className="text-sm text-gray-500 text-center">
+        <p className="text-sm text-gray-500 text-center mt-2">
           계정이 없으신가요?{" "}
           <Link
             to="/signup"
