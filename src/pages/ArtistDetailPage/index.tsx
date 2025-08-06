@@ -46,25 +46,17 @@ const ArtistDetailPage = () => {
   // 최적화된 팔로우 상태 확인
   const isFollowing = artist ? followingSet.has(artist.artistId) : false;
 
-  // 페이지 진입 시 아티스트 상세 정보 및 방목록 정보 병렬로 불러오기
+  // 페이지 진입 시 아티스트 상세 정보 불러오기
   useEffect(() => {
     const fetchPageData = async () => {
       if (!artistId) {
-        console.error("Artist ID가 state로 전달되지 않았습니다.");
         setIsLoadingPage(false);
         return;
       }
       setIsLoadingPage(true);
       try {
         const artistData = await getArtistDetail(artistId);
-
         setArtist(artistData);
-
-        // roomsData 관련 로직은 나중에
-        // setRooms({
-        //   live: roomsData.roomList.filter((r) => r.isLive),
-        //   upcoming: roomsData.roomList.filter((r) => !r.isLive),
-        // });
       } catch (error) {
         console.error("페이지 데이터를 불러오는 데 실패했습니다.", error);
         setArtist(null);
@@ -77,7 +69,6 @@ const ArtistDetailPage = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
       fetchFollowedArtists();
     }
   }, [isLoggedIn, fetchFollowedArtists]);
@@ -105,21 +96,6 @@ const ArtistDetailPage = () => {
           </div>
 
           {/* 라이브 방 영역 Skeleton */}
-          <div className="space-y-4">
-            <div className="h-6 w-40 bg-gray-200 rounded" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array(2)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* 예정된 방 영역 Skeleton */}
           <div className="space-y-4">
             <div className="h-6 w-40 bg-gray-200 rounded" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
