@@ -84,7 +84,7 @@ const ArtistDetailPage = () => {
 
   if (isLoadingPage || !artist) {
     return (
-      <div className="flex w-full bg-gray-50">
+      <div className="flex w-full h-screen bg-gray-50">
         {/* 왼쪽: 팔로우 리스트 자리 */}
         <LeftSidebar />
 
@@ -105,21 +105,6 @@ const ArtistDetailPage = () => {
           </div>
 
           {/* 라이브 방 영역 Skeleton */}
-          <div className="space-y-4">
-            <div className="h-6 w-40 bg-gray-200 rounded" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array(2)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
-                  />
-                ))}
-            </div>
-          </div>
-
-          {/* 예정된 방 영역 Skeleton */}
           <div className="space-y-4">
             <div className="h-6 w-40 bg-gray-200 rounded" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
@@ -179,7 +164,7 @@ const ArtistDetailPage = () => {
   };
 
   return (
-    <div className="flex w-full bg-gray-50">
+    <div className="flex w-full h-screen bg-gray-50">
       {/* 왼쪽: 팔로우 리스트 */}
       <LeftSidebar />
 
