@@ -1,11 +1,9 @@
-export type Room = {
+export type room = {
   roomId: number;
-  artistId: number;
-  creatorId: number;
-  artistName: string;
   title: string;
-  imgUrl: string;
-  isLive: boolean;
-  viewerCount: number;
-  createdAt: string;
+  hostId: string;
+  hostNickname: string;
+  hostProfileImgUrl: string;
+  imgUrl: string | null;
+  participantCount: number;
 };
