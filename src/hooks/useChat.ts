@@ -1,10 +1,10 @@
 // src/hooks/useChat.ts
 import { useState, useEffect, useRef } from "react";
-import { Client } from "@stomp/stompjs";
+import { Client, type IMessage } from "@stomp/stompjs";
 import { createStompClient } from "../api/stompService";
 import { getChatHistory } from "../api/chatService";
 import { useUserStore } from "../store/useUserStore";
-import type { ChatMessage } from "../types/chat";
+import type { ChatMessage, ChatMessageRequest } from "../types/chat";
 
 /**
  * 채팅방의 실시간 통신 및 상태 관리를 담당하는 커스텀 훅
@@ -14,6 +14,7 @@ export const useChat = (roomId: string) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const stompClientRef = useRef<Client | null>(null);
+  const subscriptionRef = useRef<ReturnType<Client["subscribe"]> | null>(null);
   const { myUser } = useUserStore();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export const useChat = (roomId: string) => {
     };
     fetchHistory();
 
-    // --- 2. STOMP 클라이언트 생성/연결 ---
+    // 2. STOMP 연결 설정
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
@@ -41,19 +42,31 @@ export const useChat = (roomId: string) => {
       console.log("STOMP 연결 성공!");
       setIsConnected(true);
 
-      // 2-1. 채팅방 채널 구독 (메시지 수신)
-      client.subscribe(`/topic/rooms/${roomId}`, (message) => {
-        const receivedMessage = JSON.parse(message.body) as ChatMessage;
-        setMessages((prevMessages) => [...prevMessages, receivedMessage]);
-      });
+      // 2-1. 메시지 구독
+      const subscription = client.subscribe(
+        `/topic/rooms/${roomId}`,
+        (message: IMessage) => {
+          try {
+            const received = JSON.parse(message.body) as ChatMessage;
+            setMessages((prev) => [...prev, received]);
+          } catch (error) {
+            console.error("메시지 파싱 실패:", error);
+          }
+        }
+      );
+
+      subscriptionRef.current = subscription;
 
       // 2-2. 입장 메시지 전송
-      const enterMessage = {
+      const enterMessage: ChatMessageRequest = {
         roomId,
         senderId: myUser.userId,
         senderName: myUser.nickname,
         content: `${myUser.nickname}님이 입장했습니다.`,
+        timestamp: Date.now().toString(),
+        chatType: "ENTER",
       };
+
       client.publish({
         destination: `/app/chat/enter`,
         body: JSON.stringify(enterMessage),
@@ -66,15 +79,14 @@ export const useChat = (roomId: string) => {
       setIsConnected(false);
     };
 
-    // STOMP 클라이언트 활성화 (연결 시작)
+    // STOMP 클라이언트 활성화
     client.activate();
 
     // --- 3. 컴포넌트 언마운트 시 정리 작업 ---
     return () => {
-      if (client) {
-        console.log("STOMP 연결을 해제합니다.");
-        client.deactivate();
-      }
+      console.log("STOMP 클라이언트 정리");
+      subscriptionRef.current?.unsubscribe();
+      client.deactivate();
     };
   }, [roomId, myUser]);
 
@@ -83,18 +95,24 @@ export const useChat = (roomId: string) => {
    * @param content - 보낼 메시지 내용
    */
   const sendMessage = (content: string) => {
-    if (stompClientRef.current && isConnected && myUser) {
-      const chatMessage = {
-        roomId,
-        senderId: myUser.userId,
-        senderName: myUser.nickname,
-        content,
-      };
-      stompClientRef.current.publish({
-        destination: `/app/chat/message`,
-        body: JSON.stringify(chatMessage),
-      });
-    }
+    if (!stompClientRef.current || !isConnected || !myUser) return;
+
+    const chatMessage: ChatMessageRequest = {
+      roomId,
+      senderId: myUser.userId,
+      senderName: myUser.nickname,
+      content,
+      timestamp: Date.now().toString(),
+      chatType: "TALK",
+    };
+
+    stompClientRef.current.publish({
+      destination: `/app/chat/message`,
+      body: JSON.stringify(chatMessage),
+    });
+
+    // [선택] 낙관적 렌더링 (서버에서 echo 해주면 생략 가능)
+    // setMessages((prev) => [...prev, chatMessage]);
   };
 
   return { messages, isConnected, sendMessage };
