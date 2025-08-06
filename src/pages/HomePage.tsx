@@ -5,17 +5,19 @@ import ArtistCard from "../components/domain/artist/ArtistCard";
 import { Link } from "react-router-dom";
 import { getRandomArtists } from "../api/artistService";
 import { type Artist } from "../types/artist";
-import { dummyRooms } from "../mocks/rooms";
+import { useTrendingRooms } from "../hooks/useTrendingRooms";
+import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 
 const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingArtists, setIsLoadingArtists] = useState(true);
   const navigate = useNavigate();
 
-  // 더미 데이터
-  const hotRooms = dummyRooms
-    .sort((a, b) => b.participantCount - a.participantCount)
-    .slice(0, 3);
+  const {
+    trendingRooms,
+    isLoading: isLoadingTrending,
+    error: trendingError,
+  } = useTrendingRooms(3);
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     navigate(`/artist/${nameEn}`, {
@@ -31,7 +33,7 @@ const HomePage = () => {
       } catch (error) {
         console.error("추천 아티스트를 불러오는 데 실패했습니다.", error);
       } finally {
-        setIsLoading(false);
+        setIsLoadingArtists(false);
       }
     };
 
@@ -64,9 +66,21 @@ const HomePage = () => {
         <section>
           <h2 className="text-2xl font-bold mb-4">🔥 지금 핫한 방 🔥</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {hotRooms.map((room) => (
-              <VideoCard key={room.roomId} {...room} />
-            ))}
+            {isLoadingTrending ? (
+              // 로딩 중일 때 스켈레톤 UI 표시
+              Array.from({ length: 3 }).map((_, i) => (
+                <VideoCardSkeleton key={i} />
+              ))
+            ) : trendingError ? (
+              // 에러 발생 시 메시지 표시
+              <p className="col-span-3 text-center text-red-500">
+                {trendingError}
+              </p>
+            ) : (
+              trendingRooms.map((room) => (
+                <VideoCard key={room.roomId} {...room} />
+              ))
+            )}
           </div>
         </section>
 
@@ -82,7 +96,7 @@ const HomePage = () => {
             </Link>
           </div>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
-            {isLoading ? (
+            {isLoadingArtists ? (
               <p>아티스트를 불러오는 중...</p>
             ) : (
               recommendedArtists.map((artist) => (

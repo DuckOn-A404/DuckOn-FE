@@ -44,3 +44,22 @@ export const getRoomsByArtist = async (artistId: number): Promise<room[]> => {
 
   return response.data.roomInfoList;
 };
+
+/**
+ * 트렌딩 방 목록을 가져오는 API 함수
+ * @param size - 조회할 방의 개수 (기본값: 3)
+ * @returns 트렌딩 방 목록 배열
+ */
+export const getTrendingRooms = async (size = 3): Promise<room[]> => {
+  try {
+    const response = await api.get("/api/rooms/trending", {
+      params: { size },
+    });
+    // 백엔드 응답 구조에 따라 `response.data.roomInfoList` 등으로 변경될 수 있습니다.
+    // 만약 응답 데이터가 바로 배열이라면 `response.data`를 사용합니다.
+    return response.data.roomInfoList || [];
+  } catch (error) {
+    console.error("트렌딩 방 목록을 불러오는 데 실패했습니다:", error);
+    return [];
+  }
+};
