@@ -72,7 +72,7 @@ const LiveRoomPage = () => {
         {/* 왼쪽: 영상 */}
         <main className="flex-1 bg-black">
           <VideoPlayer
-            videoId={room.playlist[room.currentVideoIndex]?.videoId}
+            videoId={room.playlist[room.currentVideoIndex]}
             isHost={isHost}
             stompClient={stompClient}
             user={myUser!}
