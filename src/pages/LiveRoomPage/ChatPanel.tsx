@@ -10,8 +10,21 @@ import {
 import { Popover } from "@headlessui/react";
 import { useChat } from "../../hooks/useChat";
 import { useUserStore } from "../../store/useUserStore";
+import type { }
 
-const ChatPanel = ({ roomId }: { roomId: string }) => {
+type ChatPanelProps = {
+  roomId: string;
+  messages: ChatMessage[];
+  isConnected: boolean;
+  sendMessage: (message: string) => void;
+};
+
+const ChatPanel = ({
+  roomId,
+  messages,
+  isConnected,
+  sendMessage,
+}: ChatPanelProps) => {
   const { messages, isConnected, sendMessage } = useChat(roomId);
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
