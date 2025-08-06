@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../store/useUserStore";
-import { fetchMyProfile } from "../api/userService";
+import { getMyProfileAfterOAuth } from "../api/authService";
 
 /**
  * 소셜 로그인 성공 후, 백엔드로부터 리다이렉트되는 페이지입니다.
@@ -17,7 +17,7 @@ const OAuth2RedirectHandler = () => {
       try {
         // 1. 백엔드로부터 내 유저 정보를 가져옵니다.
         //    (백엔드가 쿠키에 토큰을 저장했으므로, 이 요청 시 자동으로 토큰이 함께 전송됩니다)
-        const userData = await fetchMyProfile();
+        const userData = await getMyProfileAfterOAuth();
 
         // 2. Zustand 스토어에 유저 정보를 저장하여 로그인 상태로 만듭니다.
         setMyUser(userData);
