@@ -109,6 +109,7 @@ deploy_be:
           -e MONGO_DB_NAME="${MONGO_DB_NAME}" \
           -e MONGO_DB_USERNAME="${MONGO_DB_USERNAME}" \
           -e MONGO_DB_PASSWORD="${MONGO_DB_PASSWORD}" \
+          -e BASE_URL="${BASE_URL}"
           duckonback:latest
       EOF
 
