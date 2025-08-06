@@ -119,7 +119,6 @@ export const useSignupForm = () => {
       const { passwordConfirm, ...rest } = formData;
       // 🔧 FormData로 변환
       const form = new FormData();
-      console.log("사용자가 친 값", formData);
 
       Object.entries(rest).forEach(([key, value]) => {
         if (value === null || value === undefined) return;
@@ -130,9 +129,6 @@ export const useSignupForm = () => {
           form.append(key, String(value));
         }
       });
-
-      // 확인용
-      console.log("FormData entries 확인:", [...form.entries()]);
 
       await postSignup(form);
       alert("회원가입이 완료되었습니다.");
@@ -152,7 +148,6 @@ export const useSignupForm = () => {
     setEmailSuccess("");
 
     if (!formData.email) {
-      console.log(formData.email);
       setEmailError("이메일을 입력해주세요.");
       return;
     }
@@ -179,7 +174,6 @@ export const useSignupForm = () => {
       return;
     }
     try {
-      console.log("아이디 중복 확인 요청:", formData.userId);
       const res = await checkUserIdExists(formData.userId);
       setUserIdChecked(true);
       if (res.isDuplicate) {
