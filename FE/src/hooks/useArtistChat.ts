@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { getBlockedUsers } from "../api/userService";
 import { getArtistMessages, postArtistMessage } from "../api/artistChatService";
 import { useUserStore } from "../store/useUserStore";
 import type { artistChatMessage } from "../types/artistChat";
@@ -11,6 +12,17 @@ export const useArtistChat = (artistId: string) => {
   const [messages, setMessages] = useState<artistChatMessage[]>([]);
   const { myUser } = useUserStore();
   const lastTimestampRef = useRef<string | null>(null);
+
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const fetchBlockedUsers = async () => {
+      const blockedUsers = await getBlockedUsers();
+      const ids = new Set(blockedUsers.map((user) => user.userId));
+      setBlockedUserIds(ids);
+    };
+    fetchBlockedUsers();
+  }, []);
 
   const fetchNewMessages = useCallback(async () => {
     if (!artistId) return;
@@ -78,5 +90,9 @@ export const useArtistChat = (artistId: string) => {
     }
   };
 
-  return { messages, sendMessage };
+  const filteredMessages = useMemo(() => {
+    return messages.filter((msg) => !blockedUserIds.has(msg.userId));
+  }, [messages, blockedUserIds]);
+
+  return { messages: filteredMessages, sendMessage };
 };
