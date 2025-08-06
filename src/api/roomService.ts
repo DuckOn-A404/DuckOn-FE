@@ -1,5 +1,5 @@
 import { api } from "./axiosInstance";
-import type { room } from "../types/room";
+import type { room } from "../types/Room";
 
 // 방 생성 API
 export const CreateRoom = async (formData: FormData) => {
