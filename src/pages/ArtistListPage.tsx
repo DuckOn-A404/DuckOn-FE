@@ -16,20 +16,30 @@ const ArtistListPage = () => {
 
   // 무한 스크롤 처리
   useEffect(() => {
-    if (!observerRef.current || !hasMore) return;
+    // 로딩 중이거나, 더 이상 불러올 데이터가 없으면 관찰하지 않음
+    if (loading || !hasMore) return;
 
-    // IntersectionObserver 생성
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) fetchMore();
+        // 감지용 div가 화면에 보이고, 로딩 중이 아닐 때만 다음 데이터를 불러옴
+        if (entry.isIntersecting && !loading) {
+          fetchMore();
+        }
       },
-      { threshold: 1 }
+      { threshold: 1.0 }
     );
 
-    observer.observe(observerRef.current);
+    const currentObserverRef = observerRef.current;
+    if (currentObserverRef) {
+      observer.observe(currentObserverRef);
+    }
 
-    return () => observer.disconnect();
-  }, [fetchMore, hasMore]);
+    return () => {
+      if (currentObserverRef) {
+        observer.unobserve(currentObserverRef);
+      }
+    };
+  }, [loading, hasMore, fetchMore]);
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     navigate(`/artist/${nameEn}`, { state: { artistId } });
@@ -75,7 +85,15 @@ const ArtistListPage = () => {
       {/* 감지용 ref */}
       <div ref={observerRef} className="h-10 mt-10" />
 
-      {loading && <p className="text-center text-gray-500">불러오는 중...</p>}
+      {/* 1. 로딩 스피너: 로딩 중일 때만 표시됩니다. */}
+      {loading && (
+        <div className="flex justify-center items-center h-24">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      )}
+
+      {/* 2. 감지용 ref: 로딩 중이 아니고, 더 불러올 데이터가 있을 때만 렌더링됩니다. */}
+      {!loading && hasMore && <div ref={observerRef} className="h-10" />}
     </div>
   );
 };
