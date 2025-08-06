@@ -3,20 +3,54 @@ stages:
   - build
   - deploy
 
-# Merge Request나 BE/develop 브랜치일 때 빌드/테스트
+# BE 빌드/테스트
 # --------------------------------------------------
-build_and_test:
+build_and_test_be:
   stage: build
   image: gradle:8.6-jdk21 # 필요에 따라 다른 이미지로 바꿔주세요
-  only:
-    - merge_requests # MR 열릴 때만 실행
-    - /^BE\/develop$/ # BE/develop 브랜치일 때도 실행
+  rules:
+    # BE/develop 브랜치에 푸시됐을 때
+    - if: '$CI_COMMIT_BRANCH =~ /^BE\/develop$/'
+      when: always
+    # MR 타겟이 BE/develop 일 때
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "BE/develop"'
+      when: always
+    - when: never
   script:
     - echo "Building the project"
     - cd $CI_PROJECT_DIR/BE
     - chmod +x gradlew
     - ./gradlew clean build # 테스트까지 포함
 
+# FE 빌드/테스트
+# --------------------------------------------------
+build_and_test_fe:
+  stage: build
+  image: node:20-alpine
+  variables:
+    # Ensure devDependencies (typescript, @types/*) actually get installed
+    NODE_ENV: development
+  variables:
+    VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
+  rules:
+    # FE/develop 브랜치에 푸시됐을 때
+    - if: '$CI_COMMIT_BRANCH =~ /^FE\/develop$/'
+      when: always
+    # MR 타겟이 FE/develop 일 때
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "FE/develop"'
+      when: always
+    - when: never
+  script:
+    - cd FE
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - FE/dist
+    expire_in: 1 hour
+
+# BE 배포
+# --------------------------------------------------
 deploy_be:
   stage: deploy
 
@@ -76,4 +110,48 @@ deploy_be:
           -e MONGO_DB_USERNAME="${MONGO_DB_USERNAME}" \
           -e MONGO_DB_PASSWORD="${MONGO_DB_PASSWORD}" \
           duckonback:latest
+      EOF
+
+# FE 배포
+# --------------------------------------------------
+deploy_fe:
+  stage: deploy
+  image: alpine:latest
+  variables:
+    VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
+  only:
+    - /^FE\/develop$/
+  before_script:
+    - apk add --no-cache openssh-client git
+    - eval "$(ssh-agent -s)"
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+  script:
+    - |
+      ssh ubuntu@i13a404.p.ssafy.io <<EOF
+        set -e
+
+        # 네트워크가 없으면 생성
+        sudo docker network create duckon-net || true
+
+        # FE 코드 갱신
+        cd ~/DuckOn-BE/FE
+        git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
+        git fetch origin FE/develop
+        git reset --hard origin/FE/develop
+
+        # FE 도커 이미지 빌드 & 재실행 (빌드타임 ARG 주입)
+       sudo docker build \
+          --build-arg VITE_API_BASE_URL=${VITE_API_BASE_URL} \
+          --no-cache \
+          -t duckon-front:latest \
+          .
+        sudo docker rm -f duckon-front || true
+        sudo docker run -d \
+          --name duckon-front \
+          -p 80:80 \
+          --network duckon-net \
+          duckon-front:latest
       EOF
