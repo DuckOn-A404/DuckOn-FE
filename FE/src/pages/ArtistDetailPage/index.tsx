@@ -50,7 +50,6 @@ const ArtistDetailPage = () => {
   useEffect(() => {
     const fetchPageData = async () => {
       if (!artistId) {
-        console.error("Artist ID가 state로 전달되지 않았습니다.");
         setIsLoadingPage(false);
         return;
       }
@@ -77,7 +76,6 @@ const ArtistDetailPage = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      console.log("로그인 상태이므로 팔로우 목록을 불러옵니다.");
       fetchFollowedArtists();
     }
   }, [isLoggedIn, fetchFollowedArtists]);
