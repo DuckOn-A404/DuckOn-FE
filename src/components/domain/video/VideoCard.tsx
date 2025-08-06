@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
 import { formatCompactNumber } from "../../../utils/formatters";
-import { type room } from "../../../types/room";
+import { type room } from "../../../types/Room";
 
 const PLACEHOLDER_URL =
   "https://via.placeholder.com/1280x720.png?text=Image+Not+Available";
