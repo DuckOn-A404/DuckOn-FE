@@ -1,7 +1,8 @@
 // src/pages/OAuth2RedirectHandler.tsx
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUserStore } from "../store/useUserStore";
+import { api } from "../api/axiosInstance";
 import { getMyProfileAfterOAuth } from "../api/authService";
 
 /**
@@ -10,31 +11,38 @@ import { getMyProfileAfterOAuth } from "../api/authService";
  */
 const OAuth2RedirectHandler = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { setMyUser } = useUserStore();
 
   useEffect(() => {
     const processLogin = async () => {
       try {
-        // 1. 백엔드로부터 내 유저 정보를 가져옵니다.
-        //    (백엔드가 쿠키에 토큰을 저장했으므로, 이 요청 시 자동으로 토큰이 함께 전송됩니다)
-        const userData = await getMyProfileAfterOAuth();
+        const params = new URLSearchParams(location.search);
+        const accessToken = params.get("accessToken");
+        const refreshToken = params.get("refreshToken");
 
-        // 2. Zustand 스토어에 유저 정보를 저장하여 로그인 상태로 만듭니다.
+        if (!accessToken || !refreshToken) {
+          throw new Error("토큰이 존재하지 않습니다.");
+        }
+
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+        const userData = await getMyProfileAfterOAuth();
         setMyUser(userData);
 
-        // 3. 모든 처리가 끝나면 홈페이지로 이동시킵니다.
         navigate("/");
-      } catch (error) {
-        console.error("소셜 로그인 처리 중 오류 발생:", error);
-        // 에러 발생 시 로그인 페이지로 다시 보냅니다.
+      } catch (err) {
+        console.error("소셜 로그인 실패:", err);
         navigate("/login");
       }
     };
 
     processLogin();
-  }, [navigate, setMyUser]);
+  }, [location.search, navigate, setMyUser]);
 
-  // 처리 중 사용자에게 보여줄 로딩 화면
   return (
     <div className="flex justify-center items-center h-screen">
       <p>로그인 처리 중입니다. 잠시만 기다려주세요...</p>
