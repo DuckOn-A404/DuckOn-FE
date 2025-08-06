@@ -9,6 +9,7 @@ import MyPage from "./pages/MyPage";
 import OtherUserPage from "./pages/OtherUserPage";
 import LiveRoomPage from "./pages/LiveRoomPage";
 import LayoutWithoutFooter from "./layouts/LayoutWithoutFooter";
+import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/live/:roomId" element={<LiveRoomPage />} />
+          <Route path="/oauth2/success" element={<OAuth2RedirectHandler />} />
         </Routes>
       </BrowserRouter>
     </>
