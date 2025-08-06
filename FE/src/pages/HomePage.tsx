@@ -31,7 +31,7 @@ const HomePage = () => {
         const data = await getRandomArtists(4);
         setRecommendedArtists(data);
       } catch (error) {
-        console.error("추천 아티스트를 불러오는 데 실패했습니다.", error);
+        console.error("추천 아티스트를 불러오는 데 실패했습니다. !!!", error);
       } finally {
         setIsLoadingArtists(false);
       }
