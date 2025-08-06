@@ -1,5 +1,6 @@
 import InputField from "../components/common/InputField";
 import ArtistCard from "../components/domain/artist/ArtistCard";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
@@ -11,13 +12,7 @@ const ArtistListPage = () => {
   const { artists, totalCount, fetchMore, hasMore, loading } =
     useArtistList(debouncedSearchText);
   const observerRef = useRef<HTMLDivElement | null>(null);
-
-  // useEffect(() => {
-  //   console.log(
-  //     "현재 아티스트 ID 목록:",
-  //     artists.map((a) => a.artistId)
-  //   );
-  // }, [artists]);
+  const navigate = useNavigate();
 
   // 무한 스크롤 처리
   useEffect(() => {
@@ -35,6 +30,10 @@ const ArtistListPage = () => {
 
     return () => observer.disconnect();
   }, [fetchMore, hasMore]);
+
+  const handleCardClick = (artistId: number, nameEn: string) => {
+    navigate(`/artist/${nameEn}`, { state: { artistId } });
+  };
 
   return (
     <div className="px-4 md:px-10 py-8">
@@ -65,7 +64,11 @@ const ArtistListPage = () => {
       {/* 아티스트 카드 리스트 */}
       <div className="flex flex-wrap justify-center gap-x-[14px] gap-y-[23px]">
         {artists.map((artist) => (
-          <ArtistCard key={artist.artistId} {...artist} />
+          <ArtistCard
+            key={artist.artistId}
+            {...artist}
+            onClick={() => handleCardClick(artist.artistId, artist.nameEn)}
+          />
         ))}
       </div>
 

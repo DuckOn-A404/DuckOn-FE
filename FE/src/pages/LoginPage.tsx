@@ -12,7 +12,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  const setUser = useUserStore((state) => state.setUser)    // Zustand 훅 사용
+  const setUser = useUserStore((state) => state.setMyUser)    // Zustand 훅 사용
 
   const handleLogin = async () => {
     setError("")
