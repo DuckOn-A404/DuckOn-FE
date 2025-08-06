@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import ArtistChatTab from "./ArtistChatTab";
 import RecommendTab from "./RecommendTab";
 import { Send } from "lucide-react";
@@ -23,6 +23,8 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
   const { myUser } = useUserStore();
   const { isFollowing } = useArtistFollowStore();
 
+  const scrollContainerRef = useRef<null | HTMLDivElement>(null);
+
   const isLoggedIn = !!myUser;
   const isUserFollowing = isFollowing.has(artistId);
 
@@ -34,24 +36,24 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
 
   return (
     <aside className="w-80 p-4">
-      <div className="bg-white rounded-2xl shadow p-4 flex flex-col min-h-[calc(100vh-6rem)]">
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col h-[calc(100vh-6rem)]">
         {/* 탭 선택 */}
-        <div className="flex border-b mb-4">
+        <div className="flex-shrink-0 flex border-b border-gray-200">
           <button
-            className={`flex-1 text-sm font-semibold py-2 ${
+            className={`flex-1 text-sm font-semibold py-2 -mb-[1px] ${
               selectedTab === "chat"
                 ? "text-purple-600 border-b-2 border-purple-600"
-                : "text-gray-400"
+                : "text-gray-500 border-b-2 border-transparent"
             }`}
             onClick={() => setSelectedTab("chat")}
           >
             실시간 채팅
           </button>
           <button
-            className={`flex-1 text-sm font-semibold py-2 ${
+            className={`flex-1 text-sm font-semibold py-2 -mb-[1px] ${
               selectedTab === "recommend"
                 ? "text-purple-600 border-b-2 border-purple-600"
-                : "text-gray-400"
+                : "text-gray-500 border-b-2 border-transparent"
             }`}
             onClick={() => setSelectedTab("recommend")}
           >
@@ -60,9 +62,15 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
         </div>
 
         {/* 탭 내용 */}
-        <div className="flex-grow overflow-y-auto">
+        <div
+          ref={scrollContainerRef}
+          className="flex-grow overflow-y-auto min-h-0"
+        >
           {selectedTab === "chat" ? (
-            <ArtistChatTab messages={messages} />
+            <ArtistChatTab
+              messages={messages}
+              scrollContainerRef={scrollContainerRef}
+            />
           ) : (
             <RecommendTab />
           )}
@@ -70,7 +78,7 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
 
         {/* 채팅 입력창 (채팅 탭일 때만 보임) */}
         {selectedTab === "chat" && (
-          <>
+          <div className="flex-shrink-0">
             {/* 로그인했고, 팔로우 중일 때만 입력창을 표시합니다. */}
             {isLoggedIn && isUserFollowing ? (
               <div className="mt-4 flex items-center gap-2">
@@ -123,7 +131,7 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </aside>

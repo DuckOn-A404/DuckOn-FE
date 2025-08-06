@@ -84,7 +84,7 @@ const ArtistDetailPage = () => {
 
   if (isLoadingPage || !artist) {
     return (
-      <div className="flex w-full bg-gray-50">
+      <div className="flex w-full h-screen bg-gray-50">
         {/* 왼쪽: 팔로우 리스트 자리 */}
         <LeftSidebar />
 
@@ -179,7 +179,7 @@ const ArtistDetailPage = () => {
   };
 
   return (
-    <div className="flex w-full bg-gray-50">
+    <div className="flex w-full h-screen bg-gray-50">
       {/* 왼쪽: 팔로우 리스트 */}
       <LeftSidebar />
 
