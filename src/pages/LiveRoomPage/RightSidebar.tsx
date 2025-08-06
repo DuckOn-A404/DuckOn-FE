@@ -6,6 +6,9 @@ const RightSidebar = ({
   selectedTab,
   isHost,
   roomId,
+  messages,
+  isConnected,
+  sendMessage,
 }: {
   selectedTab: "chat" | "playlist";
   isHost: boolean;
