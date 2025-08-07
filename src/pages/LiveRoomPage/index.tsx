@@ -5,7 +5,6 @@ import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
 
-// 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
@@ -36,7 +35,7 @@ const LiveRoomPage = () => {
 
     client.onConnect = () => {
       console.log("STOMP 연결 성공!");
-      setStompClient(client); // 👉 onConnect에서만 set!
+      setStompClient(client);
     };
 
     client.onStompError = (frame) => {
