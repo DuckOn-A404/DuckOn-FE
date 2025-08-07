@@ -73,12 +73,16 @@ export const followArtist = async (artistId: number) => {
     throw new Error("로그인이 필요합니다.");
   }
 
-  const response = await api.post(`/api/artists/${artistId}/follow`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const response = await api.post(
+    `/api/artists/${artistId}/follow`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
   return response.data;
 };
