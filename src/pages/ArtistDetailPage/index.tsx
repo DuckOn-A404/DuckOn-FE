@@ -19,12 +19,17 @@ import VideoCardSkeleton from "../../components/domain/video/VideoCardSkeleton";
 const PLACEHOLDER_URL =
   "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
 
+type ArtistDetailInfo = Artist & {
+  followed: boolean;
+  followedAt: string | null;
+};
+
 const ArtistDetailPage = () => {
   const location = useLocation();
   const artistId = location.state?.artistId as number | undefined;
 
   // 아티스트 상세 정보와 로딩 상태를 위한 State
-  const [artist, setArtist] = useState<Artist | null>(null);
+  const [artist, setArtist] = useState<ArtistDetailInfo | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -48,7 +53,9 @@ const ArtistDetailPage = () => {
   } = useArtistRooms(artist?.artistId);
 
   // 최적화된 팔로우 상태 확인
-  const isFollowing = artist ? followingSet.has(artist.artistId) : false;
+  const isFollowing = artist
+    ? artist.followed || followingSet.has(artist.artistId)
+    : false;
 
   // 페이지 진입 시 아티스트 상세 정보 불러오기
   useEffect(() => {
@@ -116,13 +123,14 @@ const ArtistDetailPage = () => {
     );
   }
 
-  const getDday = (dateString: string) => {
+  // 팔로우 d-day 계산
+  const getFollowDday = (dateString: string) => {
     const today = new Date();
     const target = new Date(dateString);
     const diff = Math.floor(
       (today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24)
     );
-    return diff >= 0 ? `D+${diff}` : `D${diff}`;
+    return `D+${diff}`;
   };
 
   if (!artist) {
@@ -135,7 +143,6 @@ const ArtistDetailPage = () => {
 
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
-    if (!myUser) return alert("로그인이 필요합니다.");
     if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
@@ -179,9 +186,11 @@ const ArtistDetailPage = () => {
             <div className="text-right space-y-2">
               {isFollowing ? (
                 <>
-                  <p className="text-sm font-semibold">
-                    {getDday(artist.debutDate)}
-                  </p>
+                  {artist.followedAt && (
+                    <p className="text-sm font-semibold">
+                      {getFollowDday(artist.followedAt)}
+                    </p>
+                  )}
                   <button
                     className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
                     onClick={handleFollowToggle}
