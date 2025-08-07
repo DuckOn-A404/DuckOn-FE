@@ -11,21 +11,35 @@ type VideoPlayerProps = {
   roomId: string;
 };
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient, user, roomId }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  videoId,
+  isHost,
+  stompClient,
+  user,
+  roomId,
+}) => {
   const playerRef = useRef<YT.Player | null>(null);
 
-  const onPlayerReady = (event: any) => {
-    playerRef.current = event.target;
+  const playlist = [videoId];
+  const currentVideoIndex = 0;
 
+  const onPlayerReady = (event: YT.PlayerEvent) => {
+    playerRef.current = event.target;
     if (!isHost) {
-      event.target.pauseVideo();
+      event.target.pauseVideo(); // 참가자는 처음에 영상 멈춰놓기
+      event.target.mute();       // autoplay 제한 회피용 mute
     }
   };
 
-  const onPlayerStateChange = (event: any) => {
+  const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+    console.log("[상태 변경]", event.data);
+    console.log("stomp 연결 상태:", stompClient.connected);
+    console.log("isHost:", isHost);
     if (!stompClient.connected || !playerRef.current) return;
+
     const player = playerRef.current;
 
+    // 참가자가 play 버튼을 눌렀을 때 강제 정지
     if (!isHost && event.data === YT.PlayerState.PLAYING) {
       player.pauseVideo();
       return;
@@ -34,54 +48,71 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient,
     if (!isHost) return;
 
     const currentTime = player.getCurrentTime();
+    const isPlaying = event.data === YT.PlayerState.PLAYING;
 
-    switch (event.data) {
-      case YT.PlayerState.PLAYING:
-        stompClient.publish({
-          destination: `/app/room/update`,
-          body: JSON.stringify({
-            roomId,
-            hostId: user.userId,
-            type: "play",
-            currentTime,
-          }),
-        });
-        break;
-      case YT.PlayerState.PAUSED:
-        stompClient.publish({
-          destination: `/app/room/update`,
-          body: JSON.stringify({
-            roomId,
-            hostId: user.userId,
-            type: "pause",
-            currentTime,
-          }),
-        });
-        break;
-    }
+    const payload = {
+      roomId: parseInt(roomId),
+      hostId: user.userId,
+      playlist,
+      currentVideoIndex,
+      currentTime,
+      isPlaying,
+      lastUpdated: Date.now(),
+    };
+
+    const jsonPayload = JSON.stringify(payload);
+
+    console.log("[STOMP 전송 데이터]", jsonPayload);
+
+    stompClient.publish({
+      destination: "/app/room/update",
+      body: JSON.stringify(payload),
+    });
   };
 
-  // 참여자: WebSocket으로 play/pause 신호 수신
   useEffect(() => {
-    if (!stompClient.connected || isHost) return;
+    if (!stompClient || !stompClient.connected || isHost) return;
 
-    const subscription = stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
-      const { type, currentTime } = JSON.parse(message.body);
-      const player = playerRef.current;
-      if (!player) return;
-
-      if (type === "play") {
-        player.seekTo(currentTime, true);
-        player.playVideo();
-      } else if (type === "pause") {
-        player.seekTo(currentTime, true);
-        player.pauseVideo();
+    const waitAndSubscribe = () => {
+      if (!playerRef.current) {
+        setTimeout(waitAndSubscribe, 100);
+        return;
       }
-    });
 
-    return () => {
-      subscription.unsubscribe();
+      const subscription = stompClient.subscribe(
+        `/topic/room/${roomId}`,
+        (message) => {
+          console.log("[참가자] 메시지 수신:", message.body);
+          try {
+            const { currentTime, isPlaying } = JSON.parse(message.body);
+            const player = playerRef.current;
+            if (!player) return;
+
+            player.seekTo(currentTime, true);
+
+            setTimeout(() => {
+              if (isPlaying) {
+                player.playVideo();
+              } else {
+                player.pauseVideo();
+              }
+            }, 200);
+          } catch (err) {
+            console.error("메시지 파싱 실패", err);
+          }
+        }
+      );
+
+      console.log(`Subscribed to /topic/room/${roomId}`);
+
+      // 클린업
+      return () => {
+        subscription.unsubscribe();
+        console.log(`Unsubscribed from /topic/room/${roomId}`);
+      };
     };
+
+    waitAndSubscribe();
   }, [stompClient, isHost, roomId]);
 
   return (
@@ -96,22 +127,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient,
               width: "100%",
               height: "100%",
               playerVars: {
-                autoplay: 0,
-                controls: isHost ? 1 : 0,
+                autoplay: 0,               // autoplay 설정
+                mute: 1,                   // 브라우저 autoplay 정책 우회
+                controls: isHost ? 1 : 0,  // 참가자는 조작 불가
                 disablekb: 1,
                 rel: 0,
               },
             }}
           />
-
-          {/* 참여자일 경우 오버레이로 클릭 차단 */}
           {!isHost && (
             <>
               <div
                 className="absolute inset-0 z-10 bg-transparent cursor-not-allowed"
                 style={{ pointerEvents: "auto" }}
               />
-              {/* 메시지 표시 (선택) */}
               <div className="absolute inset-0 z-20 flex items-center justify-center text-white text-lg bg-black/40">
                 방장이 영상을 재생할 때까지 대기 중입니다...
               </div>
@@ -119,7 +148,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient,
           )}
         </>
       ) : (
-        <div className="text-center text-white mt-10">영상 ID가 없습니다.</div>
+        <div className="text-center text-white mt-10">
+          영상 ID가 없습니다.
+        </div>
       )}
     </div>
   );
