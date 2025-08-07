@@ -49,21 +49,15 @@ export interface LoginRequest {
 }
 
 // 로그인 응답의 사용자 정보 타입
-export interface User {
-  email: string;
-  userId: string;
-  nickname: string;
-  role: "ADMIN" | "USER" | "BANNED";
-  language: string;
-  imgUrl: string | null;
-  artistList: number[];
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
 }
 
 // 로그인 응답 타입
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
-  user: User;
 }
 
 export const logIn = async (
@@ -74,24 +68,23 @@ export const logIn = async (
 
     const response = await api.post<LoginResponse>(
       "/api/auth/login",
-      { email, userId, password }, // plain JSON
+      { email, userId, password },
       {
         headers: { "Content-Type": "application/json" },
       }
     );
 
     // 응답에서 토큰과 사용자 정보 추출
-    const { accessToken, refreshToken, user } = response.data;
+    const { accessToken, refreshToken } = response.data;
 
     // 저장 및 Authorization 헤더 설정
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
-    localStorage.setItem("user", JSON.stringify(user));
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-    console.log(
-      " Authorization 헤더 설정 완료:",
-      api.defaults.headers.common["Authorization"]
-    );
+    // console.log(
+    //   " Authorization 헤더 설정 완료:",
+    //   api.defaults.headers.common["Authorization"]
+    // );
 
     return response.data;
   } catch (error) {
