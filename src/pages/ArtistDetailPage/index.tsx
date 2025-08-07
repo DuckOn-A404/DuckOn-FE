@@ -19,12 +19,16 @@ import VideoCardSkeleton from "../../components/domain/video/VideoCardSkeleton";
 const PLACEHOLDER_URL =
   "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
 
+type ArtistDetailInfo = Artist & {
+  followedAt: string | null;
+};
+
 const ArtistDetailPage = () => {
   const location = useLocation();
   const artistId = location.state?.artistId as number | undefined;
 
   // 아티스트 상세 정보와 로딩 상태를 위한 State
-  const [artist, setArtist] = useState<Artist | null>(null);
+  const [artist, setArtist] = useState<ArtistDetailInfo | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -48,7 +52,9 @@ const ArtistDetailPage = () => {
   } = useArtistRooms(artist?.artistId);
 
   // 최적화된 팔로우 상태 확인
-  const isFollowing = artist ? followingSet.has(artist.artistId) : false;
+  const isFollowing = artist
+    ? !!artist.followedAt || followingSet.has(artist.artistId)
+    : false;
 
   // 페이지 진입 시 아티스트 상세 정보 불러오기
   useEffect(() => {
@@ -77,7 +83,7 @@ const ArtistDetailPage = () => {
     }
   }, [isLoggedIn, fetchFollowedArtists]);
 
-  if (isLoadingPage || !artist) {
+  if (isLoadingPage) {
     return (
       <div className="flex w-full bg-gray-50">
         {/* 왼쪽: 팔로우 리스트 자리 */}
@@ -116,14 +122,22 @@ const ArtistDetailPage = () => {
     );
   }
 
-  const getDday = (dateString: string) => {
-    const today = new Date();
-    const target = new Date(dateString);
-    const diff = Math.floor(
-      (today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return diff >= 0 ? `D+${diff}` : `D${diff}`;
-  };
+  // // 팔로우 d-day 계산
+  // const getFollowDday = (dateString: string) => {
+  //   const today = new Date();
+  //   const target = new Date(dateString);
+
+  //   const KST_OFFSET = 9 * 60 * 60 * 1000;
+
+  //   const todayKST = new Date(today.getTime() + KST_OFFSET);
+  //   const targetKST = new Date(target.getTime() + KST_OFFSET);
+
+  //   const diff = Math.floor(
+  //     (todayKST.getTime() - targetKST.getTime()) / (1000 * 60 * 60 * 24)
+  //   );
+
+  //   return `D+${Math.max(diff + 1, 1)}`;
+  // };
 
   if (!artist) {
     return (
@@ -136,16 +150,19 @@ const ArtistDetailPage = () => {
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
     if (!myUser) return alert("로그인이 필요합니다.");
-    if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
     try {
       if (isFollowing) {
         await unfollowArtist(artist.artistId);
         removeFollow(artist.artistId);
+        setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
       } else {
         await followArtist(artist.artistId);
         addFollow(artist);
+        setArtist((prev) =>
+          prev ? { ...prev, followedAt: new Date().toISOString() } : prev
+        );
       }
     } catch (error) {
       console.error("팔로우 처리 실패:", error);
@@ -179,9 +196,11 @@ const ArtistDetailPage = () => {
             <div className="text-right space-y-2">
               {isFollowing ? (
                 <>
-                  <p className="text-sm font-semibold">
-                    {getDday(artist.debutDate)}
-                  </p>
+                  {/* {artist.followedAt && (
+                    <p className="text-sm font-semibold">
+                      {getFollowDday(artist.followedAt)}
+                    </p>
+                  )} */}
                   <button
                     className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
                     onClick={handleFollowToggle}

@@ -5,10 +5,10 @@ import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
 
-// 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 // import RightSidebar from "./RightSidebar";
+// import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -16,28 +16,38 @@ const LiveRoomPage = () => {
   const myUserId = myUser?.userId;
   const [room, setRoom] = useState<any>(null);
   const navigate = useNavigate();
-  const [stompClient, setStompClient] = useState<Client | null>(null)
+
+  const [stompClient, setStompClient] = useState<Client | null>(null);
+  const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
+
+  // const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
     navigate(-1);
   };
 
-  // 오른쪽 사이드바의 활성 탭 상태만 관리합니다.
-  const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
+  const isHost = room?.hostId === myUserId;
 
-  const isHost = room?.hostId === myUserId
-  
   useEffect(() => {
-    if (!myUser) return
+    if (!myUser) return;
 
-    const client = createStompClient(localStorage.getItem("accessToken") || "")
-    client.activate()
-    setStompClient(client)
+    const client = createStompClient(localStorage.getItem("accessToken") || "");
+
+    client.onConnect = () => {
+      console.log("STOMP 연결 성공!");
+      setStompClient(client);
+    };
+
+    client.onStompError = (frame) => {
+      console.error("STOMP 에러 발생:", frame);
+    };
+
+    client.activate();
 
     return () => {
-      client.deactivate()
-    }
-  }, [myUser])
+      client.deactivate();
+    };
+  }, [myUser]);
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -53,7 +63,7 @@ const LiveRoomPage = () => {
     loadRoom();
   }, [roomId]);
 
-  if (!room || !stompClient || !myUser) return <div>로딩 중...</div>;
+  if (!room || !stompClient?.connected || !myUser) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
@@ -110,6 +120,8 @@ const LiveRoomPage = () => {
             selectedTab={activeTab}
             isHost={isHost}
             roomId={roomId}
+            messages={messages}
+            sendMessage={sendMessage}
           /> */}
         </aside>
       </div>
