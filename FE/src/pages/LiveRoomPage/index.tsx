@@ -14,12 +14,11 @@ import { useChatSubscription } from "../../hooks/useChatSubscription";
 const LiveRoomPage = () => {
   const { roomId } = useParams();
   const { myUser } = useUserStore();
+  const myUserId = myUser?.userId;
   const [room, setRoom] = useState<any>(null);
   const navigate = useNavigate();
 
-  const stompClientRef = useRef<Client | null>(null);
   const [stompClient, setStompClient] = useState<Client | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
   const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
@@ -28,14 +27,23 @@ const LiveRoomPage = () => {
     navigate(-1);
   };
 
-  const isHost = room?.hostId === myUser.userId;
+  const isHost = room?.hostId === myUserId;
 
   useEffect(() => {
     if (!myUser) return;
 
     const client = createStompClient(localStorage.getItem("accessToken") || "");
+
+    client.onConnect = () => {
+      console.log("STOMP 연결 성공!");
+      setStompClient(client); // 👉 onConnect에서만 set!
+    };
+
+    client.onStompError = (frame) => {
+      console.error("STOMP 에러 발생:", frame);
+    };
+
     client.activate();
-    setStompClient(client);
 
     return () => {
       client.deactivate();
@@ -56,7 +64,7 @@ const LiveRoomPage = () => {
     loadRoom();
   }, [roomId]);
 
-  if (!room || !stompClient || !myUser) return <div>로딩 중...</div>;
+  if (!room || !stompClient?.connected || !myUser) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
