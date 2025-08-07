@@ -1,27 +1,20 @@
-const recommendations = [
-  { name: "케이팝러버" },
-  { name: "뮤직매니아" },
-  { name: "댄스퀸" },
-  { name: "음악덕후" },
-  { name: "콘서트매니아" },
-];
+import { Wrench } from "lucide-react"; // 기능 준비 중을 나타내는 아이콘
 
+/*
+  name: RecommendTab
+  summary: 추천 탭. 현재는 개발 예정 안내를 표시합니다.
+*/
 const RecommendTab = () => {
   return (
-    <div className="space-y-3">
-      {recommendations.map((user, i) => (
-        <div
-          key={i}
-          className="flex justify-between items-center text-sm bg-gray-50 px-3 py-2 rounded-lg"
-        >
-          <div>
-            <div className="font-semibold">{user.name}</div>
-          </div>
-          <button className="bg-purple-500 text-white px-3 py-1 rounded-full text-xs">
-            팔로우
-          </button>
-        </div>
-      ))}
+    <div className="flex flex-col items-center justify-center h-full text-center p-4 text-gray-500">
+      <Wrench className="w-12 h-12 text-gray-300 mb-4" />
+
+      <h3 className="font-semibold text-gray-600">기능 준비 중</h3>
+      <p className="text-sm text-gray-400 mt-1">
+        나와 비슷한 취향을 가진
+        <br />
+        다른 팬들을 추천해드릴 예정이에요!
+      </p>
     </div>
   );
 };
