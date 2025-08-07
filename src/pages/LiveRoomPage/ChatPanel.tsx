@@ -1,27 +1,24 @@
-import { useState } from "react";
-import {
-  Send,
-  MoreVertical,
-  ShieldAlert,
-  UserX,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Send, MoreVertical, UserX, Wifi, WifiOff } from "lucide-react";
 import { Popover } from "@headlessui/react";
-import { useChat } from "../../hooks/useChat";
 import { useUserStore } from "../../store/useUserStore";
+import type { ChatMessage } from "../../types/chat";
 
 type ChatPanelProps = {
-  roomId: string;
+  messages: ChatMessage[];
+  isConnected: boolean;
+  sendMessage: (content: string) => void;
 };
 
-const ChatPanel = ({ roomId }: ChatPanelProps) => {
-  const { messages, isConnected, sendMessage } = useChat(roomId);
+const ChatPanel = ({ messages, isConnected, sendMessage }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const handleReport = (senderId: string) =>
-    alert(`${senderId}님을 신고합니다.`);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleBlock = (senderId: string) =>
     alert(`${senderId}님을 차단합니다.`);
 
@@ -41,7 +38,7 @@ const ChatPanel = ({ roomId }: ChatPanelProps) => {
             return (
               <div
                 key={msg.messageId}
-                className="text-center text-sm text-gray-400"
+                className="text-center text-xs text-gray-400 py-1"
               >
                 {msg.content}
               </div>
