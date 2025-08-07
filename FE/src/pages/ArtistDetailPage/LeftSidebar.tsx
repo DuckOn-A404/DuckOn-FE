@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { List } from "lucide-react";
+import { List, PlusCircle } from "lucide-react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -47,10 +47,11 @@ const LeftSidebar = () => {
               })}
             </ul>
             <button
-              className="mt-auto w-full bg-purple-600 text-white text-sm py-2 rounded-xl"
+              className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
-              + 아티스트 더보기
+              <PlusCircle size={16} />
+              <span>아티스트 더보기</span>
             </button>
           </>
         ) : (
@@ -60,10 +61,11 @@ const LeftSidebar = () => {
               팔로우한 아티스트가 없습니다.
             </p>
             <button
-              className="mt-auto w-full bg-purple-600 text-white text-sm py-2 rounded-xl cursor-pointer"
+              className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
-              + 아티스트 팔로우 하러가기
+              <PlusCircle size={16} />
+              <span>아티스트 팔로우 하러가기</span>
             </button>
           </div>
         )}
