@@ -122,7 +122,7 @@ const ArtistDetailPage = () => {
     );
   }
 
-  // 팔로우 d-day 계산
+  // // 팔로우 d-day 계산
   // const getFollowDday = (dateString: string) => {
   //   const today = new Date();
   //   const target = new Date(dateString);
@@ -139,13 +139,13 @@ const ArtistDetailPage = () => {
   //   return `D+${Math.max(diff + 1, 1)}`;
   // };
 
-  // if (!artist) {
-  //   return (
-  //     <div className="p-10 text-center text-gray-500">
-  //       아티스트를 찾을 수 없습니다.
-  //     </div>
-  //   );
-  // }
+  if (!artist) {
+    return (
+      <div className="p-10 text-center text-gray-500">
+        아티스트를 찾을 수 없습니다.
+      </div>
+    );
+  }
 
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
