@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, MoreVertical, UserX, Wifi, WifiOff } from "lucide-react";
+import { Send, MoreVertical, UserX } from "lucide-react";
 import { Popover } from "@headlessui/react";
 import { useUserStore } from "../../store/useUserStore";
 import type { ChatMessage } from "../../types/chat";

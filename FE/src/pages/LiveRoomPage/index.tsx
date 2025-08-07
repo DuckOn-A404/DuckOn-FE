@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { fetchRoomById } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
