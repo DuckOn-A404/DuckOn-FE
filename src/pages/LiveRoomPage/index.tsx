@@ -22,10 +22,7 @@ const LiveRoomPage = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
-  const { messages, sendMessage } = useChatSubscription(
-    stompClientRef.current,
-    roomId
-  );
+  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
     navigate(-1);
