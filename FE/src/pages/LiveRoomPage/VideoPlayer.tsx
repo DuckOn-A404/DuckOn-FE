@@ -14,6 +14,9 @@ type VideoPlayerProps = {
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient, user, roomId }) => {
   const playerRef = useRef<YT.Player | null>(null);
 
+  const playlist = [videoId]
+  const currentVideoIndex = 0
+
   const onPlayerReady = (event: any) => {
     playerRef.current = event.target;
     if (!isHost) event.target.pauseVideo();
@@ -29,17 +32,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient,
     if (!isHost) return;
 
     const currentTime = player.getCurrentTime();
+    const isPlaying = event.data === YT.PlayerState.PLAYING;
+
     const payload = {
-      roomId,
+      roomId: parseInt(roomId),
       hostId: user.userId,
+      playlist,
+      currentVideoIndex,
       currentTime,
+      isPlaying,
+      lastUpdated: Date.now(),
     };
 
-    if (event.data === YT.PlayerState.PLAYING) {
-      stompClient.publish({ destination: "/app/room/update", body: JSON.stringify({ ...payload, type: "play" }) });
-    } else if (event.data === YT.PlayerState.PAUSED) {
-      stompClient.publish({ destination: "/app/room/update", body: JSON.stringify({ ...payload, type: "pause" }) });
-    }
+    stompClient.publish({
+      destination: "/app/room/update",
+      body: JSON.stringify(payload),
+    });
   };
 
   useEffect(() => {
@@ -47,12 +55,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, isHost, stompClient,
 
     const subscription = stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
       if (isHost) return;
-      const { type, currentTime } = JSON.parse(message.body);
+      const {
+        currentTime,
+        isPlaying
+      } = JSON.parse(message.body);
+
       const player = playerRef.current;
       if (!player) return;
+
       player.seekTo(currentTime, true);
-      if (type === "play") player.playVideo();
-      else if (type === "pause") player.pauseVideo();
+      isPlaying ? player.playVideo() : player.pauseVideo();
     });
 
     console.log(`Subscribed to /topic/room/${roomId}`);
