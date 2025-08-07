@@ -12,8 +12,12 @@ import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
-import { Video } from "lucide-react";
+import { Video, Plus } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
+import VideoCardSkeleton from "../../components/domain/video/VideoCardSkeleton";
+
+const PLACEHOLDER_URL =
+  "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
 
 const ArtistDetailPage = () => {
   const location = useLocation();
@@ -99,14 +103,9 @@ const ArtistDetailPage = () => {
           <div className="space-y-4">
             <div className="h-6 w-40 bg-gray-200 rounded" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array(2)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
-                  />
-                ))}
+              {Array.from({ length: 2 }).map((_, i) => (
+                <VideoCardSkeleton key={i} />
+              ))}
             </div>
           </div>
         </main>
@@ -155,7 +154,7 @@ const ArtistDetailPage = () => {
   };
 
   return (
-    <div className="flex w-full bg-gray-50">
+    <div className="flex w-full">
       {/* 왼쪽: 팔로우 리스트 */}
       <LeftSidebar />
 
@@ -164,7 +163,7 @@ const ArtistDetailPage = () => {
         <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
           <div className="flex items-center gap-6">
             <img
-              src={artist.imgUrl}
+              src={artist.imgUrl || PLACEHOLDER_URL}
               alt={artist.nameEn}
               className="w-24 h-24 rounded-2xl object-cover shadow"
             />
@@ -206,24 +205,28 @@ const ArtistDetailPage = () => {
         {/* 라이브 방 */}
         <section>
           {/* 섹션 헤더: 타이틀과 '새 방 만들기' 버튼 */}
-          <div className="flex justify-between items-center mb-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-pink-50 p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 rounded-2xl bg-white p-5 shadow-md border border-gray-100">
+            {/* 왼쪽: 아이콘 및 텍스트 */}
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 text-white shadow">
-                <Video size={24} />
+              <div className="flex-shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-3 text-white shadow-lg shadow-purple-200/50">
+                <Video size={28} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-800">라이브 방</h2>
+                <h2 className="text-xl font-bold text-gray-800">라이브 방</h2>
                 <p className="text-sm text-gray-500">
                   {liveRooms.length}개의 방이 진행 중
                 </p>
               </div>
             </div>
+
+            {/* 오른쪽: '새 방 만들기' 버튼 */}
             {isFollowing && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-md shadow-purple-300/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
               >
-                + 새 방 만들기
+                <Plus size={16} />
+                <span>새 방 만들기</span>
               </button>
             )}
           </div>
