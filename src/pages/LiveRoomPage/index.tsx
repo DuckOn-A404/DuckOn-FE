@@ -5,10 +5,10 @@ import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
 
-// 1. 페이지를 구성하는 자식 컴포넌트들을 import 합니다.
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
-// import RightSidebar from "./RightSidebar";
+import RightSidebar from "./RightSidebar";
+import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -16,17 +16,18 @@ const LiveRoomPage = () => {
   const myUserId = myUser?.userId;
   const [room, setRoom] = useState<any>(null);
   const navigate = useNavigate();
-  const [stompClient, setStompClient] = useState<Client | null>(null)
+
+  const [stompClient, setStompClient] = useState<Client | null>(null);
+  const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
+
+  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
     navigate(-1);
   };
 
-  // 오른쪽 사이드바의 활성 탭 상태만 관리합니다.
-  const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
+  const isHost = room?.hostId === myUserId;
 
-  const isHost = room?.hostId === myUserId
-  
   useEffect(() => {
     if (!myUser) return;
 
@@ -34,7 +35,7 @@ const LiveRoomPage = () => {
 
     client.onConnect = () => {
       console.log("STOMP 연결 성공!");
-      setStompClient(client); // 👉 onConnect에서만 set!
+      setStompClient(client);
     };
 
     client.onStompError = (frame) => {
@@ -115,11 +116,13 @@ const LiveRoomPage = () => {
             </button>
           </div>
 
-          {/* <RightSidebar
+          <RightSidebar
             selectedTab={activeTab}
             isHost={isHost}
             roomId={roomId}
-          /> */}
+            messages={messages}
+            sendMessage={sendMessage}
+          />
         </aside>
       </div>
     </div>
