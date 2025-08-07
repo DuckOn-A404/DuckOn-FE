@@ -7,7 +7,6 @@ type RightSidebarProps = {
   isHost: boolean;
   roomId: string | undefined;
   messages: ChatMessage[];
-  isConnected: boolean;
   sendMessage: (content: string) => void;
 };
 
@@ -15,17 +14,12 @@ const RightSidebar = ({
   selectedTab,
   isHost,
   messages,
-  isConnected,
   sendMessage,
 }: RightSidebarProps) => {
   return (
     <div className="flex-grow overflow-y-auto p-4">
       {selectedTab === "chat" ? (
-        <ChatPanel
-          messages={messages}
-          isConnected={isConnected}
-          sendMessage={sendMessage}
-        />
+        <ChatPanel messages={messages} sendMessage={sendMessage} />
       ) : (
         <PlaylistPanel isHost={isHost} />
       )}

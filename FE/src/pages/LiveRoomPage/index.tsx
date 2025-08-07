@@ -122,7 +122,6 @@ const LiveRoomPage = () => {
             isHost={isHost}
             roomId={roomId}
             messages={messages}
-            isConnected={isConnected}
             sendMessage={sendMessage}
           />
         </aside>
