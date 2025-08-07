@@ -196,11 +196,11 @@ const ArtistDetailPage = () => {
             <div className="text-right space-y-2">
               {isFollowing ? (
                 <>
-                  {artist.followedAt && (
+                  {/* {artist.followedAt && (
                     <p className="text-sm font-semibold">
                       {getFollowDday(artist.followedAt)}
                     </p>
-                  )}
+                  )} */}
                   <button
                     className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
                     onClick={handleFollowToggle}
