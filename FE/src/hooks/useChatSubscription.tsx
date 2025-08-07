@@ -1,4 +1,3 @@
-// src/hooks/useChatSubscription.ts
 import { useState, useEffect } from "react";
 import { Client } from "@stomp/stompjs";
 import { getChatHistory } from "../api/chatService";
@@ -26,7 +25,6 @@ export const useChatSubscription = (
 
   // 2. STOMP 클라이언트가 연결되면 채팅 채널을 구독
   useEffect(() => {
-    // client가 존재하고, 연결이 활성화(active) 상태일 때만 구독
     if (client && client.active && roomId) {
       const subscription = client.subscribe(
         `/topic/chat/${roomId}`,
@@ -36,12 +34,11 @@ export const useChatSubscription = (
         }
       );
 
-      // 이 useEffect가 끝나거나, client/roomId가 바뀌면 구독을 취소함
       return () => {
         subscription.unsubscribe();
       };
     }
-  }, [client, client?.active, roomId]); // client의 active 상태가 바뀔 때도 이 effect를 재실행
+  }, [client, client?.active, roomId]);
 
   // 3. 메시지 전송 함수
   const sendMessage = (content: string) => {
