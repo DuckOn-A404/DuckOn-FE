@@ -87,7 +87,9 @@ const HomePage = () => {
         {/* 아티스트 목록 영역 */}
         <section>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">추천 아티스트</h2>
+            <h2 className="text-2xl font-bold">
+              🧭 지금 주목해야 할 아티스트!
+            </h2>
             <Link
               to="/artist-list"
               className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
