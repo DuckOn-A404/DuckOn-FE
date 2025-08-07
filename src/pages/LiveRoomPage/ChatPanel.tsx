@@ -6,11 +6,10 @@ import type { ChatMessage } from "../../types/chat";
 
 type ChatPanelProps = {
   messages: ChatMessage[];
-  isConnected: boolean;
   sendMessage: (content: string) => void;
 };
 
-const ChatPanel = ({ messages, isConnected, sendMessage }: ChatPanelProps) => {
+const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -107,21 +106,22 @@ const ChatPanel = ({ messages, isConnected, sendMessage }: ChatPanelProps) => {
 
       {/* 메시지 입력 영역 */}
       <div className="py-2 border-t border-gray-700">
-        <div className="flex items-center gap-2 mb-1">
-          {isConnected ? (
-            <Wifi size={14} className="text-green-400" />
-          ) : (
-            <WifiOff size={14} className="text-red-400" />
-          )}
-          <span
-            className={`text-xs ${
-              isConnected ? "text-gray-400" : "text-red-400"
-            }`}
+        <div className="relative">
+          <input
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+            placeholder="메시지를 입력하세요..."
+            className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+          <button
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
+            disabled={!newMessage.trim()}
+            onClick={handleSendMessage}
           >
-            {isConnected
-              ? "실시간 채팅에 연결됨"
-              : "연결이 끊겼습니다. 재연결 중..."}
-          </span>
+            <Send size={16} />
+          </button>
         </div>
         <div className="relative">
           <input
@@ -131,11 +131,10 @@ const ChatPanel = ({ messages, isConnected, sendMessage }: ChatPanelProps) => {
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="메시지를 입력하세요..."
             className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            disabled={!isConnected}
           />
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
-            disabled={!newMessage.trim() || !isConnected}
+            disabled={!newMessage.trim()}
             onClick={handleSendMessage}
           >
             <Send size={16} />
