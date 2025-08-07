@@ -10,11 +10,13 @@ import OtherUserPage from "./pages/OtherUserPage";
 import LiveRoomPage from "./pages/LiveRoomPage";
 import LayoutWithoutFooter from "./layouts/LayoutWithoutFooter";
 import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
+import ScrollToTop from "./components/common/ScrollToTop";
 
 function App() {
   return (
     <>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* 공통 레이아웃이 적용되는 페이지들 */}
           <Route element={<MainLayout />}>
