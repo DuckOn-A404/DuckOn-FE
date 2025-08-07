@@ -16,6 +16,9 @@ import { Video, Plus } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 import VideoCardSkeleton from "../../components/domain/video/VideoCardSkeleton";
 
+const PLACEHOLDER_URL =
+  "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
+
 const ArtistDetailPage = () => {
   const location = useLocation();
   const artistId = location.state?.artistId as number | undefined;
@@ -160,7 +163,7 @@ const ArtistDetailPage = () => {
         <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
           <div className="flex items-center gap-6">
             <img
-              src={artist.imgUrl}
+              src={artist.imgUrl || PLACEHOLDER_URL}
               alt={artist.nameEn}
               className="w-24 h-24 rounded-2xl object-cover shadow"
             />
