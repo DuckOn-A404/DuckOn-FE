@@ -17,9 +17,6 @@ summary : User 객체의 존재 여부에 따라 버튼이 구성요소가 달�
 const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
   const navigate = useNavigate();
 
-  // 프로필 이미지가 없을 때 보여줄 기본 이미지
-  const profilePlaceholder = "https://placehold.co/40x40/e2e8f0/a0aec0?text=:)";
-
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-sm shadow-sm">
       <nav className="max-w-7xl h-16 mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
