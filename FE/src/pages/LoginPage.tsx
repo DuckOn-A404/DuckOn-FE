@@ -5,6 +5,7 @@ import LoginSignupCard from "../components/common/LoginSignupCard";
 import { Mail, LockKeyhole, ArrowLeft } from "lucide-react";
 import { useUserStore } from "../store/useUserStore";
 import { buildLoginCredentials } from "../utils/authUtils";
+import { fetchMyProfile } from "../api/userService";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -21,8 +22,13 @@ const LoginPage = () => {
     const credentials = buildLoginCredentials(loginInput.trim(), password);
 
     try {
-      const res = await logIn(credentials);
-      setUser(res.user);
+      await logIn(credentials);
+      const userData = await fetchMyProfile();
+      const userForStore = {
+        ...userData,
+        artistList: userData.artistList || [],
+      };
+      setUser(userForStore);
       navigate("/");
     } catch (err: any) {
       setError(err.message || "로그인에 실패했습니다.");
@@ -101,7 +107,6 @@ const LoginPage = () => {
 
         {/* 로그인 버튼 */}
         <button
-          // ✅ 2. 버튼에 transition과 hover 효과를 추가합니다.
           className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:brightness-110 hover:shadow-lg"
           onClick={handleLogin}
         >
