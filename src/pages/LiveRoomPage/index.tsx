@@ -28,16 +28,25 @@ const LiveRoomPage = () => {
   const isHost = room?.hostId === myUserId
   
   useEffect(() => {
-    if (!myUser) return
+    if (!myUser) return;
 
-    const client = createStompClient(localStorage.getItem("accessToken") || "")
-    client.activate()
-    setStompClient(client)
+    const client = createStompClient(localStorage.getItem("accessToken") || "");
+
+    client.onConnect = () => {
+      console.log("STOMP 연결 성공!");
+      setStompClient(client); // 👉 onConnect에서만 set!
+    };
+
+    client.onStompError = (frame) => {
+      console.error("STOMP 에러 발생:", frame);
+    };
+
+    client.activate();
 
     return () => {
-      client.deactivate()
-    }
-  }, [myUser])
+      client.deactivate();
+    };
+  }, [myUser]);
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -53,7 +62,7 @@ const LiveRoomPage = () => {
     loadRoom();
   }, [roomId]);
 
-  if (!room || !stompClient || !myUser) return <div>로딩 중...</div>;
+  if (!room || !stompClient?.connected || !myUser) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
