@@ -32,6 +32,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+    console.log("[상태 변경]", event.data);
+    console.log("stomp 연결 상태:", stompClient.connected);
+    console.log("isHost:", isHost);
     if (!stompClient.connected || !playerRef.current) return;
 
     const player = playerRef.current;
@@ -56,6 +59,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       isPlaying,
       lastUpdated: Date.now(),
     };
+
+    const jsonPayload = JSON.stringify(payload);
+
+    console.log("[STOMP 전송 데이터]", jsonPayload);
 
     stompClient.publish({
       destination: "/app/room/update",
@@ -120,7 +127,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               width: "100%",
               height: "100%",
               playerVars: {
-                autoplay: 1,               // autoplay 설정
+                autoplay: 0,               // autoplay 설정
                 mute: 1,                   // 브라우저 autoplay 정책 우회
                 controls: isHost ? 1 : 0,  // 참가자는 조작 불가
                 disablekb: 1,
