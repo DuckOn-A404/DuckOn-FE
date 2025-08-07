@@ -35,7 +35,7 @@ const MainLayout = () => {
       </main>
 
       {/* 푸터 */}
-      <div>
+      <div className="mt-8">
         <Footer />
       </div>
     </div>

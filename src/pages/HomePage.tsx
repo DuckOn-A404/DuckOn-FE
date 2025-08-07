@@ -7,6 +7,7 @@ import { getRandomArtists } from "../api/artistService";
 import { type Artist } from "../types/artist";
 import { useTrendingRooms } from "../hooks/useTrendingRooms";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
+import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
 
 const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
@@ -42,37 +43,43 @@ const HomePage = () => {
 
   return (
     <div>
-      {/* 랜딩 사진 */}
+      {/* 랜딩(Hero) 섹션 */}
       <div
-        className="relative w-full h-80 bg-cover bg-center"
+        className="relative w-full h-96 bg-cover bg-center"
         style={{ backgroundImage: "url('/hero-background.png')" }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-purple-800/70 to-transparent" />
-
-        <div className="relative h-full flex flex-col justify-center items-start text-white p-8 sm:p-12 lg:p-24">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
+        <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight drop-shadow-md">
             좋아하는 아티스트와
             <br />
             함께 즐기는 시간
           </h1>
-          <p className="text-lg md:text-xl">
+          <p className="text-lg md:text-xl max-w-2xl drop-shadow-md">
             실시간으로 음악을 시청하고 팬들과 채팅으로 소통해보세요
           </p>
+          <Link
+            to="/artist-list"
+            className="mt-8 px-8 py-3 bg-white text-purple-700 font-semibold rounded-full shadow-lg transition-transform duration-300 hover:scale-105"
+          >
+            아티스트 둘러보기
+          </Link>
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+      {/* 메인 콘텐츠 영역 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* 핫한 방송 영역 */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">🔥 지금 핫한 방 🔥</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <h2 className="text-3xl font-bold mb-8 text-center sm:text-left">
+            🔥 지금 핫한 방
+          </h2>
+          <div className="flex flex-wrap justify-center gap-8">
             {isLoadingTrending ? (
-              // 로딩 중일 때 스켈레톤 UI 표시
               Array.from({ length: 3 }).map((_, i) => (
                 <VideoCardSkeleton key={i} />
               ))
             ) : trendingError ? (
-              // 에러 발생 시 메시지 표시
               <p className="col-span-3 text-center text-red-500">
                 {trendingError}
               </p>
@@ -86,10 +93,8 @@ const HomePage = () => {
 
         {/* 아티스트 목록 영역 */}
         <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              🧭 지금 주목해야 할 아티스트!
-            </h2>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold mb-8">주목해야 할 아티스트!</h2>
             <Link
               to="/artist-list"
               className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
@@ -97,20 +102,20 @@ const HomePage = () => {
               더보기 →
             </Link>
           </div>
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-6">
-            {isLoadingArtists ? (
-              <p>아티스트를 불러오는 중...</p>
-            ) : (
-              recommendedArtists.map((artist) => (
-                <ArtistCard
-                  key={artist.artistId}
-                  {...artist}
-                  onClick={() =>
-                    handleCardClick(artist.artistId, artist.nameEn)
-                  }
-                />
-              ))
-            )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            {isLoadingArtists
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <ArtistCardSkeleton key={i} />
+                ))
+              : recommendedArtists.map((artist) => (
+                  <ArtistCard
+                    key={artist.artistId}
+                    {...artist}
+                    onClick={() =>
+                      handleCardClick(artist.artistId, artist.nameEn)
+                    }
+                  />
+                ))}
           </div>
         </section>
       </main>

@@ -155,7 +155,7 @@ const ArtistDetailPage = () => {
   };
 
   return (
-    <div className="flex w-full bg-gray-50">
+    <div className="flex w-full">
       {/* 왼쪽: 팔로우 리스트 */}
       <LeftSidebar />
 
