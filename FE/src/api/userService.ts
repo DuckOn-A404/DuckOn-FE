@@ -1,6 +1,12 @@
 import { api } from "./axiosInstance";
 import { type MyUser } from "../types/mypage";
 
+type BlockedUser = {
+  userId: string;
+  nickname: string;
+  imgUrl: string | null;
+};
+
 // 현재 사용자 정보 조회
 export const fetchMyProfile = async (): Promise<MyUser> => {
   // 실제 백엔드 연동용 코드
@@ -71,4 +77,42 @@ export const updateUserProfile = async (
     },
   });
   return response.data;
+};
+
+/**
+ * 특정 사용자를 차단하는 API 함수
+ * @param userId - 차단할 사용자의 ID
+ * @returns 성공 메시지
+ */
+export const blockUser = async (
+  userId: string
+): Promise<{ message: string }> => {
+  try {
+    const response = await api.post(`/api/block/${userId}`);
+
+    console.log("사용자 차단 성공:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("사용자 차단 API 호출에 실패했습니다:", error);
+    throw error;
+  }
+};
+
+/**
+ * 차단한 사용자 목록을 가져오는 API 함수
+ * @returns 차단된 사용자 목록 배열
+ */
+export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await api.get("/api/block", {
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+    return response.data.blockedList || [];
+  } catch (error) {
+    console.error("차단 목록 API 호출에 실패했습니다:", error);
+    return [];
+  }
 };

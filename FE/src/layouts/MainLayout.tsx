@@ -6,17 +6,16 @@ import { useUserStore } from "../store/useUserStore";
 
 const MainLayout = () => {
   const navigate = useNavigate();
-  const { myUser, setMyUser } = useUserStore(); // Zustand 훅으로 전역 상태 사용
+  const { myUser, setMyUser } = useUserStore();
 
   const handleLogin = () => navigate("/login");
 
   const handleLogout = () => {
-    localStorage.clear(); // 로컬 스토리지 지우기
-    setMyUser(null); // 전역 상태 초기화
+    localStorage.clear();
+    setMyUser(null);
   };
 
   const handleSignup = () => {
-    console.log("회원가입 페이지로 이동");
     navigate("/signup");
   };
 
