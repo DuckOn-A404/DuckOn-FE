@@ -4,7 +4,7 @@ export const createStompClient = (
   accessToken: string,
   onConnectCallback?: () => void
 ): Client => {
-  const socketUrl = `ws://localhost:8080/ws-chat?token=${accessToken}`;
+  const socketUrl = `ws://i13a404.p.ssafy.io/ws-chat?token=${accessToken}`;
 
   const client = new Client({
     webSocketFactory: () => new WebSocket(socketUrl),
