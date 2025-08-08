@@ -13,8 +13,10 @@ const LayoutWithoutFooter = () => {
   const handleLogin = () => navigate("/login");
 
   const handleLogout = () => {
-    localStorage.clear();
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("user-storage");
     setMyUser(null);
+    navigate("/");
   };
 
   const handleSignup = () => {
