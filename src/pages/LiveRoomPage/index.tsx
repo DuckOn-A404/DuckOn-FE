@@ -215,6 +215,8 @@ const LiveRoomPage = () => {
             stompClient={stompClient}
             user={myUser!}
             roomId={room.roomId}
+            playlist={room.playlist || []}
+            currentVideoIndex={room.currentVideoIndex ?? 0}
             isPlaylistUpdating={isPlaylistUpdating}
           />
         </main>
