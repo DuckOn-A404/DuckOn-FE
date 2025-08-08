@@ -129,7 +129,7 @@ deploy_fe:
           --no-cache \
           -t duckon-front:latest \
           .
-        sudo docker rm -f duckon-front || true
+        sudo docker rm -f duckon-front-dev || true
         sudo docker run -d \
           --name duckon-front-dev \
           -p 8081:80 \
