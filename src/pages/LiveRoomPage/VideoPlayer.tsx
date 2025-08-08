@@ -9,6 +9,8 @@ type VideoPlayerProps = {
   stompClient: Client;
   user: User;
   roomId: number;
+  playlist: string[];
+  currentVideoIndex: number;
 };
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -17,18 +19,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   stompClient,
   user,
   roomId,
+  playlist,
+  currentVideoIndex,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false);
   const shouldPlayAfterSeek = useRef(false);
 
-  const playlist = [videoId];
-  const currentVideoIndex = 0;
-
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
     event.target.pauseVideo(); // 자동 재생 방지
-    event.target.mute();       // autoplay 우회용
+    event.target.mute(); // autoplay 우회용
     console.log("[공통] YouTube player 준비됨");
   };
 
@@ -192,13 +193,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           )}
         </>
       ) : (
-        <div className="text-center text-white mt-10">
-          영상 ID가 없습니다.
-        </div>
+        <div className="text-center text-white mt-10">영상 ID가 없습니다.</div>
       )}
     </div>
   );
-
 };
 
 export default VideoPlayer;

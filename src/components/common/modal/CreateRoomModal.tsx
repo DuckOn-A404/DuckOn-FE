@@ -17,7 +17,12 @@ type CreateRoomModalProps = {
   hostId: string;
 };
 
-const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalProps) => {
+const CreateRoomModal = ({
+  isOpen,
+  onClose,
+  artistId,
+  hostId,
+}: CreateRoomModalProps) => {
   const [title, setTitle] = useState("");
   const [locked, setLocked] = useState(false);
   const [entryQuestion, setEntryQuestion] = useState("");
@@ -40,7 +45,12 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
   }, [videoUrl]);
 
   const handleSubmit = async () => {
-    if (!title || !videoUrl || !videoId || (locked && (!entryQuestion || !entryAnswer))) {
+    if (
+      !title ||
+      !videoUrl ||
+      !videoId ||
+      (locked && (!entryQuestion || !entryAnswer))
+    ) {
       setErrors("모든 필수 항목을 입력해주세요.");
       return;
     }
@@ -51,11 +61,11 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
     formData.append("hostId", hostId);
     formData.append("locked", locked.toString());
     formData.append("videoId", videoId);
-    
+
     if (thumbnailPreview) {
-      const blob = await fetch(thumbnailPreview).then(res => res.blob())
-      const file = new File([blob], "thumbnail.jpg", {type: blob.type})
-      formData.append("thumbnailImg", file)
+      const blob = await fetch(thumbnailPreview).then((res) => res.blob());
+      const file = new File([blob], "thumbnail.jpg", { type: blob.type });
+      formData.append("thumbnailImg", file);
     }
 
     if (locked) {
@@ -65,7 +75,6 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
 
     try {
       const createdRoom = await CreateRoom(formData);
-      alert("방이 생성되었습니다!");
       onClose();
       navigate(`/live/${createdRoom.roomId}`);
     } catch (error) {
@@ -92,7 +101,9 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
         )}
 
         <div>
-          <label className="block text-sm font-medium mb-1">방 제목<span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium mb-1">
+            방 제목<span className="text-red-500">*</span>
+          </label>
           <input
             className="w-full border rounded px-3 py-2"
             placeholder="예: BLACKPINK 신곡 함께보기"
@@ -102,7 +113,9 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">YouTube URL<span className="text-red-500">*</span></label>
+          <label className="block text-sm font-medium mb-1">
+            YouTube URL<span className="text-red-500">*</span>
+          </label>
           <input
             className="w-full border rounded px-3 py-2"
             placeholder="https://www.youtube.com/watch?v=..."
@@ -113,7 +126,9 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
 
         {thumbnailPreview && (
           <div>
-            <label className="block text-sm font-medium mb-1">썸네일 미리보기</label>
+            <label className="block text-sm font-medium mb-1">
+              썸네일 미리보기
+            </label>
             <img
               src={thumbnailPreview}
               alt="썸네일 미리보기"
@@ -123,7 +138,9 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
         )}
 
         <div>
-          <label className="block text-sm font-medium mb-1">비밀번호 설정 여부</label>
+          <label className="block text-sm font-medium mb-1">
+            비밀번호 설정 여부
+          </label>
           <div className="flex gap-6 mt-1">
             <label className="flex items-center gap-1">
               <input
@@ -149,7 +166,9 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
         {locked && (
           <>
             <div>
-              <label className="block text-sm font-medium mb-1">입장 질문<span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium mb-1">
+                입장 질문<span className="text-red-500">*</span>
+              </label>
               <input
                 className="w-full border rounded px-3 py-2"
                 placeholder="예: 1+1=?"
@@ -158,7 +177,9 @@ const CreateRoomModal = ({ isOpen, onClose, artistId, hostId }: CreateRoomModalP
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">정답<span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium mb-1">
+                정답<span className="text-red-500">*</span>
+              </label>
               <input
                 className="w-full border rounded px-3 py-2"
                 placeholder="예: 2"
