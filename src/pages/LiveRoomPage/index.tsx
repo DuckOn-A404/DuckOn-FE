@@ -1,10 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { fetchRoomById } from "../../api/roomService";
+import { fetchRoomById, enterRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
 
+import EntryQuizModal from "./EntryQuizModal";
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
@@ -14,17 +15,49 @@ const LiveRoomPage = () => {
   const { roomId } = useParams();
   const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
-  const [room, setRoom] = useState<any>(null);
   const navigate = useNavigate();
 
+  const [room, setRoom] = useState<any>(null);
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
   const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
     stompClient?.deactivate();
     navigate(-1);
+  };
+
+  const handleSubmitAnswer = async (answer: string) => {
+    console.log("제출된 정답:", answer);
+    try {
+      await enterRoom(roomId!, answer);
+      const roomData = await fetchRoomById(roomId!);
+      setRoom(roomData);
+      setIsQuizModalOpen(false); // 성공 시 모달 닫기
+    } catch (error: any) {
+      const status = error.response?.status;
+
+      if (status === 401) {
+        const serverMessage = error.response?.data?.message || "";
+
+        if (serverMessage.includes("정답")) {
+          // 정답이 틀렸을 경우 => EntryQuizModal.tsx에서 "wrong_answer"로 처리
+          throw new Error("wrong_answer");
+        }
+
+        // 그 외의 인증 오류는 로그인 필요
+        alert("로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.");
+        navigate("/login");
+        return;
+      }
+
+      // 기타 예외
+      console.error("입장 실패:", error);
+      throw error;
+    }
   };
 
   const isHost = room?.hostId === myUserId;
@@ -61,12 +94,12 @@ const LiveRoomPage = () => {
   };
 
   useEffect(() => {
-    if (!myUser) return;
+    if (!myUser || isQuizModalOpen) return;
 
     const client = createStompClient(localStorage.getItem("accessToken") || "");
 
     client.onConnect = () => {
-      console.log("STOMP 연결 성공!");
+      console.log("STOMP 연결 성공");
       setStompClient(client);
 
       client.subscribe(`/topic/room/${roomId}`, (message) => {
@@ -93,15 +126,21 @@ const LiveRoomPage = () => {
     return () => {
       client.deactivate();
     };
-  }, [myUser, roomId]);
+  }, [myUser, isQuizModalOpen, roomId]); // 퀴즈 통과 후에만 연결
 
   useEffect(() => {
     const loadRoom = async () => {
       try {
         if (!roomId) return;
         const roomData = await fetchRoomById(roomId);
-        console.log("방 정보:", roomData);
-        setRoom(roomData);
+
+        // 참가자이고 퀴즈가 존재하면 모달 오픈하기
+        if (roomData.hostId !== myUser?.userId && roomData.entryQuestion) {
+          setEntryQuestion(roomData.entryQuestion);
+          setIsQuizModalOpen(true);
+        } else {
+          setRoom(roomData);
+        }
       } catch (error) {
         console.error("방 정보 불러오기 실패:", error);
       }
@@ -109,11 +148,32 @@ const LiveRoomPage = () => {
     loadRoom();
   }, [roomId]);
 
-  if (!room || !stompClient?.connected || !myUser) return <div>로딩 중...</div>;
+  if (!room || !stompClient?.connected || !myUser) {
+    return (
+      <>
+        {isQuizModalOpen && entryQuestion && (
+          <EntryQuizModal
+            question={entryQuestion}
+            onSubmit={handleSubmitAnswer}
+            onExit={() => navigate("/")}
+          />
+        )}
+        <div>로딩 중...</div>
+      </>
+    );
+  }
+  // if (!room || !stompClient?.connected || !myUser || isQuizModalOpen) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
     <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {isQuizModalOpen && entryQuestion && (
+        <EntryQuizModal
+          question={entryQuestion}
+          onSubmit={handleSubmitAnswer}
+          onExit={() => navigate("/")}
+        />
+      )}
       {/* 상단 헤더 */}
       <LiveHeader
         isHost={room.hostId === myUserId}
