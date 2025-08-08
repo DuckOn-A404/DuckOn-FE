@@ -1,4 +1,4 @@
-import { api } from "../axiosInstance"
+import {api} from "../axiosInstance";
 
 /**
  * 사용자 팔로우 API 요청
@@ -8,26 +8,26 @@ import { api } from "../axiosInstance"
 
 // 팔로우 요청(post)
 export const followUser = async (userId: string): Promise<string> => {
-    const token = localStorage.getItem("accessToken") || ""
-    const response = await api.post(
-        `/api/users/${userId}/follow`,
-        {},
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    )
-    return response.data.message
-}
+	const token = localStorage.getItem("accessToken") || "";
+	const response = await api.post(
+		`/users/${userId}/follow`,
+		{},
+		{
+			headers: {
+				Authorization: `Bearer ${token}`,
+			},
+		}
+	);
+	return response.data.message;
+};
 
 // 언팔로우 요청(delete)
-export const unfollowUser = async(userId: string): Promise<string> => {
-    const token = localStorage.getItem("accessToken") || ""
-    const response = await api.delete(`/api/users/${userId}/follow`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    })
-    return response.data.message
-}
+export const unfollowUser = async (userId: string): Promise<string> => {
+	const token = localStorage.getItem("accessToken") || "";
+	const response = await api.delete(`/api/users/${userId}/follow`, {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data.message;
+};
