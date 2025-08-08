@@ -48,7 +48,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!isHost) return;
 
     const currentTime = player.getCurrentTime();
-    const isPlaying = event.data === YT.PlayerState.PLAYING;
+    const playing = event.data === YT.PlayerState.PLAYING;
 
     const payload = {
       roomId: parseInt(roomId),
@@ -56,7 +56,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       playlist,
       currentVideoIndex,
       currentTime,
-      isPlaying,
+      playing,
       lastUpdated: Date.now(),
     };
 
@@ -84,14 +84,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         (message) => {
           console.log("[참가자] 메시지 수신:", message.body);
           try {
-            const { currentTime, isPlaying } = JSON.parse(message.body);
+            const { currentTime, playing } = JSON.parse(message.body);
             const player = playerRef.current;
             if (!player) return;
 
             player.seekTo(currentTime, true);
 
             setTimeout(() => {
-              if (isPlaying) {
+              if (playing) {
                 player.playVideo();
               } else {
                 player.pauseVideo();
