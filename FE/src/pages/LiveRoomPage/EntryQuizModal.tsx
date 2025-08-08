@@ -13,16 +13,26 @@ const EntryQuizModal = ({
   onExit,
 }: EntryQuizModalProps) => {
   const [answer, setAnswer] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (answer.trim()) {
-      onSubmit(answer.trim());
+    if (!answer.trim()) return;
+
+    try {
+      await onSubmit(answer.trim());
+      setErrorMessage(""); // 정답일 경우 에러 메시지 초기화
+    } catch (err: any) {
+      if (err.message === "wrong_answer") {
+        setErrorMessage("정답이 틀렸습니다. 다시 시도해주세요.");
+      } else {
+        setErrorMessage("오류가 발생했습니다. 다시 시도해주세요.");
+      }
     }
+
   };
 
   return (
-    // 전체 화면을 덮는 반투명 배경
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
       <div className="bg-gray-800 border border-gray-700 rounded-2xl shadow-lg p-8 w-full max-w-md text-white">
         <div className="text-center">
@@ -46,7 +56,13 @@ const EntryQuizModal = ({
               className="w-full bg-gray-700 text-white rounded-lg py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500 text-center"
               autoFocus
             />
+            {errorMessage && (
+              <p className="mt-2 text-sm text-red-400 text-center">
+                {errorMessage}
+              </p>
+            )}
           </div>
+
           <div className="flex flex-col gap-3 mt-6">
             <button
               type="submit"
