@@ -30,7 +30,6 @@ build_and_test_fe:
   variables:
     # Ensure devDependencies (typescript, @types/*) actually get installed
     NODE_ENV: development
-  variables:
     VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
   rules:
     # FE/develop 브랜치에 푸시됐을 때
@@ -109,6 +108,7 @@ deploy_be:
           -e MONGO_DB_NAME="${MONGO_DB_NAME}" \
           -e MONGO_DB_USERNAME="${MONGO_DB_USERNAME}" \
           -e MONGO_DB_PASSWORD="${MONGO_DB_PASSWORD}" \
+          -e BASE_URL="${BASE_URL}" \
           duckonback:latest
       EOF
 
