@@ -48,7 +48,7 @@ const PlaylistPanel = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800 text-white p-4">
+    <div className="flex flex-col h-full bg-gray-800 text-white">
       {/* 리스트 */}
       <div className="flex-1 space-y-2 overflow-y-auto pr-2">
         {playlist.length === 0 ? (
