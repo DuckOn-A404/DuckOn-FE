@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import YouTube from "react-youtube";
 import { Client } from "@stomp/stompjs";
 import type { User } from "../../types";
@@ -19,6 +19,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   roomId,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
+  const [canWatch, setCanWatch] = useState(false)
 
   const playlist = [videoId];
   const currentVideoIndex = 0;
@@ -90,10 +91,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             player.seekTo(currentTime, true);
 
+            player.mute();
+
             setTimeout(() => {
               if (playing) {
+                console.log("참가자: 방장 재생 요청 -> 재생");
+                setCanWatch(true)
                 player.playVideo();
               } else {
+                console.log("참가자: 방장 정지 요청 -> 정지")
+                setCanWatch(false)
                 player.pauseVideo();
               }
             }, 200);
@@ -129,13 +136,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               playerVars: {
                 autoplay: 0,               // autoplay 설정
                 mute: 1,                   // 브라우저 autoplay 정책 우회
+                enablejsapi: 1,
                 controls: isHost ? 1 : 0,  // 참가자는 조작 불가
                 disablekb: 1,
                 rel: 0,
               },
             }}
           />
-          {!isHost && (
+          {!isHost && !canWatch && (
             <>
               <div
                 className="absolute inset-0 z-10 bg-transparent cursor-not-allowed"
