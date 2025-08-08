@@ -13,7 +13,7 @@ export const getArtistMessages = async (
 	since?: string
 ): Promise<artistChatMessage[]> => {
 	try {
-		const response = await api.get(`/api/chat/artist/${artistId}/message`, {
+		const response = await api.get(`/chat/artist/${artistId}/message`, {
 			params: {since},
 		});
 
