@@ -23,6 +23,7 @@ const LiveRoomPage = () => {
   const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
+    stompClient?.deactivate();
     navigate(-1);
   };
 
