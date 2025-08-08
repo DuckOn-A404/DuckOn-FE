@@ -5,7 +5,7 @@ import type { artistChatMessage } from "../types/artistChat";
  * 특정 아티스트의 채팅 메시지 목록을 가져옵니다.
  * 'since' 파라미터를 사용하여 효율적인 폴링(Polling)을 지원합니다.
  * @param artistId - 채팅 내역을 조회할 아티스트의 식별자
- * @param since - (선택 사항) 이 시각(ISO 8601 형식) 이후의 메시지만 조회합니다.
+ * @param since - 이 시각(ISO 8601 형식) 이후의 메시지만 조회합니다.
  * @returns 채팅 메시지 배열
  */
 export const getArtistMessages = async (
