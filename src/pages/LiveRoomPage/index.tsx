@@ -7,8 +7,8 @@ import { createStompClient } from "../../socket";
 
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
-// import RightSidebar from "./RightSidebar";
-// import { useChatSubscription } from "../../hooks/useChatSubscription";
+import RightSidebar from "./RightSidebar";
+import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -20,7 +20,7 @@ const LiveRoomPage = () => {
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
-  // const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
+  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
     stompClient?.deactivate();
@@ -28,6 +28,37 @@ const LiveRoomPage = () => {
   };
 
   const isHost = room?.hostId === myUserId;
+
+  // 방장이 playlist 영상 추가 시 update publish
+  const handleAddToPlaylist = (newVideoId: string) => {
+    if (!stompClient?.connected || !myUser || !room) return;
+    if (!isHost) return;
+
+    const updatedPlaylist = [...(room.playlist || []), newVideoId];
+
+    const payload = {
+      roomId: Number(room.roomId),
+      hostId: myUser.userId,
+      playlist: updatedPlaylist,
+      currentVideoIndex: room.currentVideoIndex ?? 0,
+      currentTime: 0,
+      playing: false,
+      lastUpdated: Date.now(),
+    };
+
+    setRoom((prev: any) => ({
+      ...prev,
+      playlist: updatedPlaylist,
+      currentTime: 0,
+      playing: false,
+      lastUpdated: payload.lastUpdated,
+    }));
+
+    stompClient.publish({
+      destination: "/app/room/update",
+      body: JSON.stringify(payload),
+    });
+  };
 
   useEffect(() => {
     if (!myUser) return;
@@ -37,6 +68,20 @@ const LiveRoomPage = () => {
     client.onConnect = () => {
       console.log("STOMP 연결 성공!");
       setStompClient(client);
+
+      client.subscribe(`/topic/room/${roomId}`, (message) => {
+        try {
+          const updatedData = JSON.parse(message.body);
+          console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
+
+          setRoom((prevRoom: any) => ({
+            ...prevRoom,
+            ...updatedData,
+          }));
+        } catch (error) {
+          console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+        }
+      });
     };
 
     client.onStompError = (frame) => {
@@ -48,7 +93,7 @@ const LiveRoomPage = () => {
     return () => {
       client.deactivate();
     };
-  }, [myUser]);
+  }, [myUser, roomId]);
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -117,13 +162,16 @@ const LiveRoomPage = () => {
             </button>
           </div>
 
-          {/* <RightSidebar
+          <RightSidebar
             selectedTab={activeTab}
             isHost={isHost}
             roomId={roomId}
             messages={messages}
             sendMessage={sendMessage}
-          /> */}
+            playlist={room.playlist || []}
+            currentVideoIndex={room.currentVideoIndex ?? 0}
+            onAddToPlaylist={handleAddToPlaylist}
+          />
         </aside>
       </div>
     </div>
