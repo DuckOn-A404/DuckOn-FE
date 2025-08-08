@@ -20,6 +20,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false)
+  const shouldPlayAfterSeek = useRef(false)
 
   const playlist = [videoId];
   const currentVideoIndex = 0;
@@ -32,24 +33,73 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
+  // const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+  //   console.log("[상태 변경]", event.data);
+  //   console.log("stomp 연결 상태:", stompClient.connected);
+  //   console.log("isHost:", isHost);
+  //   if (!stompClient.connected || !playerRef.current) return;
+
+  //   const player = playerRef.current;
+
+  //   // 참가자가 play 버튼을 눌렀을 때 강제 정지
+  //   if (!isHost && event.data === YT.PlayerState.PLAYING) {
+  //     player.pauseVideo();
+  //     return;
+  //   }
+
+  //   if (!isHost) return;
+
+  //   const currentTime = player.getCurrentTime();
+  //   const playing = event.data === YT.PlayerState.PLAYING;
+
+  //   const payload = {
+  //     roomId: parseInt(roomId),
+  //     hostId: user.userId,
+  //     playlist,
+  //     currentVideoIndex,
+  //     currentTime,
+  //     playing,
+  //     lastUpdated: Date.now(),
+  //   };
+
+  //   const jsonPayload = JSON.stringify(payload);
+
+  //   console.log("[STOMP 전송 데이터]", jsonPayload);
+
+  //   stompClient.publish({
+  //     destination: "/app/room/update",
+  //     body: JSON.stringify(payload),
+  //   });
+  // };
+
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
     console.log("[상태 변경]", event.data);
     console.log("stomp 연결 상태:", stompClient.connected);
     console.log("isHost:", isHost);
-    if (!stompClient.connected || !playerRef.current) return;
-
     const player = playerRef.current;
+    if (!player || !stompClient.connected) return;
 
-    // 참가자가 play 버튼을 눌렀을 때 강제 정지
-    if (!isHost && event.data === YT.PlayerState.PLAYING) {
+    const state = event.data;
+
+    // 참가자 조작 방지
+    if (!isHost && state === YT.PlayerState.PLAYING && !shouldPlayAfterSeek.current) {
       player.pauseVideo();
       return;
     }
 
-    if (!isHost) return;
+    // 참가자: 버퍼링 → 플레이 → canWatch 켜기
+    if (!isHost) {
+      if (state === YT.PlayerState.PLAYING && shouldPlayAfterSeek.current) {
+        console.log("🎬 참가자: 재생 시작됨");
+        setCanWatch(true);
+        shouldPlayAfterSeek.current = false;
+      }
+      return;
+    }
 
+    // 방장: 상태 전송
     const currentTime = player.getCurrentTime();
-    const playing = event.data === YT.PlayerState.PLAYING;
+    const playing = state === YT.PlayerState.PLAYING;
 
     const payload = {
       roomId: parseInt(roomId),
@@ -103,7 +153,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 setCanWatch(false)
                 player.pauseVideo();
               }
-            }, 200);
+            }, 500);
           } catch (err) {
             console.error("메시지 파싱 실패", err);
           }
