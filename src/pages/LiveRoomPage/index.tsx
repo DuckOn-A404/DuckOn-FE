@@ -263,7 +263,7 @@ const LiveRoomPage = () => {
         </main>
 
         {/* 오른쪽: 사이드바 */}
-        <aside className="w-96 bg-gray-800 flex flex-col border-l border-gray-700">
+        <aside className="w-80 bg-gray-800 flex flex-col border-l border-gray-700">
           {/* 탭 버튼 */}
           <div className="flex border-b border-gray-700">
             <button
