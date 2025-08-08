@@ -13,7 +13,7 @@ export const fetchMyProfile = async (): Promise<MyUser> => {
 	// Authorization 헤더가 빠져있다면 로그인 직후가 아닌 경우에는 헤더가 사라져서 /api/users/me가 로그인 페이지 HTML을 반환
 	const token = localStorage.getItem("accessToken");
 
-	const response = await api.get<MyUser>("/api/users/me", {
+	const response = await api.get<MyUser>("/users/me", {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -26,7 +26,7 @@ export const fetchOtherUserProfile = async (
 	userId: string
 ): Promise<MyUser> => {
 	// 실제 백엔드 연동 시:
-	const response = await api.get<MyUser>(`/api/users/${userId}`, {
+	const response = await api.get<MyUser>(`/users/${userId}`, {
 		headers: {
 			Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 		},
