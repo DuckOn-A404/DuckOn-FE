@@ -9,6 +9,7 @@ type VideoPlayerProps = {
   stompClient: Client;
   user: User;
   roomId: number;
+  isPlaylistUpdating: boolean;
 };
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -17,6 +18,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   stompClient,
   user,
   roomId,
+  isPlaylistUpdating,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false);
@@ -28,7 +30,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
     event.target.pauseVideo(); // 자동 재생 방지
-    event.target.mute();       // autoplay 우회용
+    event.target.mute(); // autoplay 우회용
     console.log("[공통] YouTube player 준비됨");
   };
 
@@ -125,7 +127,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // 방장: 주기적 상태 송신
   useEffect(() => {
-    if (!isHost || !stompClient.connected) return;
+    if (!isHost || !stompClient.connected || isPlaylistUpdating) return;
 
     const interval = setInterval(() => {
       const player = playerRef.current;
@@ -153,7 +155,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isHost, stompClient]);
+  }, [
+    isHost,
+    stompClient,
+    isPlaylistUpdating,
+    user,
+    roomId,
+    playlist,
+    currentVideoIndex,
+  ]);
 
   return (
     <div className="w-full aspect-video bg-black relative">
@@ -192,13 +202,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           )}
         </>
       ) : (
-        <div className="text-center text-white mt-10">
-          영상 ID가 없습니다.
-        </div>
+        <div className="text-center text-white mt-10">영상 ID가 없습니다.</div>
       )}
     </div>
   );
-
 };
 
 export default VideoPlayer;
