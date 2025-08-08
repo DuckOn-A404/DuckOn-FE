@@ -1,37 +1,37 @@
-import { api } from "./axiosInstance";
-import { type MyUser } from "../types/mypage";
+import {api} from "./axiosInstance";
+import {type MyUser} from "../types/mypage";
 
 type BlockedUser = {
-  userId: string;
-  nickname: string;
-  imgUrl: string | null;
+	userId: string;
+	nickname: string;
+	imgUrl: string | null;
 };
 
 // 현재 사용자 정보 조회
 export const fetchMyProfile = async (): Promise<MyUser> => {
-  // 실제 백엔드 연동용 코드
-  // Authorization 헤더가 빠져있다면 로그인 직후가 아닌 경우에는 헤더가 사라져서 /api/users/me가 로그인 페이지 HTML을 반환
-  const token = localStorage.getItem("accessToken");
+	// 실제 백엔드 연동용 코드
+	// Authorization 헤더가 빠져있다면 로그인 직후가 아닌 경우에는 헤더가 사라져서 /api/users/me가 로그인 페이지 HTML을 반환
+	const token = localStorage.getItem("accessToken");
 
-  const response = await api.get<MyUser>("/api/users/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
+	const response = await api.get<MyUser>("/api/users/me", {
+		headers: {
+			Authorization: `Bearer ${token}`,
+		},
+	});
+	return response.data;
 };
 
 // 타 유저 정보 조회
 export const fetchOtherUserProfile = async (
-  userId: string
+	userId: string
 ): Promise<MyUser> => {
-  // 실제 백엔드 연동 시:
-  const response = await api.get<MyUser>(`/api/users/${userId}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-    },
-  });
-  return response.data;
+	// 실제 백엔드 연동 시:
+	const response = await api.get<MyUser>(`/api/users/${userId}`, {
+		headers: {
+			Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+		},
+	});
+	return response.data;
 };
 
 /**
@@ -40,22 +40,22 @@ export const fetchOtherUserProfile = async (
  * @returns 성공 시 true, 실패 시 예외 발생
  */
 export const verifyPassword = async (password: string): Promise<boolean> => {
-  try {
-    const token = localStorage.getItem("accessToken") || "";
-    const response = await api.post(
-      "/api/users/me/verify-password",
-      { password },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`, // 토큰 반드시 포함해줄것 -> 새로고침시 매번 오류 발생 수정 위해
-        },
-      }
-    );
-    return response.data.valid === true;
-  } catch (error) {
-    console.error("비밀번호 검증 실패", error);
-    throw error;
-  }
+	try {
+		const token = localStorage.getItem("accessToken") || "";
+		const response = await api.post(
+			"/users/me/verify-password",
+			{password},
+			{
+				headers: {
+					Authorization: `Bearer ${token}`, // 토큰 반드시 포함해줄것 -> 새로고침시 매번 오류 발생 수정 위해
+				},
+			}
+		);
+		return response.data.valid === true;
+	} catch (error) {
+		console.error("비밀번호 검증 실패", error);
+		throw error;
+	}
 };
 
 /**
@@ -69,14 +69,14 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  */
 
 export const updateUserProfile = async (
-  formData: FormData
+	formData: FormData
 ): Promise<MyUser> => {
-  const response = await api.patch("/api/users/me", formData, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-    },
-  });
-  return response.data;
+	const response = await api.patch("/api/users/me", formData, {
+		headers: {
+			Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
+		},
+	});
+	return response.data;
 };
 
 /**
@@ -84,18 +84,16 @@ export const updateUserProfile = async (
  * @param userId - 차단할 사용자의 ID
  * @returns 성공 메시지
  */
-export const blockUser = async (
-  userId: string
-): Promise<{ message: string }> => {
-  try {
-    const response = await api.post(`/api/block/${userId}`);
+export const blockUser = async (userId: string): Promise<{message: string}> => {
+	try {
+		const response = await api.post(`/block/${userId}`);
 
-    console.log("사용자 차단 성공:", response.data);
-    return response.data;
-  } catch (error) {
-    console.error("사용자 차단 API 호출에 실패했습니다:", error);
-    throw error;
-  }
+		console.log("사용자 차단 성공:", response.data);
+		return response.data;
+	} catch (error) {
+		console.error("사용자 차단 API 호출에 실패했습니다:", error);
+		throw error;
+	}
 };
 
 /**
@@ -103,16 +101,16 @@ export const blockUser = async (
  * @returns 차단된 사용자 목록 배열
  */
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
-  try {
-    const token = localStorage.getItem("accessToken");
-    const response = await api.get("/api/block", {
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
-    return response.data.blockedList || [];
-  } catch (error) {
-    console.error("차단 목록 API 호출에 실패했습니다:", error);
-    return [];
-  }
+	try {
+		const token = localStorage.getItem("accessToken");
+		const response = await api.get("/api/block", {
+			headers: {
+				...(token && {Authorization: `Bearer ${token}`}),
+			},
+		});
+		return response.data.blockedList || [];
+	} catch (error) {
+		console.error("차단 목록 API 호출에 실패했습니다:", error);
+		return [];
+	}
 };
