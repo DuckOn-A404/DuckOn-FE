@@ -2,30 +2,20 @@
 import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import { type User } from "../types";
+import { useUserStore } from "../store/useUserStore";
 
 const MainLayout = () => {
-  const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+  const { myUser, setMyUser } = useUserStore();
 
-  const handleLogin = () => {
-    console.log("로그인 시도");
-    setUser({
-      id: "123",
-      name: "홍길동",
-      email: "hong@example.com",
-    });
-    navigate("/login");
-  };
+  const handleLogin = () => navigate("/login");
 
   const handleLogout = () => {
-    console.log("로그아웃");
-    setUser(null);
+    localStorage.clear();
+    setMyUser(null);
   };
 
   const handleSignup = () => {
-    console.log("회원가입 페이지로 이동");
     navigate("/signup");
   };
 
@@ -33,7 +23,7 @@ const MainLayout = () => {
     <div>
       {/* 헤더 */}
       <Header
-        user={user}
+        user={myUser}
         onLogin={handleLogin}
         onLogout={handleLogout}
         onSignup={handleSignup}
@@ -45,7 +35,7 @@ const MainLayout = () => {
       </main>
 
       {/* 푸터 */}
-      <div className="mt-20">
+      <div className="mt-8">
         <Footer />
       </div>
     </div>
