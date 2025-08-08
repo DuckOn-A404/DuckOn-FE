@@ -167,7 +167,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   ]);
 
   return (
-    <div className="w-full aspect-video bg-black relative">
+    <div 
+      className="w-full bg-black relative z-0"
+      style={{
+        aspectRatio: "16 / 9",
+        minHeight: "300px",
+        maxHeight: "60vh",
+        overflow: "hidden",
+      }}
+    >
       {videoId ? (
         <>
           {/* <div className="absolute top-0 left-0 w-full h-full"> */}
