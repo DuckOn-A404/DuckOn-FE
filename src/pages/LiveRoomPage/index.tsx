@@ -96,10 +96,24 @@ const LiveRoomPage = () => {
   useEffect(() => {
     if (!myUser || isQuizModalOpen) return;
 
+    if (isHost) {
+      const client = createStompClient(
+        localStorage.getItem("accessToken") || ""
+      );
+      client.onConnect = () => {
+        console.log("STOMP 연결 성공 (방장)");
+        setStompClient(client);
+      };
+      client.activate();
+      return () => {
+        client.deactivate();
+      };
+    }
+
     const client = createStompClient(localStorage.getItem("accessToken") || "");
 
     client.onConnect = () => {
-      console.log("STOMP 연결 성공");
+      console.log("STOMP 연결 성공 (참가자) ");
       setStompClient(client);
 
       client.subscribe(`/topic/room/${roomId}`, (message) => {
@@ -126,7 +140,7 @@ const LiveRoomPage = () => {
     return () => {
       client.deactivate();
     };
-  }, [myUser, isQuizModalOpen, roomId]); // 퀴즈 통과 후에만 연결
+  }, [myUser, isQuizModalOpen, roomId, isHost]);
 
   useEffect(() => {
     const loadRoom = async () => {
