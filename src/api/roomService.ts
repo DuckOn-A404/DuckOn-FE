@@ -16,7 +16,7 @@ export const CreateRoom = async (formData: FormData) => {
 // 방 정보 조회 API
 export const fetchRoomById = async (roomId: string) => {
 	const token = localStorage.getItem("accessToken");
-	const response = await api.get(`/api/rooms/${roomId}`, {
+	const response = await api.get(`/rooms/${roomId}`, {
 		headers: {
 			...(token && {Authorization: `Bearer ${token}`}),
 		},
@@ -33,7 +33,7 @@ export const getRoomsByArtist = async (artistId: number): Promise<room[]> => {
 	// 지금 로그인 상태에서만 리스트가 불러와지네,,,,
 	const token = localStorage.getItem("accessToken");
 
-	const response = await api.get(`/api/rooms`, {
+	const response = await api.get(`/rooms`, {
 		params: {
 			artistId,
 		},
@@ -52,7 +52,7 @@ export const getRoomsByArtist = async (artistId: number): Promise<room[]> => {
  */
 export const getTrendingRooms = async (size = 3): Promise<room[]> => {
 	try {
-		const response = await api.get("/api/rooms/trending", {
+		const response = await api.get("/rooms/trending", {
 			params: {size},
 		});
 		// 백엔드 응답 구조에 따라 `response.data.roomInfoList` 등으로 변경될 수 있습니다.
