@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Client } from "@stomp/stompjs";
-import { getChatHistory } from "../api/chatService";
 import type { ChatMessage } from "../types/chat";
 
 /**
@@ -14,16 +13,7 @@ export const useChatSubscription = (
 ) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // 1. 초기 대화 기록 불러오기
-  useEffect(() => {
-    if (!roomId) return;
-
-    getChatHistory(roomId)
-      .then((history) => setMessages(history || []))
-      .catch((error) => console.error("대화 기록 로딩 실패:", error));
-  }, [roomId]);
-
-  // 2. STOMP 클라이언트가 연결되면 채팅 채널을 구독
+  // 1. STOMP 클라이언트가 연결되면 채팅 채널을 구독
   useEffect(() => {
     if (client && client.active && roomId) {
       const subscription = client.subscribe(
@@ -40,7 +30,7 @@ export const useChatSubscription = (
     }
   }, [client, client?.active, roomId]);
 
-  // 3. 메시지 전송 함수
+  // 2. 메시지 전송 함수
   const sendMessage = (content: string) => {
     if (client && client.active && roomId) {
       const messageToSend = { roomId: Number(roomId), content };
