@@ -100,7 +100,6 @@ deploy_fe:
   image: alpine:latest
   variables:
     VITE_API_BASE_URL: "/api"
-    VITE_API_BASE_URL: "/api"
   only:
     - /^FE\/develop$/
   before_script:
