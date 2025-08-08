@@ -32,11 +32,11 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
     <div className="flex flex-col h-full text-white">
       {/* 메시지 목록 영역 */}
       <div className="flex-1 space-y-4 overflow-y-auto">
-        {messages.map((msg) => {
+        {messages.map((msg, index) => {
           if (msg.chatType === "ENTER") {
             return (
               <div
-                key={msg.messageId}
+                key={`system-${index}`}
                 className="text-center text-xs text-gray-400 py-1"
               >
                 {msg.content}
@@ -44,16 +44,18 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
             );
           }
 
+          const uniqueKey = `${msg.senderId}-${msg.sentAt}`;
+
           return (
             <div
-              key={msg.messageId}
+              key={uniqueKey}
               className={`flex flex-col ${
                 msg.senderId === myUser?.userId ? "items-end" : "items-start"
               }`}
             >
               {msg.senderId !== myUser?.userId && (
                 <span className="text-xs text-gray-400 mb-1">
-                  {msg.senderName}
+                  {msg.senderNickName}
                 </span>
               )}
 
@@ -93,7 +95,7 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
                 </div>
 
                 <span className="text-xs text-gray-500 whitespace-nowrap">
-                  {new Date(msg.timestamp).toLocaleTimeString("ko-KR", {
+                  {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -102,27 +104,11 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
             </div>
           );
         })}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 메시지 입력 영역 */}
       <div className="py-2 border-t border-gray-700">
-        <div className="relative">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="메시지를 입력하세요..."
-            className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
-            disabled={!newMessage.trim()}
-            onClick={handleSendMessage}
-          >
-            <Send size={16} />
-          </button>
-        </div>
         <div className="relative">
           <input
             type="text"
