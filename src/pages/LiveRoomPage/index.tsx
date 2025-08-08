@@ -239,7 +239,7 @@ const LiveRoomPage = () => {
         isHost={room.hostId === myUserId}
         title={room.title}
         hostId={room.hostId}
-        participandCount={room.participants?.length || 0}
+        participantCount={room.participants?.length || 0}
         onExit={handleExit}
       />
 
