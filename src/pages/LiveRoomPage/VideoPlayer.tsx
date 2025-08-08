@@ -11,6 +11,7 @@ type VideoPlayerProps = {
   roomId: number;
   playlist: string[];
   currentVideoIndex: number;
+  isPlaylistUpdating: boolean;
 };
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -21,6 +22,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   roomId,
   playlist,
   currentVideoIndex,
+  isPlaylistUpdating,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false);
@@ -126,7 +128,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // 방장: 주기적 상태 송신
   useEffect(() => {
-    if (!isHost || !stompClient.connected) return;
+    if (!isHost || !stompClient.connected || isPlaylistUpdating) return;
 
     const interval = setInterval(() => {
       const player = playerRef.current;
@@ -154,7 +156,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isHost, stompClient]);
+  }, [
+    isHost,
+    stompClient,
+    isPlaylistUpdating,
+    user,
+    roomId,
+    playlist,
+    currentVideoIndex,
+  ]);
 
   return (
     <div className="w-full aspect-video bg-black relative">
