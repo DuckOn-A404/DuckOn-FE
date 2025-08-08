@@ -116,7 +116,16 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="메시지를 입력하세요..."
-            className="w-full bg-gray-800 text-white rounded-md py-2 pl-3 pr-10 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="
+              w-full rounded-lg
+              bg-gray-800/90
+              text-white placeholder:text-gray-400
+              border border-gray-600
+              shadow-inner
+              py-2.5 pl-3 pr-12
+              outline-none
+              focus:border-purple-500 focus:ring-2 focus:ring-purple-500/60
+              transition"
           />
           <button
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
