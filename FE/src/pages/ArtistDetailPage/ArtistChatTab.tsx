@@ -35,6 +35,16 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
     }
   };
 
+  const formatTime = (isoString: string) => {
+    if (!isoString) return "";
+
+    const date = new Date(isoString);
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   if (!Array.isArray(messages)) {
     console.error(
       "ArtistChatTab이 배열이 아닌 messages prop을 받았습니다:",
@@ -77,10 +87,7 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
                 // 내가 보낸 메시지: 시간이 왼쪽
                 <>
                   <span className="text-xs text-gray-400 self-end">
-                    {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatTime(msg.sentAt)}
                   </span>
                   <div
                     className="relative group px-4 py-2 rounded-xl max-w-xs break-words
@@ -119,10 +126,7 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
                     </Popover>
                   </div>
                   <span className="text-xs text-gray-400 self-end">
-                    {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    {formatTime(msg.sentAt)}
                   </span>
                 </>
               )}
