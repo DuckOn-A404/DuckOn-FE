@@ -71,7 +71,7 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
 export const updateUserProfile = async (
 	formData: FormData
 ): Promise<MyUser> => {
-	const response = await api.patch("/api/users/me", formData, {
+	const response = await api.patch("/users/me", formData, {
 		headers: {
 			Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
 		},
@@ -103,7 +103,7 @@ export const blockUser = async (userId: string): Promise<{message: string}> => {
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
 	try {
 		const token = localStorage.getItem("accessToken");
-		const response = await api.get("/api/block", {
+		const response = await api.get("/block", {
 			headers: {
 				...(token && {Authorization: `Bearer ${token}`}),
 			},

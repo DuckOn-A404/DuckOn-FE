@@ -9,7 +9,7 @@ import {api} from "./axiosInstance";
 export const getArtistList = async (page = 1, size = 12) => {
 	const token = localStorage.getItem("accessToken");
 
-	const response = await api.get("/api/artists", {
+	const response = await api.get("/artists", {
 		params: {page, size},
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -35,7 +35,7 @@ export const getArtistList = async (page = 1, size = 12) => {
 export const searchArtists = async (keyword: string) => {
 	const token = localStorage.getItem("accessToken");
 
-	const response = await api.get("/api/artists", {
+	const response = await api.get("/artists", {
 		params: {keyword},
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -53,7 +53,7 @@ export const searchArtists = async (keyword: string) => {
 export const getArtistDetail = async (artistId: number) => {
 	const token = localStorage.getItem("accessToken");
 
-	const response = await api.get(`/api/artists/${artistId}`, {
+	const response = await api.get(`/artists/${artistId}`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 			"Content-Type": "application/json",
@@ -99,7 +99,7 @@ export const unfollowArtist = async (artistId: number) => {
 		throw new Error("로그인이 필요합니다.");
 	}
 
-	const response = await api.delete(`/api/artists/${artistId}/follow`, {
+	const response = await api.delete(`/artists/${artistId}/follow`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
@@ -121,7 +121,7 @@ export const getFollowedArtists = async (page = 1, size = 10) => {
 		throw new Error("로그인이 필요합니다.");
 	}
 
-	const response = await api.get("/api/artists/me", {
+	const response = await api.get("/artists/me", {
 		params: {page, size},
 		headers: {
 			Authorization: `Bearer ${token}`,
@@ -138,7 +138,7 @@ export const getFollowedArtists = async (page = 1, size = 10) => {
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 배열
  */
 export const getRandomArtists = async (size = 4) => {
-	const response = await api.get("/api/artists/random", {
+	const response = await api.get("/artists/random", {
 		params: {size},
 	});
 

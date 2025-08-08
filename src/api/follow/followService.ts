@@ -24,7 +24,7 @@ export const followUser = async (userId: string): Promise<string> => {
 // 언팔로우 요청(delete)
 export const unfollowUser = async (userId: string): Promise<string> => {
 	const token = localStorage.getItem("accessToken") || "";
-	const response = await api.delete(`/api/users/${userId}/follow`, {
+	const response = await api.delete(`/users/${userId}/follow`, {
 		headers: {
 			Authorization: `Bearer ${token}`,
 		},
