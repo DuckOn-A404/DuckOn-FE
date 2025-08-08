@@ -33,45 +33,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  // const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
-  //   console.log("[상태 변경]", event.data);
-  //   console.log("stomp 연결 상태:", stompClient.connected);
-  //   console.log("isHost:", isHost);
-  //   if (!stompClient.connected || !playerRef.current) return;
-
-  //   const player = playerRef.current;
-
-  //   // 참가자가 play 버튼을 눌렀을 때 강제 정지
-  //   if (!isHost && event.data === YT.PlayerState.PLAYING) {
-  //     player.pauseVideo();
-  //     return;
-  //   }
-
-  //   if (!isHost) return;
-
-  //   const currentTime = player.getCurrentTime();
-  //   const playing = event.data === YT.PlayerState.PLAYING;
-
-  //   const payload = {
-  //     roomId: parseInt(roomId),
-  //     hostId: user.userId,
-  //     playlist,
-  //     currentVideoIndex,
-  //     currentTime,
-  //     playing,
-  //     lastUpdated: Date.now(),
-  //   };
-
-  //   const jsonPayload = JSON.stringify(payload);
-
-  //   console.log("[STOMP 전송 데이터]", jsonPayload);
-
-  //   stompClient.publish({
-  //     destination: "/app/room/update",
-  //     body: JSON.stringify(payload),
-  //   });
-  // };
-
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
     console.log("[상태 변경]", event.data);
     console.log("stomp 연결 상태:", stompClient.connected);
@@ -90,7 +51,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // 참가자: 버퍼링 → 플레이 → canWatch 켜기
     if (!isHost) {
       if (state === YT.PlayerState.PLAYING && shouldPlayAfterSeek.current) {
-        console.log("🎬 참가자: 재생 시작됨");
+        console.log("참가자: 재생 시작됨");
         setCanWatch(true);
         shouldPlayAfterSeek.current = false;
       }
@@ -143,17 +104,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             player.mute();
 
-            setTimeout(() => {
-              if (playing) {
-                console.log("참가자: 방장 재생 요청 -> 재생");
-                setCanWatch(true)
-                player.playVideo();
-              } else {
-                console.log("참가자: 방장 정지 요청 -> 정지")
-                setCanWatch(false)
-                player.pauseVideo();
-              }
-            }, 500);
+            if (playing) {
+              shouldPlayAfterSeek.current = true;
+            } else {
+              setCanWatch(false);
+              shouldPlayAfterSeek.current = false;
+              player.pauseVideo();
+            }
           } catch (err) {
             console.error("메시지 파싱 실패", err);
           }
@@ -162,7 +119,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       console.log(`Subscribed to /topic/room/${roomId}`);
 
-      // 클린업
       return () => {
         subscription.unsubscribe();
         console.log(`Unsubscribed from /topic/room/${roomId}`);
@@ -186,8 +142,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               playerVars: {
                 autoplay: 0,               // autoplay 설정
                 mute: 1,                   // 브라우저 autoplay 정책 우회
-                enablejsapi: 1,
-                controls: isHost ? 1 : 0,  // 참가자는 조작 불가
+                enablejsapi: 1, // JS API 사용 가능
+                controls: 1,  // 참가자도 controls는 필요(JS API 작동을 위해)
                 disablekb: 1,
                 rel: 0,
               },
