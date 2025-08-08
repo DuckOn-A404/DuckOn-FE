@@ -25,6 +25,8 @@ const LiveRoomPage = () => {
   const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
   const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
+  const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
+
   const handleExit = () => {
     stompClient?.deactivate();
     navigate(-1);
@@ -67,6 +69,8 @@ const LiveRoomPage = () => {
     if (!stompClient?.connected || !myUser || !room) return;
     if (!isHost) return;
 
+    setIsPlaylistUpdating(true);
+
     const updatedPlaylist = [...(room.playlist || []), newVideoId];
 
     const payload = {
@@ -91,6 +95,10 @@ const LiveRoomPage = () => {
       destination: "/app/room/update",
       body: JSON.stringify(payload),
     });
+
+    setTimeout(() => {
+      setIsPlaylistUpdating(false);
+    }, 3000);
   };
 
   useEffect(() => {
@@ -207,6 +215,7 @@ const LiveRoomPage = () => {
             stompClient={stompClient}
             user={myUser!}
             roomId={room.roomId}
+            isPlaylistUpdating={isPlaylistUpdating}
           />
         </main>
 
