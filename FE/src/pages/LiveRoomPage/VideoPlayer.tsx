@@ -26,25 +26,33 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
-    event.target.pauseVideo(); // 방장과 참가자 모두 자동 재생 방지
-    event.target.mute();       // autoplay 정책 우회용
+    event.target.pauseVideo(); // ✅ 자동 재생 방지
+    event.target.mute();       // ✅ autoplay 우회용
+    console.log("[공통] YouTube player 준비됨");
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
-    if (!stompClient.connected || !playerRef.current) return;
-
     const player = playerRef.current;
+    if (!stompClient.connected || !player) return;
 
-    // 참가자는 직접 재생 시도 불가
+    // 참가자는 직접 재생 방지
     if (!isHost && event.data === YT.PlayerState.PLAYING) {
+      console.log("[참가자] 수동 재생 시도 차단");
       player.pauseVideo();
       return;
     }
 
+    // 방장만 상태 전송
     if (!isHost) return;
 
     const currentTime = player.getCurrentTime();
     const playing = event.data === YT.PlayerState.PLAYING;
+
+    console.log("[방장] 상태 변경 발생:", {
+      state: event.data,
+      playing,
+      currentTime,
+    });
 
     const payload = {
       roomId: parseInt(roomId),
@@ -62,6 +70,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     });
   };
 
+  // ✅ 참가자: 구독 처리
   useEffect(() => {
     if (!stompClient || !stompClient.connected || isHost) return;
 
@@ -79,29 +88,67 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             const player = playerRef.current;
             if (!player) return;
 
+            console.log("[참가자] 메시지 수신:", {
+              currentTime,
+              playing,
+            });
+
             player.seekTo(currentTime, true);
+
             setTimeout(() => {
               if (playing) {
+                console.log("[참가자] → 재생 실행");
                 player.playVideo();
                 setCanWatch(true);
               } else {
+                console.log("[참가자] → 정지 실행");
                 player.pauseVideo();
                 setCanWatch(false);
               }
-            }, 200); // 재생 상태 반영에 약간의 딜레이
+            }, 200); // 살짝 딜레이
           } catch (err) {
-            console.error("메시지 파싱 실패", err);
+            console.error("[참가자] 메시지 파싱 실패", err);
           }
         }
       );
 
-      return () => {
-        subscription.unsubscribe();
-      };
+      return () => subscription.unsubscribe();
     };
 
     waitAndSubscribe();
   }, [stompClient, isHost, roomId]);
+
+  // ✅ 방장: 주기적 동기화 전송
+  useEffect(() => {
+    if (!isHost || !stompClient.connected) return;
+
+    const interval = setInterval(() => {
+      const player = playerRef.current;
+      if (!player) return;
+
+      const payload = {
+        roomId: parseInt(roomId),
+        hostId: user.userId,
+        playlist,
+        currentVideoIndex,
+        currentTime: player.getCurrentTime(),
+        playing: player.getPlayerState() === YT.PlayerState.PLAYING,
+        lastUpdated: Date.now(),
+      };
+
+      console.log("[방장] 2초마다 상태 송신:", {
+        currentTime: payload.currentTime,
+        playing: payload.playing,
+      });
+
+      stompClient.publish({
+        destination: "/app/room/update",
+        body: JSON.stringify(payload),
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isHost, stompClient]);
 
   return (
     <div className="relative w-full h-full">
@@ -115,14 +162,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               width: "100%",
               height: "100%",
               playerVars: {
-                autoplay: 0, // ✅ 방장도 자동재생 방지
+                autoplay: 0,
                 mute: 1,
                 controls: isHost ? 1 : 0,
                 disablekb: 1,
                 rel: 0,
+                enablejsapi: 1,
               },
             }}
           />
+
           {!isHost && !canWatch && (
             <>
               <div
