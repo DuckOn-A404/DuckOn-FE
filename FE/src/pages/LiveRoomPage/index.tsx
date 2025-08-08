@@ -16,16 +16,17 @@ const LiveRoomPage = () => {
   const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
-  
+
   const [room, setRoom] = useState<any>(null);
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
-  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false)
-  const [entryQuestion, setEntryQuestion] = useState<string | null>(null)
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
   const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
+    stompClient?.deactivate();
     navigate(-1);
   };
 
@@ -59,9 +60,38 @@ const LiveRoomPage = () => {
     }
   };
 
-
-
   const isHost = room?.hostId === myUserId;
+
+  // 방장이 playlist 영상 추가 시 update publish
+  const handleAddToPlaylist = (newVideoId: string) => {
+    if (!stompClient?.connected || !myUser || !room) return;
+    if (!isHost) return;
+
+    const updatedPlaylist = [...(room.playlist || []), newVideoId];
+
+    const payload = {
+      roomId: Number(room.roomId),
+      hostId: myUser.userId,
+      playlist: updatedPlaylist,
+      currentVideoIndex: room.currentVideoIndex ?? 0,
+      currentTime: 0,
+      playing: false,
+      lastUpdated: Date.now(),
+    };
+
+    setRoom((prev: any) => ({
+      ...prev,
+      playlist: updatedPlaylist,
+      currentTime: 0,
+      playing: false,
+      lastUpdated: payload.lastUpdated,
+    }));
+
+    stompClient.publish({
+      destination: "/app/room/update",
+      body: JSON.stringify(payload),
+    });
+  };
 
   useEffect(() => {
     if (!myUser || isQuizModalOpen) return;
@@ -71,6 +101,20 @@ const LiveRoomPage = () => {
     client.onConnect = () => {
       console.log("STOMP 연결 성공");
       setStompClient(client);
+
+      client.subscribe(`/topic/room/${roomId}`, (message) => {
+        try {
+          const updatedData = JSON.parse(message.body);
+          console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
+
+          setRoom((prevRoom: any) => ({
+            ...prevRoom,
+            ...updatedData,
+          }));
+        } catch (error) {
+          console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+        }
+      });
     };
 
     client.onStompError = (frame) => {
@@ -82,7 +126,7 @@ const LiveRoomPage = () => {
     return () => {
       client.deactivate();
     };
-  }, [myUser, isQuizModalOpen]);  // 퀴즈 통과 후에만 연결
+  }, [myUser, isQuizModalOpen, roomId]); // 퀴즈 통과 후에만 연결
 
   useEffect(() => {
     const loadRoom = async () => {
@@ -93,7 +137,7 @@ const LiveRoomPage = () => {
         // 참가자이고 퀴즈가 존재하면 모달 오픈하기
         if (roomData.hostId !== myUser?.userId && roomData.entryQuestion) {
           setEntryQuestion(roomData.entryQuestion);
-          setIsQuizModalOpen(true)
+          setIsQuizModalOpen(true);
         } else {
           setRoom(roomData);
         }
@@ -116,14 +160,13 @@ const LiveRoomPage = () => {
         )}
         <div>로딩 중...</div>
       </>
-    )
+    );
   }
   // if (!room || !stompClient?.connected || !myUser || isQuizModalOpen) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
     <div className="flex flex-col h-screen bg-gray-900 text-white">
-
       {isQuizModalOpen && entryQuestion && (
         <EntryQuizModal
           question={entryQuestion}
@@ -185,6 +228,9 @@ const LiveRoomPage = () => {
             roomId={roomId}
             messages={messages}
             sendMessage={sendMessage}
+            playlist={room.playlist || []}
+            currentVideoIndex={room.currentVideoIndex ?? 0}
+            onAddToPlaylist={handleAddToPlaylist}
           />
         </aside>
       </div>

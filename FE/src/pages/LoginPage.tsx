@@ -51,7 +51,6 @@ const LoginPage = () => {
             좋아하는 아티스트와 함께하는 시간
           </p>
         </div>
-
         {/* 이메일 입력 */}
         <div className="w-full mb-6">
           <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -68,7 +67,6 @@ const LoginPage = () => {
             />
           </div>
         </div>
-
         {/* 비밀번호 입력 */}
         <div className="w-full mb-6">
           <label className="block mb-2 text-sm font-medium text-gray-700">
@@ -86,15 +84,13 @@ const LoginPage = () => {
             />
           </div>
         </div>
-
         {/* 에러 메시지 */}
         {error && (
           <p className="text-red-500 text-sm mb-4 text-center">
             아이디 또는 비밀번호를 확인해주세요.
           </p>
         )}
-
-        {/* 로그인 상태 유지 + 비밀번호 찾기 */}
+        {/* 로그인 상태 유지 + 비밀번호 찾기
         <div className="w-full flex justify-between items-center text-sm mb-4">
           <label className="flex items-center gap-2 text-gray-600 text-left">
             <input type="checkbox" className="w-4 h-4" />
@@ -103,7 +99,7 @@ const LoginPage = () => {
           <button className="text-purple-600 font-medium hover:underline">
             비밀번호 찾기
           </button>
-        </div>
+        </div> */}
 
         {/* 로그인 버튼 */}
         <button
@@ -112,7 +108,6 @@ const LoginPage = () => {
         >
           로그인
         </button>
-
         {/* 구분선 */}
         <div className="flex items-center my-6 w-full">
           <div className="flex-grow h-px bg-gray-300" />
@@ -121,7 +116,6 @@ const LoginPage = () => {
           </span>
           <div className="flex-grow h-px bg-gray-300" />
         </div>
-
         {/* Google 로그인 */}
         <a
           href={`${API_BASE_URL}/oauth2/authorization/google`}
@@ -153,7 +147,6 @@ const LoginPage = () => {
           </svg>
           Google로 계속하기
         </a>
-
         {/* Kakao 로그인 */}
         <a
           href={`${API_BASE_URL}/oauth2/authorization/kakao`}
@@ -171,7 +164,6 @@ const LoginPage = () => {
           </svg>
           카카오로 계속하기
         </a>
-
         {/* Naver 로그인 */}
         <a
           href={`${API_BASE_URL}/oauth2/authorization/naver`}
@@ -188,7 +180,6 @@ const LoginPage = () => {
           </svg>
           네이버로 계속하기
         </a>
-
         {/* 회원가입 안내 */}
         <p className="text-sm text-gray-500 text-center mt-2">
           계정이 없으신가요?{" "}

@@ -1,4 +1,4 @@
-import { User, Siren, Settings } from "lucide-react";
+import { User } from "lucide-react";
 
 type LiveHeaderProps = {
   isHost: boolean;
@@ -6,9 +6,15 @@ type LiveHeaderProps = {
   hostId: string;
   participandCount: number;
   onExit: () => void;
-}
+};
 
-const LiveHeader = ({ isHost, title, hostId, participandCount, onExit }: LiveHeaderProps) => {
+const LiveHeader = ({
+  // isHost,
+  title,
+  hostId,
+  participandCount,
+  onExit,
+}: LiveHeaderProps) => {
   return (
     <div className="bg-black text-white px-6 py-4 flex justify-between items-center">
       <div>
@@ -23,7 +29,7 @@ const LiveHeader = ({ isHost, title, hostId, participandCount, onExit }: LiveHea
       </div>
 
       <div className="flex items-center gap-3">
-        {isHost ? (
+        {/* {isHost ? (
           <div>
             <Settings size={20} />
           </div>
@@ -31,7 +37,7 @@ const LiveHeader = ({ isHost, title, hostId, participandCount, onExit }: LiveHea
           <div>
             <Siren size={20} color="red"/>
           </div>
-        )}
+        )} */}
         <button
           onClick={onExit}
           className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-md transition"

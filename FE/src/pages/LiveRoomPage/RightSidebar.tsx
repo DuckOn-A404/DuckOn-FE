@@ -8,6 +8,9 @@ type RightSidebarProps = {
   roomId: string | undefined;
   messages: ChatMessage[];
   sendMessage: (content: string) => void;
+  playlist: string[];
+  currentVideoIndex: number;
+  onAddToPlaylist: (videoId: string) => void;
 };
 
 const RightSidebar = ({
@@ -15,13 +18,21 @@ const RightSidebar = ({
   isHost,
   messages,
   sendMessage,
+  playlist,
+  currentVideoIndex,
+  onAddToPlaylist,
 }: RightSidebarProps) => {
   return (
-    <div className="flex-grow overflow-y-auto p-4">
+    <div className="flex-grow flex flex-col overflow-hidden p-4">
       {selectedTab === "chat" ? (
         <ChatPanel messages={messages} sendMessage={sendMessage} />
       ) : (
-        <PlaylistPanel isHost={isHost} />
+        <PlaylistPanel
+          isHost={isHost}
+          playlist={playlist}
+          currentVideoIndex={currentVideoIndex}
+          onAddToPlaylist={onAddToPlaylist}
+        />
       )}
     </div>
   );
