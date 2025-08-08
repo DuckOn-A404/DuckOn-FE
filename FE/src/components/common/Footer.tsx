@@ -1,33 +1,31 @@
-type FooterProps = {};
-
 /*
   name: Footer
-  summary: 모든 페이지에 필요한 footer. 나중에 좀 더 구체화 시킬 예정. 문의하기 클릭하면 문의 부분으로 넘어가게도 만들 계획. 다른 사이트 참고 필요!
+  summary: 모든 페이지에 필요한 footer.
   props:
     없습니다.
 */
-
-const Footer = ({}: FooterProps) => {
+const Footer = () => {
   return (
-    <footer className="bg-gradient-to-r from-purple-600 to-pink-500 text-white py-10 px-4 md:px-10">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-        {/* 서비스명 */}
-        <div>
-          <h2 className="text-2xl font-bold">DuckON</h2>
-          <p className="text-sm">팬들을 위한 실시간 플랫폼</p>
-        </div>
+    <footer className="bg-gray-100 border-t border-gray-200 text-gray-600">
+      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">DuckON</h2>
+            <p className="text-xs text-gray-500 mt-1">
+              © 2025 DuckON. All rights reserved.
+            </p>
+          </div>
 
-        {/* 문의하기 링크 */}
-        <div className="mt-4">
-          <ul className="text-sm space-y-1">
-            <li><a href="/contact" className="hover:underline">문의하기</a></li>
-          </ul>
+          {/* 메뉴 링크 및 문의 정보 */}
+          <div className="flex items-center gap-x-6 gap-y-2 flex-wrap justify-center text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-gray-500">문의:</span>
+              <span className="font-medium text-gray-800">
+                duckonssafy@gmail.com
+              </span>
+            </div>
+          </div>
         </div>
-
-      </div>
-      {/* 저작권 문구 */}
-      <div className="mt-10 border-t border-white/30 pt-4 text-center text-sm text-white/80">
-        © 2025 DuckON. All rights reserved.
       </div>
     </footer>
   );

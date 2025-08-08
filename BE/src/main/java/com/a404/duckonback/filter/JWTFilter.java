@@ -1,6 +1,7 @@
 package com.a404.duckonback.filter;
 
 import com.a404.duckonback.entity.User;
+import com.a404.duckonback.oauth.principal.CustomUserPrincipal;
 import com.a404.duckonback.repository.UserRepository;
 import com.a404.duckonback.util.JWTUtil;
 import io.jsonwebtoken.Claims;
@@ -48,16 +49,15 @@ public class JWTFilter extends OncePerRequestFilter {
                 Claims claims = jwtUtil.getClaims(token);
                 String userId = claims.getSubject();
 
-                // 4. DB에서 유저 조회
-                User user = userRepository.findByUserId(userId);
 
+                User user = userRepository.findByUserId(userId);
                 if (user != null) {
-                    // 5. 인증 객체 생성 및 등록
+                    CustomUserPrincipal principal = new CustomUserPrincipal(user);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    user,
+                                    principal,
                                     null,
-                                    List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                                    principal.getAuthorities()
                             );
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
