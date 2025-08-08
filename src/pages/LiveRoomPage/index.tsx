@@ -246,29 +246,31 @@ const LiveRoomPage = () => {
       {/* 본문: 영상 + 사이드바 */}
       <div className="flex flex-1 overflow-hidden">
         {/* 왼쪽: 영상 */}
-        <main className="flex-1 bg-black">
-          <VideoPlayer
-            videoId={room.playlist[room.currentVideoIndex]}
-            isHost={isHost}
-            stompClient={stompClient}
-            user={myUser!}
-            roomId={room.roomId}
-            playlist={room.playlist || []}
-            currentVideoIndex={room.currentVideoIndex ?? 0}
-            isPlaylistUpdating={isPlaylistUpdating}
-            onVideoEnd={handleVideoEnd}
-          />
+        <main className="flex-1 bg-black p-4">
+          <div className="w-full h-full rounded-lg border border-gray-800 overflow-hidden">
+            <VideoPlayer
+              videoId={room.playlist[room.currentVideoIndex]}
+              isHost={isHost}
+              stompClient={stompClient}
+              user={myUser!}
+              roomId={room.roomId}
+              playlist={room.playlist || []}
+              currentVideoIndex={room.currentVideoIndex ?? 0}
+              isPlaylistUpdating={isPlaylistUpdating}
+              onVideoEnd={handleVideoEnd}
+            />
+          </div>
         </main>
 
         {/* 오른쪽: 사이드바 */}
-        <aside className="w-80 bg-gray-800 flex flex-col border-l border-gray-700">
+        <aside className="w-96 bg-gray-800 flex flex-col border-l border-gray-700">
           {/* 탭 버튼 */}
           <div className="flex border-b border-gray-700">
             <button
               onClick={() => setActiveTab("chat")}
               className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
                 activeTab === "chat"
-                  ? "text-white border-b-2 border-purple-500"
+                  ? "text-white border-b-2 border-fuchsia-500"
                   : "text-gray-400 hover:text-white"
               }`}
             >
@@ -278,7 +280,7 @@ const LiveRoomPage = () => {
               onClick={() => setActiveTab("playlist")}
               className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
                 activeTab === "playlist"
-                  ? "text-white border-b-2 border-purple-500"
+                  ? "text-white border-b-2 border-fuchsia-500"
                   : "text-gray-400 hover:text-white"
               }`}
             >

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Youtube } from "lucide-react";
+import { Youtube } from "lucide-react";
 
 type PlaylistPanelProps = {
   isHost: boolean;
@@ -48,7 +48,7 @@ const PlaylistPanel = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-white p-4 rounded-lg">
+    <div className="flex flex-col h-full bg-gray-800 text-white p-4">
       {/* 리스트 */}
       <div className="flex-1 space-y-2 overflow-y-auto pr-2">
         {playlist.length === 0 ? (
@@ -95,25 +95,21 @@ const PlaylistPanel = ({
           })
         )}
       </div>
-
       {/* 방장 전용 추가 UI */}
       {isHost && (
         <div className="mt-4 pt-4 border-t border-gray-700">
-          <div className="relative">
+          <div className="flex items-center gap-2">
             <input
               value={inputId}
               onChange={(e) => setInputId(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAdd();
-              }}
-              placeholder="YouTube URL"
-              className="w-full bg-gray-800 border border-gray-600 rounded-md pl-4 pr-24 py-2 text-sm outline-none focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 transition-colors"
+              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+              placeholder="영상 추가"
+              className="flex-1 bg-gray-700/90 border border-gray-600 rounded-md px-3 py-2 text-sm outline-none focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/60 transition"
             />
             <button
               onClick={handleAdd}
-              className="absolute right-1 top-1/2 -translate-y-1/2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white py-1 px-3 rounded-md text-sm font-semibold flex items-center justify-center gap-1 transition-colors"
+              className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
             >
-              <Plus size={16} />
               추가
             </button>
           </div>
