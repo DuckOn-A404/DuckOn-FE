@@ -9,6 +9,8 @@ type VideoPlayerProps = {
   stompClient: Client;
   user: User;
   roomId: number;
+  playlist: string[];
+  currentVideoIndex: number;
   isPlaylistUpdating: boolean;
 };
 
@@ -18,14 +20,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   stompClient,
   user,
   roomId,
+  playlist,
+  currentVideoIndex,
   isPlaylistUpdating,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false);
   const shouldPlayAfterSeek = useRef(false);
-
-  const playlist = [videoId];
-  const currentVideoIndex = 0;
 
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
