@@ -1,8 +1,7 @@
-package com.a404.duckonback.oauth.service;
+package com.a404.duckonback.filter;
 
 import com.a404.duckonback.entity.User;
 import com.a404.duckonback.enums.UserRole;
-import com.a404.duckonback.oauth.principal.CustomUserPrincipal;
 import com.a404.duckonback.oauth.userinfo.OAuth2UserInfo;
 import com.a404.duckonback.oauth.userinfo.OAuth2UserInfoFactory;
 import com.a404.duckonback.repository.UserRepository;
@@ -43,7 +42,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private User upsertUser(OAuth2UserInfo info) {
         // 1) 이메일 기준 우선 탐색 (없을 수도 있음)
-        User user = userRepository.findByEmail(info.getEmail());
+        User user = userRepository.findByEmailAndDeletedFalse(info.getEmail());
         if (user == null) {
             // 2) providerId 기준으로 탐색
             user = userRepository.findByProviderAndProviderId(info.getProvider(), info.getProviderId());
