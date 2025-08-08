@@ -108,21 +108,21 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
 
       {/* 메시지 입력 영역 */}
       <div className="py-3 border-t border-gray-700 bg-gray-800/80">
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="메시지를 입력하세요..."
-            className="flex-1 bg-gray-700/90 border border-gray-600 rounded-md px-3 py-2 text-sm outline-none focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/60 transition"
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
           />
           <button
-            className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold py-2 px-4 rounded-md transition-colors disabled:bg-gray-600"
-            disabled={!newMessage.trim()}
             onClick={handleSendMessage}
+            disabled={!newMessage.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
           >
-            <Send size={16} />
+            <Send size={18} className="text-white" />
           </button>
         </div>
       </div>
