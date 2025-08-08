@@ -8,6 +8,7 @@ import { type Artist } from "../types/artist";
 import { useTrendingRooms } from "../hooks/useTrendingRooms";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
+import { Tv } from "lucide-react";
 
 const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
@@ -74,19 +75,28 @@ const HomePage = () => {
           <h2 className="text-3xl font-bold mb-8 text-center sm:text-left">
             🔥 지금 핫한 방
           </h2>
-          <div className="flex flex-wrap justify-center gap-8">
+          <div className="flex flex-wrap justify-center gap-8 flex-grow">
             {isLoadingTrending ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <VideoCardSkeleton key={i} />
               ))
             ) : trendingError ? (
-              <p className="col-span-3 text-center text-red-500">
+              <p className="w-full text-center text-red-500 py-20">
                 {trendingError}
               </p>
-            ) : (
+            ) : trendingRooms.length > 0 ? (
+              // 데이터가 있을 때
               trendingRooms.map((room) => (
                 <VideoCard key={room.roomId} {...room} />
               ))
+            ) : (
+              <div className="w-full flex flex-col items-center justify-center text-center text-gray-500 py-20 bg-gray-100 rounded-2xl">
+                <Tv size={48} className="text-gray-300 mb-4" />
+                <p className="font-semibold text-gray-600">
+                  아직 생성된 방이 없습니다.
+                </p>
+                <p className="text-sm mt-1">가장 먼저 라이브를 시작해보세요!</p>
+              </div>
             )}
           </div>
         </section>
