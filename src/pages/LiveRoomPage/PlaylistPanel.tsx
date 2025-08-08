@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Youtube } from "lucide-react";
 
 type PlaylistPanelProps = {
   isHost: boolean;
@@ -43,65 +43,81 @@ const PlaylistPanel = ({
       setError("유효한 YouTube URL 또는 영상 ID가 아닙니다.");
       return;
     }
-    if (playlist.includes(id)) {
-      setError("이미 플레이리스트에 있는 영상입니다.");
-      return;
-    }
     onAddToPlaylist(id);
     setInputId("");
   };
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full bg-gray-900 text-white p-4 rounded-lg">
       {/* 리스트 */}
-      <div className="flex-1 space-y-2 overflow-y-auto pb-2">
-        {playlist.map((videoId, index) => {
-          const isPlaying = index === currentVideoIndex;
-          return (
-            <div
-              key={`${videoId}-${index}`}
-              className={`p-3 rounded-md flex items-center justify-between transition-colors ${
-                isPlaying
-                  ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white"
-                  : "bg-gray-800 text-gray-300"
-              }`}
-            >
-              <div className="flex items-center gap-3 overflow-hidden">
-                <img
-                  src={toThumbUrl(videoId)}
-                  alt="thumbnail"
-                  className="w-12 h-8 object-cover rounded flex-shrink-0"
-                />
-                <span className="font-semibold truncate">{videoId}</span>
+      <div className="flex-1 space-y-2 overflow-y-auto pr-2">
+        {playlist.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+            <Youtube size={48} />
+            <p className="mt-2 text-sm">재생목록이 비었습니다.</p>
+            {isHost && (
+              <p className="text-xs">아래에서 영상을 추가해 주세요.</p>
+            )}
+          </div>
+        ) : (
+          playlist.map((videoId, index) => {
+            const isPlaying = index === currentVideoIndex;
+            return (
+              <div
+                key={`${videoId}-${index}`}
+                className={`p-2 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out ${
+                  isPlaying
+                    ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
+                    : "bg-gray-800 hover:bg-gray-700"
+                }`}
+              >
+                <div className="flex items-center gap-4 overflow-hidden">
+                  <img
+                    src={toThumbUrl(videoId)}
+                    alt="thumbnail"
+                    className="w-20 h-12 object-cover rounded-md flex-shrink-0 border-2 border-transparent"
+                  />
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-semibold truncate text-sm">
+                      {`Video ID: ${videoId}`}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        isPlaying ? "text-white" : "text-gray-400"
+                      }`}
+                    >
+                      {isPlaying ? "지금 재생 중" : `재생목록 #${index + 1}`}
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* 방장 전용 추가 UI */}
       {isHost && (
-        <div className="mt-4 flex flex-col gap-2">
-          <div className="flex items-center gap-2">
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="relative">
             <input
               value={inputId}
               onChange={(e) => setInputId(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAdd();
               }}
-              placeholder="YouTube URL 또는 Video ID"
-              className="flex-1 bg-gray-900 border border-gray-700 rounded-md px-3 py-2 text-sm outline-none focus:border-fuchsia-500"
+              placeholder="YouTube URL"
+              className="w-full bg-gray-800 border border-gray-600 rounded-md pl-4 pr-24 py-2 text-sm outline-none focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 transition-colors"
             />
             <button
               onClick={handleAdd}
-              className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white py-2 px-3 rounded-md font-semibold flex items-center justify-center gap-2 transition-colors"
+              className="absolute right-1 top-1/2 -translate-y-1/2 bg-fuchsia-600 hover:bg-fuchsia-700 text-white py-1 px-3 rounded-md text-sm font-semibold flex items-center justify-center gap-1 transition-colors"
             >
               <Plus size={16} />
               추가
             </button>
           </div>
-
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
         </div>
       )}
     </div>
