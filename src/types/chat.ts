@@ -10,11 +10,11 @@ export interface ChatMessageRequest {
 
 // 받을 때
 export interface ChatMessage {
-  messageId: string;
-  roomId: string;
+  roomId: number;
   senderId: string;
-  senderName: string;
+  senderNickName: string;
   content: string;
-  timestamp: string;
-  chatType: "TALK" | "ENTER" | "EXIT";
+  sentAt: string;
+
+  chatType?: "TALK" | "ENTER" | "EXIT";
 }
