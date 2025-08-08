@@ -77,7 +77,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     });
   };
 
-  // ✅ 참가자: 구독 처리
+  // 참가자: 구독 처리
   useEffect(() => {
     if (!stompClient || !stompClient.connected || isHost) return;
 
@@ -123,7 +123,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     waitAndSubscribe();
   }, [stompClient, isHost, roomId]);
 
-  // ✅ 방장: 주기적 상태 송신
+  // 방장: 주기적 상태 송신
   useEffect(() => {
     if (!isHost || !stompClient.connected) return;
 
