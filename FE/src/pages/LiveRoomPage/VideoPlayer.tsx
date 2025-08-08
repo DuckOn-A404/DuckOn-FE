@@ -156,29 +156,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, [isHost, stompClient]);
 
   return (
-    <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+    <div className="w-full aspect-video bg-black relative">
       {videoId ? (
         <>
-          <div className="absolute top-0 left-0 w-full h-full">
-            <YouTube
-              videoId={videoId}
-              onReady={onPlayerReady}
-              onStateChange={onPlayerStateChange}
-              className="w-full h-full"
-              opts={{
-                width: "100%",
-                height: "100%",
-                playerVars: {
-                  autoplay: 0,
-                  mute: 1,
-                  controls: isHost ? 1 : 0,
-                  disablekb: 1,
-                  rel: 0,
-                  enablejsapi: 1,
-                },
-              }}
-            />
-          </div>
+          {/* <div className="absolute top-0 left-0 w-full h-full"> */}
+          <YouTube
+            videoId={videoId}
+            onReady={onPlayerReady}
+            onStateChange={onPlayerStateChange}
+            className="w-full h-full"
+            opts={{
+              width: "100%",
+              height: "100%",
+              playerVars: {
+                autoplay: 0,
+                mute: 1,
+                controls: isHost ? 1 : 0,
+                disablekb: 1,
+                rel: 0,
+                enablejsapi: 1,
+              },
+            }}
+          />
+          {/* </div> */}
           {!isHost && !canWatch && (
             <>
               <div
