@@ -77,7 +77,7 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
                 // 내가 보낸 메시지: 시간이 왼쪽
                 <>
                   <span className="text-xs text-gray-400 self-end">
-                    {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
+                    {new Date(msg.sentAt).toLocaleTimeString(undefined, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -119,7 +119,7 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
                     </Popover>
                   </div>
                   <span className="text-xs text-gray-400 self-end">
-                    {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
+                    {new Date(msg.sentAt).toLocaleTimeString(undefined, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
