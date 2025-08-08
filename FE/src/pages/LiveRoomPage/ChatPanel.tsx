@@ -123,23 +123,6 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
             <Send size={16} />
           </button>
         </div>
-        <div className="relative">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="메시지를 입력하세요..."
-            className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
-            disabled={!newMessage.trim()}
-            onClick={handleSendMessage}
-          >
-            <Send size={16} />
-          </button>
-        </div>
       </div>
     </div>
   );
