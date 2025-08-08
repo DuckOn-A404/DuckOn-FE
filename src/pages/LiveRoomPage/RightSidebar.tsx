@@ -23,7 +23,7 @@ const RightSidebar = ({
   onAddToPlaylist,
 }: RightSidebarProps) => {
   return (
-    <div className="flex-grow flex flex-col overflow-hidden p-4">
+    <div className="flex-grow flex flex-col overflow-hidden p-4 bg-gray-800">
       {selectedTab === "chat" ? (
         <ChatPanel messages={messages} sendMessage={sendMessage} />
       ) : (
