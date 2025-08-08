@@ -21,7 +21,7 @@ export const postSignup = async (formData: FormData) => {
 export const checkEmailExists = async (
 	email: string
 ): Promise<{isDuplicate: boolean}> => {
-	const response = await api.get("/api/auth/email/exists", {
+	const response = await api.get("/auth/email/exists", {
 		params: {email},
 	});
 	return response.data;
@@ -35,7 +35,7 @@ export const checkEmailExists = async (
 export const checkUserIdExists = async (
 	userId: string
 ): Promise<{isDuplicate: boolean}> => {
-	const response = await api.get("/api/auth/user-id/exists", {
+	const response = await api.get("/auth/user-id/exists", {
 		params: {userId},
 	});
 	return response.data;
@@ -99,6 +99,6 @@ export const logIn = async (
 export const getMyProfileAfterOAuth = async () => {
 	// 이 함수는 withCredentials: true 설정에 의존하여 쿠키를 전송합니다.
 	// localStorage에서 토큰을 직접 읽지 않습니다.
-	const response = await api.get("/api/users/me");
+	const response = await api.get("/users/me");
 	return response.data;
 };
