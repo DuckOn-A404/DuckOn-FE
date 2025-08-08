@@ -9,6 +9,7 @@ type RightSidebarProps = {
   messages: ChatMessage[];
   sendMessage: (content: string) => void;
   playlist: string[];
+  currentVideoIndex: number;
   onAddToPlaylist: (videoId: string) => void;
 };
 
@@ -18,6 +19,7 @@ const RightSidebar = ({
   messages,
   sendMessage,
   playlist,
+  currentVideoIndex,
   onAddToPlaylist,
 }: RightSidebarProps) => {
   return (
@@ -28,6 +30,7 @@ const RightSidebar = ({
         <PlaylistPanel
           isHost={isHost}
           playlist={playlist}
+          currentVideoIndex={currentVideoIndex}
           onAddToPlaylist={onAddToPlaylist}
         />
       )}
