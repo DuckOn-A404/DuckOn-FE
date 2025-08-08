@@ -7,8 +7,8 @@ import { createStompClient } from "../../socket";
 
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
-// import RightSidebar from "./RightSidebar";
-// import { useChatSubscription } from "../../hooks/useChatSubscription";
+import RightSidebar from "./RightSidebar";
+import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -20,7 +20,7 @@ const LiveRoomPage = () => {
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
-  // const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
+  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const handleExit = () => {
     navigate(-1);
@@ -116,13 +116,13 @@ const LiveRoomPage = () => {
             </button>
           </div>
 
-          {/* <RightSidebar
+          <RightSidebar
             selectedTab={activeTab}
             isHost={isHost}
             roomId={roomId}
             messages={messages}
             sendMessage={sendMessage}
-          /> */}
+          />
         </aside>
       </div>
     </div>
