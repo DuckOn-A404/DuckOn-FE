@@ -104,11 +104,11 @@ const PlaylistPanel = ({
               onChange={(e) => setInputId(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               placeholder="영상 추가"
-              className="flex-1 bg-gray-700/90 border border-gray-600 rounded-md px-3 py-2 text-sm outline-none focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-500/60 transition"
+              className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
             />
             <button
               onClick={handleAdd}
-              className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-5 rounded-lg transition-colors"
             >
               추가
             </button>
