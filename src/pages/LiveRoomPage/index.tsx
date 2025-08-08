@@ -101,6 +101,44 @@ const LiveRoomPage = () => {
     }, 3000);
   };
 
+  // 현재 영상 끝났을 때 관리
+  const handleVideoEnd = () => {
+    // 방장이 아니거나, 플레이리스트가 없으면 아무것도 안 함
+    if (!isHost || !room || !room.playlist || !myUser) return;
+
+    const { currentVideoIndex, playlist } = room;
+
+    if (currentVideoIndex >= playlist.length - 1) {
+      console.log("플레이리스트 마지막 영상입니다.");
+      return;
+    }
+
+    const nextVideoIndex = currentVideoIndex + 1;
+
+    console.log(`[방장] 영상 종료, 다음 트랙으로: ${nextVideoIndex}`);
+
+    const payload = {
+      roomId: Number(room.roomId),
+      hostId: myUser.userId,
+      playlist: room.playlist,
+      currentVideoIndex: nextVideoIndex,
+      currentTime: 0,
+      playing: true,
+      lastUpdated: Date.now(),
+    };
+
+    // 서버로 다음 영상 정보 전송
+    stompClient?.publish({
+      destination: "/app/room/update",
+      body: JSON.stringify(payload),
+    });
+
+    setRoom((prev: any) => ({
+      ...prev,
+      ...payload,
+    }));
+  };
+
   useEffect(() => {
     if (!myUser || isQuizModalOpen) return;
 
@@ -218,6 +256,7 @@ const LiveRoomPage = () => {
             playlist={room.playlist || []}
             currentVideoIndex={room.currentVideoIndex ?? 0}
             isPlaylistUpdating={isPlaylistUpdating}
+            onVideoEnd={handleVideoEnd}
           />
         </main>
 
