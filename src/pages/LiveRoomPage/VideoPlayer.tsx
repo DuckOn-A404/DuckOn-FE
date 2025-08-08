@@ -8,7 +8,7 @@ type VideoPlayerProps = {
   isHost: boolean;
   stompClient: Client;
   user: User;
-  roomId: number;  // ✅ number로 통일
+  roomId: number;
 };
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -27,8 +27,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
-    event.target.pauseVideo(); // ✅ 자동 재생 방지
-    event.target.mute();       // ✅ autoplay 우회용
+    event.target.pauseVideo(); // 자동 재생 방지
+    event.target.mute();       // autoplay 우회용
     console.log("[공통] YouTube player 준비됨");
   };
 
@@ -36,7 +36,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const player = playerRef.current;
     if (!stompClient.connected || !player) return;
 
-    // ✅ 참가자: 수동 재생 차단 또는 허용
+    // 참가자: 수동 재생 차단 또는 허용
     if (!isHost) {
       if (event.data === YT.PlayerState.PLAYING) {
         if (!shouldPlayAfterSeek.current) {
@@ -51,7 +51,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
-    // ✅ 방장만 상태 전송
+    // 방장만 상태 전송
     const currentTime = player.getCurrentTime();
     const playing = event.data === YT.PlayerState.PLAYING;
 
@@ -156,26 +156,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, [isHost, stompClient]);
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
       {videoId ? (
         <>
-          <YouTube
-            videoId={videoId}
-            onReady={onPlayerReady}
-            onStateChange={onPlayerStateChange}
-            opts={{
-              width: "100%",
-              height: "100%",
-              playerVars: {
-                autoplay: 0,
-                mute: 1,
-                controls: isHost ? 1 : 0,
-                disablekb: 1,
-                rel: 0,
-                enablejsapi: 1,
-              },
-            }}
-          />
+          <div className="absolute top-0 left-0 w-full h-full">
+            <YouTube
+              videoId={videoId}
+              onReady={onPlayerReady}
+              onStateChange={onPlayerStateChange}
+              className="w-full h-full"
+              opts={{
+                width: "100%",
+                height: "100%",
+                playerVars: {
+                  autoplay: 0,
+                  mute: 1,
+                  controls: isHost ? 1 : 0,
+                  disablekb: 1,
+                  rel: 0,
+                  enablejsapi: 1,
+                },
+              }}
+            />
+          </div>
           {!isHost && !canWatch && (
             <>
               <div
@@ -195,6 +198,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       )}
     </div>
   );
+
 };
 
 export default VideoPlayer;
