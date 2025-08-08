@@ -66,22 +66,21 @@ export const getTrendingRooms = async (size = 3): Promise<room[]> => {
 
 // 방 입장(entryAnswer)
 export const enterRoom = async (roomId: string, entryAnswer: string) => {
-  const token = localStorage.getItem("accessToken");
+	const token = localStorage.getItem("accessToken");
 
-  try {
-    const response = await api.post(
-      `/api/rooms/${roomId}/enter`,
-      { entryAnswer: String(entryAnswer) },
-      {
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      }
-    );
-    return response.data;
-  } catch (error: any) {
-    console.error("방 입장 실패:", error.response?.data);
-    throw error;
-  }
+	try {
+		const response = await api.post(
+			`/rooms/${roomId}/enter`,
+			{entryAnswer: String(entryAnswer)},
+			{
+				headers: {
+					...(token && {Authorization: `Bearer ${token}`}),
+				},
+			}
+		);
+		return response.data;
+	} catch (error: any) {
+		console.error("방 입장 실패:", error.response?.data);
+		throw error;
+	}
 };
-
