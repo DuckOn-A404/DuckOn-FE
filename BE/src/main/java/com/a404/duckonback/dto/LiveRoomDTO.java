@@ -14,14 +14,17 @@ import java.util.List;
 public class LiveRoomDTO {
     private Long roomId;
     private String title;
+    private Long artistId;
     private String hostId;
     private String imgUrl;
     private List<String> playlist;
     private int currentVideoIndex;
     private double currentTime;
-    private boolean isPlaying;
+    private boolean playing;
     private long lastUpdated;
     private boolean isLocked;
     private String entryQuestion;
     private String entryAnswer;
+
+
 }

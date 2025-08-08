@@ -1,7 +1,6 @@
 package com.a404.duckonback.filter;
 
 import com.a404.duckonback.entity.User;
-import com.a404.duckonback.oauth.principal.CustomUserPrincipal;
 import com.a404.duckonback.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,10 +20,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = null;
 
         // 1) 먼저 userId로 조회
-        user = userRepository.findByUserId(username);
+        user = userRepository.findByUserIdAndDeletedFalse(username);
         // 2) userId 조회가 안 됐으면 이메일로 시도
         if (user == null) {
-            user = userRepository.findByEmail(username);
+            user = userRepository.findByEmailAndDeletedFalse(username);
         }
 
         if (user == null) {

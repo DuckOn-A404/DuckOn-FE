@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,7 +31,7 @@ public class ChatService {
             );
         }
         // 2) 사용자 정보 조회
-        User user = userRepository.findById(userPk);
+        User user = userRepository.findByIdAndDeletedFalse(userPk);
         if (user == null) {
             throw new CustomException("존재하지 않는 사용자입니다.", HttpStatus.NOT_FOUND);
         }
@@ -41,7 +42,7 @@ public class ChatService {
                 .senderUserId(user.getUserId())
                 .senderNickname(user.getNickname())
                 .content(dto.getContent())
-                .sentAt(LocalDateTime.now())
+                .sentAt(Instant.now())
                 .build();
         return chatMessageRepository.save(msg);
     }
@@ -52,7 +53,7 @@ public class ChatService {
                 .toList();
     }
 
-    public List<ChatMessageResponseDTO> getHistorySince(String artistId, LocalDateTime since) {
+    public List<ChatMessageResponseDTO> getHistorySince(String artistId, Instant since) {
         return chatMessageRepository.findByArtistIdAndSentAtAfterOrderBySentAtAsc(artistId, since)
                 .stream()
                 .map(ChatMessageResponseDTO::fromEntity)

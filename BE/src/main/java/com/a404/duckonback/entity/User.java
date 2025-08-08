@@ -17,9 +17,6 @@ import java.util.List;
 @Builder
 public class User {
 
-//    @Id
-//    @Column(name = "id", nullable = false, length = 255)
-//    private String id;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -59,6 +56,12 @@ public class User {
 
     @Column(name = "img_url", columnDefinition = "TEXT")
     private String imgUrl;
+
+    @Column(name = "deleted", nullable = false)
+    private boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @Builder.Default
     @OneToMany(mappedBy = "reporter")

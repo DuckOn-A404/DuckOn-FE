@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { logIn } from "../api/authService";
+import {useState} from "react";
+import {Link, useNavigate} from "react-router-dom";
+import {logIn} from "../api/authService";
 import LoginSignupCard from "../components/common/LoginSignupCard";
-import { Mail, LockKeyhole, ArrowLeft } from "lucide-react";
-import { useUserStore } from "../store/useUserStore";
-import { buildLoginCredentials } from "../utils/authUtils";
-import { fetchMyProfile } from "../api/userService";
+import {Mail, LockKeyhole, ArrowLeft} from "lucide-react";
+import {useUserStore} from "../store/useUserStore";
+import {buildLoginCredentials} from "../utils/authUtils";
+import {fetchMyProfile} from "../api/userService";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const LoginPage = () => {
 
   const setUser = useUserStore((state) => state.setMyUser);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
   const handleLogin = async () => {
     setError("");
