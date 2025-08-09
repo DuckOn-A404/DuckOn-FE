@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { PlusCircle } from "lucide-react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -14,7 +13,7 @@ const LeftSidebar = () => {
 
   return (
     <aside className="w-72 p-4">
-      <div className="bg-white rounded-2xl shadow p-4 flex flex-col min-h-[calc(100vh-6rem)]">
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col h-[calc(100vh-6rem)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">팔로우한 아티스트</h2>
         </div>
@@ -48,7 +47,6 @@ const LeftSidebar = () => {
               className="flex-shrink-0 w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
-              <PlusCircle size={16} />
               <span>아티스트 더보기</span>
             </button>
           </>
@@ -62,7 +60,6 @@ const LeftSidebar = () => {
               className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
-              <PlusCircle size={16} />
               <span>아티스트 팔로우 하러가기</span>
             </button>
           </div>
