@@ -66,8 +66,7 @@ const ArtistDetailPage = () => {
       try {
         const artistData = await getArtistDetail(artistId);
         setArtist(artistData);
-      } catch (error) {
-        console.error("페이지 데이터를 불러오는 데 실패했습니다.", error);
+      } catch {
         setArtist(null);
       } finally {
         setIsLoadingPage(false);
@@ -153,8 +152,7 @@ const ArtistDetailPage = () => {
           prev ? { ...prev, followedAt: new Date().toISOString() } : prev
         );
       }
-    } catch (error) {
-      console.error("팔로우 처리 실패:", error);
+    } catch {
       alert("요청 처리에 실패했습니다.");
     }
   };

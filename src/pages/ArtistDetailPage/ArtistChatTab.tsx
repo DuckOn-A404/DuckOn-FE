@@ -28,18 +28,13 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
       try {
         await blockUser(userId);
         alert(`${userNickname}님을 차단했습니다.`);
-      } catch (error) {
+      } catch {
         alert("차단 요청에 실패했습니다. 다시 시도해주세요.");
-        console.error("차단 API 호출 실패:", error);
       }
     }
   };
 
   if (!Array.isArray(messages)) {
-    console.error(
-      "ArtistChatTab이 배열이 아닌 messages prop을 받았습니다:",
-      messages
-    );
     return (
       <div className="p-4 text-sm text-gray-500">채팅을 불러오는 중...</div>
     );
