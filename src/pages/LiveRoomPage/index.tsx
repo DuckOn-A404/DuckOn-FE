@@ -1,6 +1,6 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { fetchRoomById, enterRoom } from "../../api/roomService";
+import { fetchRoomById, enterRoom, exitRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
@@ -13,6 +13,7 @@ import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
+  const [searchParams] = useSearchParams()
   const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
@@ -30,9 +31,31 @@ const LiveRoomPage = () => {
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   const autoEnterTriedRef = useRef(false);
 
-  const handleExit = () => {
-    stompClient?.deactivate();
-    navigate(-1);
+  const artistId = Number(searchParams.get("artistId") || 0)
+
+  const leavingRef = useRef(false);
+
+  const handleExit = async () => {
+    if (!roomId || leavingRef.current) return;
+    leavingRef.current = true;
+
+    // 내 화면에서 즉시 카운트 -1
+    setRoom((prev: any) =>
+      prev ? { ...prev, participantCount: Math.max(0, (prev.participantCount ?? 0) - 1) } : prev
+    );
+
+    try {
+      // 퇴장 api 호출
+      await exitRoom(Number(roomId), artistId);
+    } catch (e) {
+      setRoom((prev: any) =>
+        prev ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1} : prev
+      )
+    } finally {
+      // 이전 페이지 이동
+      try { await stompClient?.deactivate() } catch {}
+      navigate(-1)
+    }
   };
 
   const handleSubmitAnswer = async (answer: string) => {
@@ -241,19 +264,6 @@ const LiveRoomPage = () => {
     };
     loadRoom();
   }, [roomId, myUser?.userId]);
-  //       // 참가자이고 퀴즈가 존재하면 모달 오픈하기
-  //       if (roomData.hostId !== myUser?.userId && roomData.entryQuestion) {
-  //         setEntryQuestion(roomData.entryQuestion);
-  //         setIsQuizModalOpen(true);
-  //       } else {
-  //         setRoom(roomData);
-  //       }
-  //     } catch (error) {
-  //       console.error("방 정보 불러오기 실패:", error);
-  //     }
-  //   };
-  //   loadRoom();
-  // }, [roomId]);
 
   if (!room || !stompClient?.connected || !myUser) {
     return (
