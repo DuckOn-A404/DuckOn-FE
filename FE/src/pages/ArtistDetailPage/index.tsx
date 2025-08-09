@@ -14,7 +14,6 @@ import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
 import { Video, Plus } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
-import VideoCardSkeleton from "../../components/domain/video/VideoCardSkeleton";
 
 const PLACEHOLDER_URL =
   "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
