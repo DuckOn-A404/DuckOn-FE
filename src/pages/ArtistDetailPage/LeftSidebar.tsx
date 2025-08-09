@@ -14,7 +14,6 @@ const LeftSidebar = () => {
 
   return (
     <aside className="w-72 p-4">
-      {/* 모든 콘텐츠를 포함하는 하나의 큰 하얀색 카드 */}
       <div className="bg-white rounded-2xl shadow p-4 flex flex-col min-h-[calc(100vh-6rem)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">팔로우한 아티스트</h2>
@@ -46,7 +45,7 @@ const LeftSidebar = () => {
               })}
             </ul>
             <button
-              className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
+              className="flex-shrink-0 w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
               <PlusCircle size={16} />
