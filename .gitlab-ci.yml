@@ -155,3 +155,107 @@ deploy_fe:
           --network duckon-net \
           duckon-front:latest
       EOF
+
+build_be_prod:
+  stage: build
+  image: gradle:8.6-jdk21
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      changes: ["BE/**"]
+  script:
+    - cd BE
+    - chmod +x gradlew
+    - ./gradlew clean build
+
+deploy_be_prod:
+  stage: deploy
+  image: alpine:latest
+  resource_group: prod
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      changes: ["BE/**"]
+      when: manual # 자동으로 하려면 on_success
+  before_script:
+    - apk add --no-cache openssh git curl
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+  script: |
+    ssh ubuntu@duckon.site <<'EOF'
+      set -e
+      sudo docker network create duckon-net || true
+
+      cd ~/DuckOn-BE/BE
+      git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
+      git fetch origin master
+      git reset --hard origin/master
+
+      sudo docker build -t duckonback:prod .
+
+      # BE(prod) 재기동 (게이트웨이 통해 접근하므로 포트 바인딩 없음)
+      sudo docker rm -f duckon-app-prod || true
+      sudo docker run -d --name duckon-app-prod \
+        --network duckon-net \
+        --env-file /home/ubuntu/prod.env \
+        duckonback:prod
+
+      # 헬스체크 (게이트웨이 경유)
+      sleep 6
+      curl -sSf https://duckon.site/api/actuator/health | grep -i '"status":"UP"'
+    EOF
+  environment:
+    name: production
+    url: https://duckon.site
+
+build_fe_prod:
+  stage: build
+  image: node:20-alpine
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      changes: ["FE/**"]
+  script:
+    - cd FE
+    - npm ci
+    - npm run build
+
+deploy_fe_prod:
+  stage: deploy
+  image: alpine:latest
+  resource_group: prod
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      changes: ["FE/**"]
+      when: manual # 자동으로 하려면 on_success
+  before_script:
+    - apk add --no-cache openssh git curl
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+  script: |
+    ssh ubuntu@duckon.site <<'EOF'
+      set -e
+      sudo docker network create duckon-net || true
+
+      cd ~/DuckOn-BE/FE
+      git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
+      git fetch origin master
+      git reset --hard origin/master
+
+      sudo docker build -t duckon-front:prod .
+
+      # FE(prod) 재기동 (게이트웨이가 프록시하므로 포트 바인딩/DEV nginx마운트 없음)
+      sudo docker rm -f duckon-front-prod || true
+      sudo docker run -d --name duckon-front-prod \
+        --network duckon-net \
+        duckon-front:prod
+
+      # 간단 응답 확인 (200/301/302 중 하나면 정상)
+      curl -sI https://duckon.site | grep -i '200\|301\|302'
+    EOF
+  environment:
+    name: production
+    url: https://duckon.site
