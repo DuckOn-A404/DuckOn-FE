@@ -178,36 +178,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div
-      className="w-full bg-black relative z-0"
-      style={{
-        aspectRatio: "16 / 9",
-        minHeight: "300px",
-        maxHeight: "60vh",
-        overflow: "hidden",
-      }}
+      className="w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black flex items-center justify-center"
     >
       {videoId ? (
         <>
-          {/* <div className="absolute top-0 left-0 w-full h-full"> */}
-          <YouTube
-            videoId={videoId}
-            onReady={onPlayerReady}
-            onStateChange={onPlayerStateChange}
-            className="w-full h-full"
-            opts={{
-              width: "100%",
-              height: "100%",
-              playerVars: {
-                autoplay: 0,
-                mute: 1,
-                controls: isHost ? 1 : 0,
-                disablekb: 1,
-                rel: 0,
-                enablejsapi: 1,
-              },
-            }}
-          />
-          {/* </div> */}
+          <div className="h-full w-auto aspect-video max-w-full">
+            <YouTube
+              videoId={videoId}
+              onReady={onPlayerReady}
+              onStateChange={onPlayerStateChange}
+              className="w-full h-full"
+              opts={{
+                width: "100%",
+                height: "100%",
+                playerVars: {
+                  autoplay: 0,
+                  mute: 1,
+                  controls: isHost ? 1 : 0,
+                  disablekb: 1,
+                  rel: 0,
+                  enablejsapi: 1,
+                },
+              }}
+            />
+          </div>
           {!isHost && !canWatch && (
             <>
               <div
