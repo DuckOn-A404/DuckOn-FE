@@ -178,7 +178,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   return (
     <div
-      className="w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black flex items-center justify-center"
+      className="relative w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black
+                flex items-center justify-center"
     >
       {videoId ? (
         <>
@@ -198,20 +199,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   disablekb: 1,
                   rel: 0,
                   enablejsapi: 1,
+                  playsinline: 1,
                 },
               }}
             />
           </div>
+
           {!isHost && !canWatch && (
-            <>
-              <div
-                className="absolute inset-0 z-10 bg-transparent cursor-not-allowed"
-                style={{ pointerEvents: "auto" }}
-              />
-              <div className="absolute inset-0 z-20 flex items-center justify-center text-white text-lg bg-black/40">
+            <div className="absolute inset-0 z-10 pointer-events-auto">
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="relative z-20 w-full h-full flex items-center justify-center text-white text-lg">
                 방장이 영상을 재생할 때까지 대기 중입니다...
               </div>
-            </>
+            </div>
           )}
         </>
       ) : (
@@ -219,6 +219,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       )}
     </div>
   );
+
 };
 
 export default VideoPlayer;
