@@ -139,7 +139,7 @@ build_be_prod:
   image: gradle:8.6-jdk21
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      changes: ["BE/**"]
+      when: on_success
   script:
     - cd BE
     - chmod +x gradlew
@@ -151,8 +151,7 @@ deploy_be_prod:
   resource_group: prod
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      changes: ["BE/**"]
-      when: manual # 자동으로 하려면 on_success
+      when: on_success
   before_script:
     - apk add --no-cache openssh git curl
     - eval $(ssh-agent -s)
@@ -192,7 +191,7 @@ build_fe_prod:
   image: node:20-alpine
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      changes: ["FE/**"]
+      when: on_success
   script:
     - cd FE
     - npm ci
@@ -204,8 +203,7 @@ deploy_fe_prod:
   resource_group: prod
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-      changes: ["FE/**"]
-      when: manual # 자동으로 하려면 on_success
+      when: on_success
   before_script:
     - apk add --no-cache openssh git curl
     - eval $(ssh-agent -s)
