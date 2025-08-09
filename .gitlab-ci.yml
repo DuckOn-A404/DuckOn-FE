@@ -243,6 +243,26 @@ deploy_fe_prod:
 
       # 간단 응답 확인 (200/301/302 중 하나면 정상)
       curl -sI https://duckon.site | grep -i '200\|301\|302'
+    EOFscript: |
+    ssh ubuntu@duckon.site <<EOF
+      set -e
+      sudo docker network create duckon-net || true
+
+      cd ~/DuckOn-BE/FE
+      git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
+      git fetch origin master
+      git reset --hard origin/master
+
+      sudo docker build -t duckon-front:prod .
+
+      # FE(prod) 재기동 (게이트웨이가 프록시하므로 포트 바인딩/DEV nginx마운트 없음)
+      sudo docker rm -f duckon-front-prod || true
+      sudo docker run -d --name duckon-front-prod \
+        --network duckon-net \
+        duckon-front:prod
+
+      # 간단 응답 확인 (200/301/302 중 하나면 정상)
+      curl -sI https://duckon.site | grep -i '200\|301\|302'
     EOF
   environment:
     name: production
