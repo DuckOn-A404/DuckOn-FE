@@ -104,16 +104,6 @@ const ArtistDetailPage = () => {
             </div>
             <div className="w-20 h-8 bg-gray-200 rounded-full" />
           </div>
-
-          {/* 라이브 방 영역 Skeleton */}
-          <div className="space-y-4">
-            <div className="h-6 w-40 bg-gray-200 rounded" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array.from({ length: 2 }).map((_, i) => (
-                <VideoCardSkeleton key={i} />
-              ))}
-            </div>
-          </div>
         </main>
 
         {/* 오른쪽 실시간 탭 */}
