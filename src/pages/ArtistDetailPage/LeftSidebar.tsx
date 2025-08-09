@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { List, PlusCircle } from "lucide-react";
+import { PlusCircle } from "lucide-react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -18,7 +18,6 @@ const LeftSidebar = () => {
       <div className="bg-white rounded-2xl shadow p-4 flex flex-col min-h-[calc(100vh-6rem)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">팔로우한 아티스트</h2>
-          <List className="w-5 h-5 text-gray-500" />
         </div>
 
         {followedArtists.length > 0 ? (

@@ -8,7 +8,11 @@ type VideoPlayerProps = {
   isHost: boolean;
   stompClient: Client;
   user: User;
-  roomId: number;  // ✅ number로 통일
+  roomId: number;
+  playlist: string[];
+  currentVideoIndex: number;
+  isPlaylistUpdating: boolean;
+  onVideoEnd: () => void;
 };
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -17,26 +21,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   stompClient,
   user,
   roomId,
+  playlist,
+  currentVideoIndex,
+  isPlaylistUpdating,
+  onVideoEnd,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false);
   const shouldPlayAfterSeek = useRef(false);
 
-  const playlist = [videoId];
-  const currentVideoIndex = 0;
-
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
-    event.target.pauseVideo(); // ✅ 자동 재생 방지
-    event.target.mute();       // ✅ autoplay 우회용
+    event.target.pauseVideo();
+    event.target.mute(); // autoplay 우회용
     console.log("[공통] YouTube player 준비됨");
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+    // 영상 종료 상태 감지
+    if (event.data === YT.PlayerState.ENDED) {
+      if (isHost) {
+        onVideoEnd();
+      }
+      return;
+    }
+
     const player = playerRef.current;
     if (!stompClient.connected || !player) return;
 
-    // ✅ 참가자: 수동 재생 차단 또는 허용
+    // 참가자: 수동 재생 차단 또는 허용
     if (!isHost) {
       if (event.data === YT.PlayerState.PLAYING) {
         if (!shouldPlayAfterSeek.current) {
@@ -51,7 +64,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
-    // ✅ 방장만 상태 전송
+    // 방장만 상태 전송
     const currentTime = player.getCurrentTime();
     const playing = event.data === YT.PlayerState.PLAYING;
 
@@ -125,7 +138,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // 방장: 주기적 상태 송신
   useEffect(() => {
-    if (!isHost || !stompClient.connected) return;
+    if (!isHost || !stompClient.connected || isPlaylistUpdating) return;
 
     const interval = setInterval(() => {
       const player = playerRef.current;
@@ -153,48 +166,60 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isHost, stompClient]);
+  }, [
+    isHost,
+    stompClient,
+    isPlaylistUpdating,
+    user,
+    roomId,
+    playlist,
+    currentVideoIndex,
+  ]);
 
   return (
-    <div className="relative w-full h-full">
+    <div
+      className="relative w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black
+                flex items-center justify-center"
+    >
       {videoId ? (
         <>
-          <YouTube
-            videoId={videoId}
-            onReady={onPlayerReady}
-            onStateChange={onPlayerStateChange}
-            opts={{
-              width: "100%",
-              height: "100%",
-              playerVars: {
-                autoplay: 0,
-                mute: 1,
-                controls: isHost ? 1 : 0,
-                disablekb: 1,
-                rel: 0,
-                enablejsapi: 1,
-              },
-            }}
-          />
+          <div className="h-full w-auto aspect-video max-w-full">
+            <YouTube
+              videoId={videoId}
+              onReady={onPlayerReady}
+              onStateChange={onPlayerStateChange}
+              className="w-full h-full"
+              opts={{
+                width: "100%",
+                height: "100%",
+                playerVars: {
+                  autoplay: 0,
+                  mute: 1,
+                  controls: isHost ? 1 : 0,
+                  disablekb: 1,
+                  rel: 0,
+                  enablejsapi: 1,
+                  playsinline: 1,
+                },
+              }}
+            />
+          </div>
+
           {!isHost && !canWatch && (
-            <>
-              <div
-                className="absolute inset-0 z-10 bg-transparent cursor-not-allowed"
-                style={{ pointerEvents: "auto" }}
-              />
-              <div className="absolute inset-0 z-20 flex items-center justify-center text-white text-lg bg-black/40">
+            <div className="absolute inset-0 z-10 pointer-events-auto">
+              <div className="absolute inset-0 bg-black/40" />
+              <div className="relative z-20 w-full h-full flex items-center justify-center text-white text-lg">
                 방장이 영상을 재생할 때까지 대기 중입니다...
               </div>
-            </>
+            </div>
           )}
         </>
       ) : (
-        <div className="text-center text-white mt-10">
-          영상 ID가 없습니다.
-        </div>
+        <div className="text-center text-white mt-10">영상 ID가 없습니다.</div>
       )}
     </div>
   );
+
 };
 
 export default VideoPlayer;
