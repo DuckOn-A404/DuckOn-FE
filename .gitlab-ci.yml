@@ -166,7 +166,7 @@ deploy_be_prod:
     - echo "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
     - chmod 600 ~/.ssh/known_hosts
   script: |
-    ssh ubuntu@duckon.site <<'EOF'
+    ssh ubuntu@duckon.site <<EOF
       set -e
       sudo docker network create duckon-net || true
 
