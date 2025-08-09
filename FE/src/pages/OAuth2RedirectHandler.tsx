@@ -34,8 +34,7 @@ const OAuth2RedirectHandler = () => {
         setMyUser(userData);
 
         navigate("/");
-      } catch (err) {
-        console.error("소셜 로그인 실패:", err);
+      } catch {
         navigate("/login");
       }
     };

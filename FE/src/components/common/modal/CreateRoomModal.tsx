@@ -87,15 +87,12 @@ const CreateRoomModal = ({
             "로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요."
           );
           // navigate("/login"); return;
-        } else {
-          console.warn("입장 실패:", err);
         }
       }
 
       onClose();
       navigate(`/live/${createdRoom.roomId}`);
-    } catch (error) {
-      console.error("방 생성 실패:", error);
+    } catch {
       alert("방 생성에 실패했습니다.");
     }
   };
@@ -148,7 +145,7 @@ const CreateRoomModal = ({
           </div>
 
           {thumbnailPreview && (
-            <div className="aspect-[4/3] bg-black rounded-lg overflow-hidden shadow-lg">
+            <div className="aspect-[16/9] bg-black rounded-lg overflow-hidden shadow-lg">
               <img
                 src={thumbnailPreview}
                 alt="썸네일 미리보기"
