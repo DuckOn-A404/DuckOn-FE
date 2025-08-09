@@ -28,7 +28,7 @@ const LiveRoomPage = () => {
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
 
   // 비번 없는 방에서 참가자 자동입장 중복 방지
-  const autoEnterTriedRef = useRef(false)
+  const autoEnterTriedRef = useRef(false);
 
   const handleExit = () => {
     stompClient?.deactivate();
@@ -111,13 +111,10 @@ const LiveRoomPage = () => {
     const { currentVideoIndex, playlist } = room;
 
     if (currentVideoIndex >= playlist.length - 1) {
-      console.log("플레이리스트 마지막 영상입니다.");
       return;
     }
 
     const nextVideoIndex = currentVideoIndex + 1;
-
-    console.log(`[방장] 영상 종료, 다음 트랙으로: ${nextVideoIndex}`);
 
     const payload = {
       roomId: Number(room.roomId),
@@ -168,6 +165,7 @@ const LiveRoomPage = () => {
         try {
           const updatedData = JSON.parse(message.body);
           console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
+          console.log("업데이트된 참가자 목록:", updatedData.participants);
 
           setRoom((prevRoom: any) => ({
             ...prevRoom,
@@ -203,36 +201,37 @@ const LiveRoomPage = () => {
         // 1. 방장
         if (isHostView) {
           setRoom(roomData);
-          return
+          return;
         }
 
         // 2. 참가자, 비번 존재. 모달 오픈, 정답 제출 시 enterRoom 호출
         if (hasQuiz) {
-          setEntryQuestion(roomData.entryQuestion)
-          setIsQuizModalOpen(true)
-          return
+          setEntryQuestion(roomData.entryQuestion);
+          setIsQuizModalOpen(true);
+          return;
         }
 
         // 3. 참가자, 비번 존재x 최초 진입 시 자동으로 enterRoom 1회 호출
         if (!autoEnterTriedRef.current) {
           autoEnterTriedRef.current = true;
           try {
-            await enterRoom(roomId, "") // 빈 문자열로 자동 입장
+            await enterRoom(roomId, ""); // 빈 문자열로 자동 입장
           } catch (err: any) {
             const status = err?.response?.status;
             if (status === 409) {
+              console.log("statust 409");
             } else if (status === 401 && err?.response?.data?.entryQuestion) {
               setEntryQuestion(err.response.data.entryQuestion);
               setIsQuizModalOpen(true);
-              return
+              return;
             } else {
-              console.warn("입장 실패", err)
+              console.warn("입장 실패", err);
             }
           } finally {
             const fresh = await fetchRoomById(roomId);
             setRoom(fresh);
           }
-          return
+          return;
         }
 
         setRoom(roomData);
