@@ -36,9 +36,9 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
 
   return (
     <aside className="w-80 p-4">
-      <div className="bg-white rounded-2xl shadow p-4 mb-2 flex flex-col h-[calc(100vh-6rem)]">
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col h-[calc(100vh-6rem)]">
         {/* 탭 선택 */}
-        <div className="flex-shrink-0 flex border-b border-gray-200">
+        <div className="flex-shrink-0 flex border-b border-gray-200 mb-2">
           <button
             className={`flex-1 text-sm font-semibold py-2 -mb-[1px] ${
               selectedTab === "chat"

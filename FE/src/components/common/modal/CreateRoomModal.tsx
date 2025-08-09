@@ -148,7 +148,7 @@ const CreateRoomModal = ({
           </div>
 
           {thumbnailPreview && (
-            <div className="aspect-[4/3] bg-black rounded-lg overflow-hidden shadow-lg">
+            <div className="aspect-[16/9] bg-black rounded-lg overflow-hidden shadow-lg">
               <img
                 src={thumbnailPreview}
                 alt="썸네일 미리보기"
