@@ -20,7 +20,7 @@ const MyPage = () => {
     const isValid = await verifyPassword(password);
     if (isValid) {
       setShowModal(false);
-      setIsEditing(true); // 수정 모드 전환
+      setIsEditing(true);
       return true;
     }
     return false;
@@ -31,10 +31,7 @@ const MyPage = () => {
       setLoading(true);
       try {
         const data = await fetchMyProfile();
-        console.log("받아온 사용자 정보:", data);
         setMyUser(data);
-      } catch (error) {
-        console.error("사용자 정보를 불러오지 못했습니다.", error);
       } finally {
         setLoading(false);
       }
@@ -48,11 +45,8 @@ const MyPage = () => {
       const reloadProfile = async () => {
         try {
           const updated = await fetchMyProfile();
-          console.log("모달 닫힌 후 갱신된 사용자 정보:", updated);
           setMyUser(updated);
-        } catch (error) {
-          console.error("사용자 정보 갱신 실패:", error);
-        }
+        } catch {}
       };
       reloadProfile();
     }

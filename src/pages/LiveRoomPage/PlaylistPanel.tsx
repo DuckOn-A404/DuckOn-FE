@@ -100,17 +100,17 @@ const PlaylistPanel = ({
       {/* 방장 전용 추가 UI */}
       {isHost && (
         <div className="mt-4 pt-4 border-t border-gray-700">
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center">
             <input
               value={inputId}
               onChange={(e) => setInputId(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               placeholder="영상 추가"
-              className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-20"
             />
             <button
               onClick={handleAdd}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-5 rounded-lg transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1.5 px-3 rounded-md text-sm flex items-center gap-1"
             >
               추가
             </button>
