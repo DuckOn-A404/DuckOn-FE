@@ -37,8 +37,6 @@ export const useArtistList = (searchText: string) => {
         setPage((prev) => prev + 1);
         setTotalCount(res.total);
       }
-    } catch (err) {
-      console.error("아티스트 로딩 실패", err);
     } finally {
       setLoading(false);
     }
@@ -61,8 +59,6 @@ export const useArtistList = (searchText: string) => {
           setTotalCount(res.total);
           setHasMore(res.data.length > 0);
         }
-      } catch (err) {
-        console.error("검색 실패", err);
       } finally {
         setLoading(false);
       }

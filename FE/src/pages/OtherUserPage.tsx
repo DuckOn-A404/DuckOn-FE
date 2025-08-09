@@ -7,25 +7,19 @@ import OtherProfileCard from "../components/domain/user/OtherProfileCard";
 
 const OtherUserPage = () => {
   const { userId } = useParams();
-  console.log("OtherUserPage userId:", userId);
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
 
   useEffect(() => {
     if (!userId) {
-      console.warn("userId가 존재하지 않습니다.");
       return;
     }
-    // 백엔드 연동 코드
     setOtherUser(null);
 
     const getUserData = async () => {
       try {
         const data = await fetchOtherUserProfile(userId);
-        console.log("타 유저 정보:", data);
         setOtherUser(data);
-      } catch (err) {
-        console.error("타 유저 정보 조회 실패", err);
-      }
+      } catch {}
     };
     getUserData();
   }, [userId]);
@@ -44,9 +38,7 @@ const OtherUserPage = () => {
             }
           : prev
       );
-    } catch (err) {
-      console.error("팔로우 실패", err);
-    }
+    } catch {}
   };
 
   if (!otherUser)
