@@ -18,9 +18,8 @@ export const useTrendingRooms = (size: number) => {
       try {
         const data = await getTrendingRooms(size);
         setTrendingRooms(data);
-      } catch (err) {
+      } catch {
         setError("트렌딩 방 목록을 불러오는 데 실패했습니다.");
-        console.error(err);
       } finally {
         setIsLoading(false);
       }

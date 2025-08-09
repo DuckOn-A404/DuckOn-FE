@@ -58,8 +58,6 @@ const LiveRoomPage = () => {
         return;
       }
 
-      // 기타 예외
-      console.error("입장 실패:", error);
       throw error;
     }
   };
@@ -165,7 +163,6 @@ const LiveRoomPage = () => {
         try {
           const updatedData = JSON.parse(message.body);
           console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
-          console.log("업데이트된 참가자 목록:", updatedData.participants);
 
           setRoom((prevRoom: any) => ({
             ...prevRoom,

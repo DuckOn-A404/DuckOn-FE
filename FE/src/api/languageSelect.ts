@@ -9,8 +9,7 @@ export const fetchLanguages = async (): Promise<LanguageOption[]> => {
     const response = await fetch("/data/languages.json");
     const data = await response.json();
     return data;
-  } catch (error) {
-    console.error("언어 데이터를 불러오지 못했습니다.", error);
+  } catch {
     return [];
   }
 };

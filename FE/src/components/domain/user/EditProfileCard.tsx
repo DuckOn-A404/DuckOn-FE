@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
-import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
+import {
+  fetchLanguages,
+  type LanguageOption,
+} from "../../../api/languageSelect";
 import { useUserStore } from "../../../store/useUserStore";
 
 export type EditProfileCardProps = {
@@ -22,8 +25,10 @@ const EditProfileCard = ({
   const [language, setLanguage] = useState(user.language);
   const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl || DEFAULT_IMG)
-  const [showImageOptions, setShowImageOptions] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    user.imgUrl || DEFAULT_IMG
+  );
+  const [showImageOptions, setShowImageOptions] = useState(false);
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,11 +52,9 @@ const EditProfileCard = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfileImage(file)
-      setPreviewUrl(URL.createObjectURL(file))
-      setShowImageOptions(false)
-    } else {
-      console.log("파일 선택 취소됨 또는 파일 없음")
+      setProfileImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setShowImageOptions(false);
     }
   };
 
@@ -78,8 +81,8 @@ const EditProfileCard = ({
     }
 
     if (newPassword && newPassword.length < 8) {
-      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.")
-      return
+      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
+      return;
     }
 
     const formData = new FormData();
@@ -99,7 +102,7 @@ const EditProfileCard = ({
       useUserStore.getState().setMyUser({
         ...updated,
         artistList: updated.artistList ?? [],
-      })
+      });
       onUpdate(updated);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
