@@ -55,10 +55,10 @@ const SignupPage = () => {
   }, []);
 
   // 'Enter' 키 동작을 제어하는 이벤트 핸들러
-  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
     if (e.key !== "Enter") return;
 
-    const target = e.target as HTMLInputElement;
+    const target = e.target as HTMLInputElement | HTMLSelectElement | null;
     const targetId = target?.id;
 
     // 이메일 입력창에서 Enter를 누르면 이메일 중복 확인 실행
@@ -87,7 +87,11 @@ const SignupPage = () => {
         </div>
 
         {/* 회원가입 폼 영역 */}
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={handleFormKeyDown}
+          className="w-full flex flex-col gap-4"
+        >
           <div className="flex gap-2 items-start">
             <div className="flex-grow">
               <InputField
