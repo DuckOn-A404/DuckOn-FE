@@ -33,7 +33,7 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
             <Menu as="div" className="relative">
               <Menu.Button className="flex items-center gap-2 rounded-full p-1 pr-3 transition-colors hover:bg-gray-100">
                 <img
-                  src={user.profileImg || "/default_image.png"}
+                  src={user.imgUrl || "/default_image.png"}
                   alt="프로필 이미지"
                   className="w-8 h-8 rounded-full object-cover"
                 />
