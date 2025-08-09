@@ -1,6 +1,5 @@
 import { type User } from "../../types";
 import { useNavigate } from "react-router-dom";
-// ✅ 1. 드롭다운 메뉴와 아이콘을 위해 필요한 컴포넌트를 import 합니다.
 import { Menu } from "@headlessui/react";
 import { ChevronDown } from "lucide-react";
 
