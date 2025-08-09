@@ -84,8 +84,12 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 // 방 퇴장
 export const exitRoom = async (roomId: number, artistId: number): Promise<{ message: string }> => {
 	const token = localStorage.getItem("accessToken");
+	if (!roomId) throw new Error("roomId가 없습니다.");
+	if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+		throw new Error("artistId가 유효하지 않습니다.");
+	}
 	const res = await api.post(
-		`/room/${roomId}/exit`,
+		`/rooms/${roomId}/exit`,
 		null,
 		{
 			params: { artistId },
