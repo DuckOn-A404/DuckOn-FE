@@ -83,3 +83,17 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 		throw error;
 	}
 };
+
+// 방 퇴장
+export const exitRoom = async (roomId: number, artistId: number): Promise<{ message: string }> => {
+	const token = localStorage.getItem("accessToken");
+	const res = await api.post(
+		`/room/${roomId}/exit`,
+		null,
+		{
+			params: { artistId },
+			headers: { ...(token && {Authorization: `Bearer ${token}`}) },
+		}
+	);
+	return res.data
+};
