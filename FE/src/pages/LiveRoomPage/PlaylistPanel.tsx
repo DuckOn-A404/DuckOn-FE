@@ -71,13 +71,15 @@ const PlaylistPanel = ({
                     : "bg-gray-800 hover:bg-gray-700"
                 }`}
               >
-                <div className="flex items-center gap-4 overflow-hidden">
-                  <img
-                    src={toThumbUrl(videoId)}
-                    alt="thumbnail"
-                    className="w-20 h-12 object-cover rounded-md flex-shrink-0 border-2 border-transparent"
-                  />
-                  <div className="flex flex-col overflow-hidden">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-2/5 flex-shrink-0">
+                    <img
+                      src={toThumbUrl(videoId)}
+                      alt="thumbnail"
+                      className="w-full aspect-video object-cover rounded-md" // aspect-video 추가
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col overflow-hidden">
                     <span className="font-semibold truncate text-sm">
                       {`Video ID: ${videoId}`}
                     </span>
