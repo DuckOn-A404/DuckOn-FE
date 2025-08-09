@@ -54,6 +54,27 @@ const SignupPage = () => {
     loadLanguages();
   }, []);
 
+  // 'Enter' 키 동작을 제어하는 이벤트 핸들러
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+
+    const target = e.target as HTMLInputElement;
+    const targetId = target?.id;
+
+    // 이메일 입력창에서 Enter를 누르면 이메일 중복 확인 실행
+    if (targetId === "email") {
+      e.preventDefault();
+      handleCheckEmail();
+    }
+    // 아이디 입력창에서 Enter를 누르면 아이디 중복 확인 실행
+    else if (targetId === "userId") {
+      e.preventDefault();
+      handleCheckUserId();
+    } else {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-purple-600 to-pink-500">
       <LoginSignupCard>
