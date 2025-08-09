@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchRoomById, enterRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client } from "@stomp/stompjs";
@@ -27,13 +27,15 @@ const LiveRoomPage = () => {
 
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
 
+  // 비번 없는 방에서 참가자 자동입장 중복 방지
+  const autoEnterTriedRef = useRef(false)
+
   const handleExit = () => {
     stompClient?.deactivate();
     navigate(-1);
   };
 
   const handleSubmitAnswer = async (answer: string) => {
-    console.log("제출된 정답:", answer);
     try {
       await enterRoom(roomId!, answer);
       const roomData = await fetchRoomById(roomId!);
@@ -188,25 +190,71 @@ const LiveRoomPage = () => {
     };
   }, [myUser, isQuizModalOpen, roomId, isHost]);
 
+  // 방 정보 로딩, 비잠금 자동 입장 처리
   useEffect(() => {
     const loadRoom = async () => {
       try {
         if (!roomId) return;
         const roomData = await fetchRoomById(roomId);
 
-        // 참가자이고 퀴즈가 존재하면 모달 오픈하기
-        if (roomData.hostId !== myUser?.userId && roomData.entryQuestion) {
-          setEntryQuestion(roomData.entryQuestion);
-          setIsQuizModalOpen(true);
-        } else {
+        const isHostView = roomData.hostId === myUser?.userId;
+        const hasQuiz = Boolean(roomData.entryQuestion);
+
+        // 1. 방장
+        if (isHostView) {
           setRoom(roomData);
+          return
         }
+
+        // 2. 참가자, 비번 존재. 모달 오픈, 정답 제출 시 enterRoom 호출
+        if (hasQuiz) {
+          setEntryQuestion(roomData.entryQuestion)
+          setIsQuizModalOpen(true)
+          return
+        }
+
+        // 3. 참가자, 비번 존재x 최초 진입 시 자동으로 enterRoom 1회 호출
+        if (!autoEnterTriedRef.current) {
+          autoEnterTriedRef.current = true;
+          try {
+            await enterRoom(roomId, "") // 빈 문자열로 자동 입장
+          } catch (err: any) {
+            const status = err?.response?.status;
+            if (status === 409) {
+            } else if (status === 401 && err?.response?.data?.entryQuestion) {
+              setEntryQuestion(err.response.data.entryQuestion);
+              setIsQuizModalOpen(true);
+              return
+            } else {
+              console.warn("입장 실패", err)
+            }
+          } finally {
+            const fresh = await fetchRoomById(roomId);
+            setRoom(fresh);
+          }
+          return
+        }
+
+        setRoom(roomData);
       } catch (error) {
         console.error("방 정보 불러오기 실패:", error);
       }
     };
     loadRoom();
-  }, [roomId]);
+  }, [roomId, myUser?.userId]);
+  //       // 참가자이고 퀴즈가 존재하면 모달 오픈하기
+  //       if (roomData.hostId !== myUser?.userId && roomData.entryQuestion) {
+  //         setEntryQuestion(roomData.entryQuestion);
+  //         setIsQuizModalOpen(true);
+  //       } else {
+  //         setRoom(roomData);
+  //       }
+  //     } catch (error) {
+  //       console.error("방 정보 불러오기 실패:", error);
+  //     }
+  //   };
+  //   loadRoom();
+  // }, [roomId]);
 
   if (!room || !stompClient?.connected || !myUser) {
     return (
@@ -222,7 +270,6 @@ const LiveRoomPage = () => {
       </>
     );
   }
-  // if (!room || !stompClient?.connected || !myUser || isQuizModalOpen) return <div>로딩 중...</div>;
 
   return (
     // 전체 레이아웃
