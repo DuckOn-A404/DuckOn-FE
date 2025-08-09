@@ -29,46 +29,45 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full bg-gray-800 text-white">
       {/* 메시지 목록 영역 */}
-      <div className="flex-1 space-y-4 overflow-y-auto">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.map((msg, index) => {
           if (msg.chatType === "ENTER") {
             return (
               <div
                 key={`system-${index}`}
-                className="text-center text-xs text-gray-400 py-1"
+                className="text-center text-xs text-gray-500 py-1"
               >
                 {msg.content}
               </div>
             );
           }
 
-          const uniqueKey = `${msg.senderId}-${msg.sentAt}`;
+          const uniqueKey = `${msg.senderId}-${msg.sentAt || index}`;
+          const isMyMessage = msg.senderId === myUser?.userId;
 
           return (
             <div
               key={uniqueKey}
               className={`flex flex-col ${
-                msg.senderId === myUser?.userId ? "items-end" : "items-start"
+                isMyMessage ? "items-end" : "items-start"
               }`}
             >
               {msg.senderId !== myUser?.userId && (
-                <span className="text-xs text-gray-400 mb-1">
+                <span className="text-xs text-gray-500 mb-1">
                   {msg.senderNickName}
                 </span>
               )}
 
               <div
                 className={`flex items-end gap-2 max-w-[85%] ${
-                  msg.senderId === myUser?.userId ? "flex-row-reverse" : ""
+                  isMyMessage ? "flex-row-reverse" : "flex-row"
                 }`}
               >
                 <div
-                  className={`relative group px-3 py-2 rounded-lg break-words ${
-                    msg.senderId === myUser?.userId
-                      ? "bg-purple-600 rounded-br-none"
-                      : "bg-gray-700 rounded-bl-none"
+                  className={`px-4 py-2 rounded-lg break-words text-sm ${
+                    isMyMessage ? "bg-purple-600" : "bg-gray-700"
                   }`}
                 >
                   <span>{msg.content}</span>
@@ -108,22 +107,22 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
       </div>
 
       {/* 메시지 입력 영역 */}
-      <div className="py-2 border-t border-gray-700">
-        <div className="relative">
+      <div className="py-3 border-t border-gray-700 bg-gray-800/80">
+        <div className="relative flex items-center">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
             placeholder="메시지를 입력하세요..."
-            className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
           />
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
-            disabled={!newMessage.trim()}
             onClick={handleSendMessage}
+            disabled={!newMessage.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
           >
-            <Send size={16} />
+            <Send size={18} className="text-white" />
           </button>
         </div>
       </div>

@@ -30,7 +30,6 @@ build_and_test_fe:
   variables:
     # Ensure devDependencies (typescript, @types/*) actually get installed
     NODE_ENV: development
-    VITE_API_BASE_URL: "http://i13a404.p.ssafy.io:8080"
   rules:
     # FE/develop 브랜치에 푸시됐을 때
     - if: '$CI_COMMIT_BRANCH =~ /^FE\/develop$/'
@@ -99,7 +98,6 @@ deploy_fe:
   stage: deploy
   image: alpine:latest
   variables:
-    VITE_API_BASE_URL: "/api"
   only:
     - /^FE\/develop$/
   before_script:
@@ -124,10 +122,10 @@ deploy_fe:
         git reset --hard origin/FE/develop
 
         # FE 도커 이미지 빌드 & 재실행 (빌드타임 ARG 주입)
-       sudo docker build --no-cache \
-          --build-arg VITE_API_BASE_URL=/api \
-          -t duckon-front:latest .
-
+       sudo docker build \
+          --no-cache \
+          -t duckon-front:latest \
+          .
         sudo docker rm -f duckon-front-dev || true
         sudo docker run -d \
           --name duckon-front-dev \
