@@ -1,4 +1,9 @@
-import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+  useLocation,
+} from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { fetchRoomById, enterRoom, exitRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
@@ -13,8 +18,8 @@ import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
-  const [searchParams] = useSearchParams()
-  const location = useLocation() as { state?: { artistId?: number } }
+  const [searchParams] = useSearchParams();
+  const location = useLocation() as { state?: { artistId?: number } };
   const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
@@ -33,29 +38,39 @@ const LiveRoomPage = () => {
   const autoEnterTriedRef = useRef(false);
 
   const parseId = (raw: string | null) => {
-    if (!raw) return undefined
-    const n = parseInt(raw, 10)
-    return Number.isFinite(n) && n > 0 ? n: undefined
-  }
-  const artistIdFromQuery = parseId(searchParams.get("artistId"))
-  const artistIdFromRoom = room?.artistId && room.artistId > 0 ? room.artistId : undefined
-  const artistIdFromState = location.state?.artistId && location.state.artistId > 0 ? location.state.artistId : undefined
+    if (!raw) return undefined;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : undefined;
+  };
+  const artistIdFromQuery = parseId(searchParams.get("artistId"));
+  const artistIdFromRoom =
+    room?.artistId && room.artistId > 0 ? room.artistId : undefined;
+  const artistIdFromState =
+    location.state?.artistId && location.state.artistId > 0
+      ? location.state.artistId
+      : undefined;
 
-  const resolvedArtistId = artistIdFromQuery ?? artistIdFromRoom ?? artistIdFromState
+  const resolvedArtistId =
+    artistIdFromQuery ?? artistIdFromRoom ?? artistIdFromState;
 
   const leavingRef = useRef(false);
 
   const handleExit = async () => {
     if (!roomId || leavingRef.current) return;
-    
+
     if (!resolvedArtistId) {
-      return
+      return;
     }
     leavingRef.current = true;
 
     // 내 화면에서 즉시 카운트 -1
     setRoom((prev: any) =>
-      prev ? { ...prev, participantCount: Math.max(0, (prev.participantCount ?? 0) - 1) } : prev
+      prev
+        ? {
+            ...prev,
+            participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
+          }
+        : prev
     );
 
     try {
@@ -63,14 +78,16 @@ const LiveRoomPage = () => {
       await exitRoom(Number(roomId), resolvedArtistId);
     } catch (e) {
       setRoom((prev: any) =>
-        prev ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1} : prev
-      )
+        prev
+          ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
+          : prev
+      );
     } finally {
       // 이전 페이지 이동
-      try { 
-        await stompClient?.deactivate() 
+      try {
+        await stompClient?.deactivate();
       } catch {}
-      navigate(-1)
+      navigate(-1);
     }
   };
 
@@ -288,7 +305,9 @@ const LiveRoomPage = () => {
             onExit={() => navigate("/")}
           />
         )}
-        <div>로딩 중...</div>
+        <div className="flex justify-center items-center h-24">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
       </>
     );
   }

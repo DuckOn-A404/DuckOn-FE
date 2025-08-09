@@ -54,6 +54,27 @@ const SignupPage = () => {
     loadLanguages();
   }, []);
 
+  // 'Enter' 키 동작을 제어하는 이벤트 핸들러
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== "Enter") return;
+
+    const target = e.target as HTMLInputElement | HTMLSelectElement | null;
+    const targetId = target?.id;
+
+    // 이메일 입력창에서 Enter를 누르면 이메일 중복 확인 실행
+    if (targetId === "email") {
+      e.preventDefault();
+      handleCheckEmail();
+    }
+    // 아이디 입력창에서 Enter를 누르면 아이디 중복 확인 실행
+    else if (targetId === "userId") {
+      e.preventDefault();
+      handleCheckUserId();
+    } else {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-purple-600 to-pink-500">
       <LoginSignupCard>
@@ -66,7 +87,11 @@ const SignupPage = () => {
         </div>
 
         {/* 회원가입 폼 영역 */}
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={handleFormKeyDown}
+          className="w-full flex flex-col gap-4"
+        >
           <div className="flex gap-2 items-start">
             <div className="flex-grow">
               <InputField
