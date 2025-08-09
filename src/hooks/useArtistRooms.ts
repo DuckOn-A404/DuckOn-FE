@@ -31,9 +31,8 @@ export const useArtistRooms = (artistId: number | undefined) => {
       try {
         const roomsData = await getRoomsByArtist(artistId);
         setRooms(roomsData || []);
-      } catch (err) {
+      } catch {
         setError("방 목록을 불러오는 데 실패했습니다.");
-        console.error(err);
       } finally {
         setIsLoading(false);
       }
