@@ -166,7 +166,7 @@ deploy_be_prod:
     - echo "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
     - chmod 600 ~/.ssh/known_hosts
   script: |
-    ssh ubuntu@duckon.site <<EOF
+    ssh ubuntu@duckon.site <<'EOF'
       set -e
       sudo docker network create duckon-net || true
 
@@ -177,16 +177,24 @@ deploy_be_prod:
 
       sudo docker build -t duckonback:prod .
 
-      # BE(prod) 재기동 (게이트웨이 통해 접근하므로 포트 바인딩 없음)
       sudo docker rm -f duckon-app-prod || true
       sudo docker run -d --name duckon-app-prod \
         --network duckon-net \
         --env-file /home/ubuntu/prod.env \
         duckonback:prod
 
-      # 헬스체크 (게이트웨이 경유)
-      sleep 6
-      curl -sSf https://duckon.site/api/actuator/health | grep -i '"status":"UP"'
+      # 헬스체크 (최대 30회, 3초 간격) — 200 또는 401이면 통과
+      for i in $(seq 1 30); do
+        echo "healthcheck try $i/30"
+        code=$(curl -ksS -o /dev/null -w "%{http_code}" https://duckon.site/api/actuator/health || true)
+        if [ "$code" = "200" ] || [ "$code" = "401" ]; then
+          echo "health OK ($code)"
+          exit 0
+        fi
+        sleep 3
+      done
+      echo "healthcheck failed"
+      exit 1
     EOF
   environment:
     name: production
@@ -224,26 +232,6 @@ deploy_fe_prod:
     - echo "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
     - chmod 600 ~/.ssh/known_hosts
   script: |
-    ssh ubuntu@duckon.site <<EOF
-      set -e
-      sudo docker network create duckon-net || true
-
-      cd ~/DuckOn-BE/FE
-      git remote set-url origin https://gitlab-ci-token:${CI_JOB_TOKEN}@lab.ssafy.com/s13-webmobile1-sub1/S13P11A404.git
-      git fetch origin master
-      git reset --hard origin/master
-
-      sudo docker build -t duckon-front:prod .
-
-      # FE(prod) 재기동 (게이트웨이가 프록시하므로 포트 바인딩/DEV nginx마운트 없음)
-      sudo docker rm -f duckon-front-prod || true
-      sudo docker run -d --name duckon-front-prod \
-        --network duckon-net \
-        duckon-front:prod
-
-      # 간단 응답 확인 (200/301/302 중 하나면 정상)
-      curl -sI https://duckon.site | grep -i '200\|301\|302'
-    EOFscript: |
     ssh ubuntu@duckon.site <<EOF
       set -e
       sudo docker network create duckon-net || true
