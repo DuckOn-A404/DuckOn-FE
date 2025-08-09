@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { fetchRoomById, enterRoom, exitRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
@@ -14,6 +14,7 @@ import { useChatSubscription } from "../../hooks/useChatSubscription";
 const LiveRoomPage = () => {
   const { roomId } = useParams();
   const [searchParams] = useSearchParams()
+  const location = useLocation() as { state?: { artistId?: number } }
   const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
@@ -31,12 +32,25 @@ const LiveRoomPage = () => {
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   const autoEnterTriedRef = useRef(false);
 
-  const artistId = Number(searchParams.get("artistId") || 0)
+  const parseId = (raw: string | null) => {
+    if (!raw) return undefined
+    const n = parseInt(raw, 10)
+    return Number.isFinite(n) && n > 0 ? n: undefined
+  }
+  const artistIdFromQuery = parseId(searchParams.get("artistId"))
+  const artistIdFromRoom = room?.artistId && room.artistId > 0 ? room.artistId : undefined
+  const artistIdFromState = location.state?.artistId && location.state.artistId > 0 ? location.state.artistId : undefined
+
+  const resolvedArtistId = artistIdFromQuery ?? artistIdFromRoom ?? artistIdFromState
 
   const leavingRef = useRef(false);
 
   const handleExit = async () => {
     if (!roomId || leavingRef.current) return;
+    
+    if (!resolvedArtistId) {
+      return
+    }
     leavingRef.current = true;
 
     // 내 화면에서 즉시 카운트 -1
@@ -46,14 +60,16 @@ const LiveRoomPage = () => {
 
     try {
       // 퇴장 api 호출
-      await exitRoom(Number(roomId), artistId);
+      await exitRoom(Number(roomId), resolvedArtistId);
     } catch (e) {
       setRoom((prev: any) =>
         prev ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1} : prev
       )
     } finally {
       // 이전 페이지 이동
-      try { await stompClient?.deactivate() } catch {}
+      try { 
+        await stompClient?.deactivate() 
+      } catch {}
       navigate(-1)
     }
   };
