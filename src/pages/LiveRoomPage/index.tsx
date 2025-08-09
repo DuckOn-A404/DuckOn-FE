@@ -13,7 +13,7 @@ import { useChatSubscription } from "../../hooks/useChatSubscription";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
-  const [searchParams] = useSearchParams()
+  const [searchParams] = useSearchParams();
   const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ const LiveRoomPage = () => {
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   const autoEnterTriedRef = useRef(false);
 
-  const artistId = Number(searchParams.get("artistId") || 0)
+  const artistId = Number(searchParams.get("artistId") || 0);
 
   const leavingRef = useRef(false);
 
@@ -41,7 +41,12 @@ const LiveRoomPage = () => {
 
     // 내 화면에서 즉시 카운트 -1
     setRoom((prev: any) =>
-      prev ? { ...prev, participantCount: Math.max(0, (prev.participantCount ?? 0) - 1) } : prev
+      prev
+        ? {
+            ...prev,
+            participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
+          }
+        : prev
     );
 
     try {
@@ -49,12 +54,16 @@ const LiveRoomPage = () => {
       await exitRoom(Number(roomId), artistId);
     } catch (e) {
       setRoom((prev: any) =>
-        prev ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1} : prev
-      )
+        prev
+          ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
+          : prev
+      );
     } finally {
       // 이전 페이지 이동
-      try { await stompClient?.deactivate() } catch {}
-      navigate(-1)
+      try {
+        await stompClient?.deactivate();
+      } catch {}
+      navigate(-1);
     }
   };
 
@@ -272,7 +281,9 @@ const LiveRoomPage = () => {
             onExit={() => navigate("/")}
           />
         )}
-        <div>로딩 중...</div>
+        <div className="flex justify-center items-center h-24">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
       </>
     );
   }
