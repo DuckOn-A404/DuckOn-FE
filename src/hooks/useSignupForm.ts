@@ -134,8 +134,6 @@ export const useSignupForm = () => {
       alert("회원가입이 완료되었습니다.");
       navigate("/login");
     } catch (err: any) {
-      // 확인용 콘솔
-      console.error("회원가입 오류:", err);
       setError(err.response?.data?.message || "오류가 발생했습니다.");
     } finally {
       setLoading(false);

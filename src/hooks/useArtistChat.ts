@@ -47,9 +47,7 @@ export const useArtistChat = (artistId: string) => {
           return prev;
         });
       }
-    } catch (error) {
-      console.error("새 채팅 메시지를 불러오는 데 실패했습니다:", error);
-    }
+    } catch {}
   }, [artistId]);
 
   useEffect(() => {
@@ -68,9 +66,7 @@ export const useArtistChat = (artistId: string) => {
           lastTimestampRef.current =
             initialMessages[initialMessages.length - 1].sentAt;
         }
-      } catch (error) {
-        console.error("초기 채팅 메시지를 불러오는 데 실패했습니다:", error);
-      }
+      } catch {}
     };
 
     fetchInitialMessages();
@@ -85,9 +81,7 @@ export const useArtistChat = (artistId: string) => {
     try {
       await postArtistMessage(artistId, content);
       await fetchNewMessages();
-    } catch (error) {
-      console.error("메시지 전송에 실패했습니다:", error);
-    }
+    } catch {}
   };
 
   const filteredMessages = useMemo(() => {
