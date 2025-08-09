@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CreateRoom } from "../../../api/roomService";
+import { CreateRoom, enterRoom } from "../../../api/roomService";
 import { useNavigate } from "react-router-dom";
 
 // 다양한 YouTube URL에서 videoId를 추출하는 함수
@@ -75,6 +75,23 @@ const CreateRoomModal = ({
 
     try {
       const createdRoom = await CreateRoom(formData);
+      try {
+        await enterRoom(
+          String(createdRoom.roomId),
+          locked ? entryAnswer : ""
+        );
+      } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 409) {
+          // 이미 집계됨/중복 입장 같은 정책이면 무시
+        } else if (status === 401) {
+          alert("로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.");
+          // navigate("/login"); return;
+        } else {
+          console.warn("입장 실패:", err);
+        }
+      }
+      
       onClose();
       navigate(`/live/${createdRoom.roomId}`);
     } catch (error) {

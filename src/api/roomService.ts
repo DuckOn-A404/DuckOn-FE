@@ -6,7 +6,6 @@ export const CreateRoom = async (formData: FormData) => {
 	const token = localStorage.getItem("accessToken"); // 개별 요청에서만 토큰 꺼내기
 	const response = await api.post("/rooms", formData, {
 		headers: {
-			// "Content-Type": "multipart/form-data",
 			...(token && {Authorization: `Bearer ${token}`}), // 조건부로 헤더 추가
 		},
 	});
@@ -80,7 +79,7 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 		);
 		return response.data;
 	} catch (error: any) {
-		console.error("방 입장 실패:", error.response?.data);
+		console.error("방 입장 실패:", error?.response?.data || error);
 		throw error;
 	}
 };
