@@ -162,12 +162,13 @@ const ArtistDetailPage = () => {
   return (
     <div className="flex w-full">
       {/* 왼쪽: 팔로우 리스트 */}
-      <LeftSidebar />
-
+      <div className="hidden lg:block">
+        <LeftSidebar />
+      </div>
       {/* 가운데: 아티스트 카드 + 라이브/예정 */}
-      <main className="flex-1 p-6 space-y-10">
-        <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
-          <div className="flex items-center gap-6">
+      <main className="w-full lg:flex-1 p-4 sm:p-6 space-y-8">
+        <div className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
             <img
               src={artist.imgUrl || PLACEHOLDER_URL}
               alt={artist.nameEn}
@@ -182,7 +183,7 @@ const ArtistDetailPage = () => {
             </div>
           </div>
           {isLoggedIn && (
-            <div className="text-right space-y-2">
+            <div className="w-full sm:w-auto flex-shrink-0">
               {isFollowing ? (
                 <>
                   {/* {artist.followedAt && (
@@ -191,7 +192,7 @@ const ArtistDetailPage = () => {
                     </p>
                   )} */}
                   <button
-                    className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
+                    className="w-full sm:w-auto bg-purple-100 text-purple-700 font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-purple-200"
                     onClick={handleFollowToggle}
                   >
                     팔로우 중
@@ -200,7 +201,7 @@ const ArtistDetailPage = () => {
               ) : (
                 // 팔로우 중이 아닐 때
                 <button
-                  className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
+                  className="w-full sm:w-auto bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-purple-700"
                   onClick={handleFollowToggle}
                 >
                   + 팔로우
@@ -231,7 +232,7 @@ const ArtistDetailPage = () => {
             {isFollowing && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-md shadow-purple-300/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-md shadow-purple-300/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
               >
                 <Plus size={16} />
                 <span>새 방 만들기</span>
@@ -279,7 +280,9 @@ const ArtistDetailPage = () => {
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar artistId={artist!.artistId} />
+      <div className="hidden lg:block">
+        <RightSidebar artistId={artist!.artistId} />
+      </div>
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
