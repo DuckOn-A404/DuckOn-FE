@@ -5,5 +5,5 @@ export type User = {
   role: "ADMIN" | "USER" | "BANNED";
   artistList: number[];
   bannedTill?: string;
-  profileImg?: string;
+  imgUrl?: string;
 };
