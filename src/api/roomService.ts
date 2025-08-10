@@ -59,6 +59,7 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 };
 
 // 방 퇴장
+// //기존 코드
 // export const exitRoom = async (
 //   roomId: number,
 //   artistId: number
@@ -75,27 +76,76 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 //   return res.data;
 // };
 
-export const exitRoom = async (roomId: number, artistId: number) => {
+// // 1차 수정
+// export const exitRoom = async (roomId: number, artistId: number) => {
+//   const token = localStorage.getItem("accessToken");
+//   if (!roomId) throw new Error("roomId가 없습니다.");
+//   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+//     throw new Error("artistId가 유효하지 않습니다.");
+//   }
+//   return api.post(`/rooms/${roomId}/exit`, null, {
+//     params: { artistId },
+//     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+//   });
+// };
+
+// 2차 수정
+export const exitRoom = async (roomId: number, artistId: number): Promise<string> => {
   const token = localStorage.getItem("accessToken");
   if (!roomId) throw new Error("roomId가 없습니다.");
   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
     throw new Error("artistId가 유효하지 않습니다.");
   }
-  return api.post(`/rooms/${roomId}/exit`, null, {
-    params: { artistId },
-    headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-  });
+
+  try {
+    const res = await api.post(`/rooms/${roomId}/exit`, null, {
+      params: { artistId },
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        Accept: "text/plain",
+      },
+    });
+    // 서버: "방에서 퇴장하였습니다."
+    return typeof res.data === "string" ? res.data : String(res.data?.message ?? "");
+  } catch (err: any) {
+    throw new Error(err?.response?.data || "방 퇴장에 실패했습니다.");
+  }
 };
 
+
 // 방 삭제
-export const deleteRoom = async (roomId: number, artistId: number) => {
+// // 기존 코드
+// export const deleteRoom = async (roomId: number, artistId: number) => {
+//   const token = localStorage.getItem("accessToken");
+//   if (!roomId) throw new Error("roomId가 없습니다.");
+//   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+//     throw new Error("artistId가 유효하지 않습니다.");
+//   }
+//   return api.delete(`/rooms/${roomId}`, {
+//     params: { artistId },
+//     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+//   });
+// };
+
+// 2차 수정
+export const deleteRoom = async (roomId: number, artistId: number): Promise<string> => {
   const token = localStorage.getItem("accessToken");
   if (!roomId) throw new Error("roomId가 없습니다.");
   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
     throw new Error("artistId가 유효하지 않습니다.");
   }
-  return api.delete(`/rooms/${roomId}`, {
-    params: { artistId },
-    headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-  });
+
+  try {
+    const res = await api.delete(`/rooms/${roomId}`, {
+      params: { artistId },
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+        Accept: "text/plain",
+      },
+    });
+    // 서버: "방이 삭제되었습니다."
+    return typeof res.data === "string" ? res.data : String(res.data?.message ?? "");
+  } catch (err: any) {
+    throw new Error(err?.response?.data || "방 삭제에 실패했습니다.");
+  }
 };
