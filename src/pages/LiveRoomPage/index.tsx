@@ -224,7 +224,7 @@ const LiveRoomPage = () => {
       setConnectionError(true);
     };
 
-    presenceClient.onWebSocketError = (event) => {
+    presenceClient.onWebSocketError = () => {
       setConnectionError(true);
     };
 
