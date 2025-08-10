@@ -59,18 +59,43 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 };
 
 // 방 퇴장
-export const exitRoom = async (
-  roomId: number,
-  artistId: number
-): Promise<{ message: string }> => {
+// export const exitRoom = async (
+//   roomId: number,
+//   artistId: number
+// ): Promise<{ message: string }> => {
+//   const token = localStorage.getItem("accessToken");
+//   if (!roomId) throw new Error("roomId가 없습니다.");
+//   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+//     throw new Error("artistId가 유효하지 않습니다.");
+//   }
+//   const res = await api.post(`/rooms/${roomId}/exit`, null, {
+//     params: { artistId },
+//     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+//   });
+//   return res.data;
+// };
+
+export const exitRoom = async (roomId: number, artistId: number) => {
   const token = localStorage.getItem("accessToken");
   if (!roomId) throw new Error("roomId가 없습니다.");
   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
     throw new Error("artistId가 유효하지 않습니다.");
   }
-  const res = await api.post(`/rooms/${roomId}/exit`, null, {
+  return api.post(`/rooms/${roomId}/exit`, null, {
     params: { artistId },
     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
   });
-  return res.data;
+};
+
+// 방 삭제
+export const deleteRoom = async (roomId: number, artistId: number) => {
+  const token = localStorage.getItem("accessToken");
+  if (!roomId) throw new Error("roomId가 없습니다.");
+  if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+    throw new Error("artistId가 유효하지 않습니다.");
+  }
+  return api.delete(`/rooms/${roomId}`, {
+    params: { artistId },
+    headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+  });
 };
