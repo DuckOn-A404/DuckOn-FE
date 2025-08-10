@@ -15,6 +15,9 @@ type VideoPlayerProps = {
   onVideoEnd: () => void;
 };
 
+const DRIFT_TOLERANCE = 0.9;  // 초 단위
+const HEARTBEAT_MS = 5000;  // 방장 주기 송신
+
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoId,
   isHost,
@@ -28,7 +31,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
   const [canWatch, setCanWatch] = useState(false);
-  const shouldPlayAfterSeek = useRef(false);
+  // const shouldPlayAfterSeek = useRef(false);
+  const justSynced = useRef(false)  // 동기화 직후 onStateChange 오작동 방지
 
   const onPlayerReady = (event: YT.PlayerEvent) => {
     playerRef.current = event.target;
@@ -52,14 +56,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // 참가자: 수동 재생 차단 또는 허용
     if (!isHost) {
       if (event.data === YT.PlayerState.PLAYING) {
-        if (!shouldPlayAfterSeek.current) {
-          console.log("[참가자] 수동 재생 시도 차단");
-          player.pauseVideo();
-        } else {
-          console.log("[참가자] 호스트 재생 허용");
-          setCanWatch(true);
-          shouldPlayAfterSeek.current = false;
+        if (justSynced.current) {
+          justSynced.current = false
+          return
         }
+        if (!canWatch) {
+          player.pauseVideo()
+        }
+        // if (!shouldPlayAfterSeek.current) {
+        //   console.log("[참가자] 수동 재생 시도 차단");
+        //   player.pauseVideo();
+        // } else {
+        //   console.log("[참가자] 호스트 재생 허용");
+        //   setCanWatch(true);
+        //   shouldPlayAfterSeek.current = false;
+        // }
       }
       return;
     }
@@ -67,13 +78,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // 방장만 상태 전송
     const currentTime = player.getCurrentTime();
     const playing = event.data === YT.PlayerState.PLAYING;
-
-    console.log("[방장] 상태 변경 발생:", {
-      state: event.data,
-      playing,
-      currentTime,
-    });
-
+    
     const payload = {
       roomId,
       hostId: user.userId,
@@ -83,6 +88,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       playing,
       lastUpdated: Date.now(),
     };
+    
+    console.log("[방장] 상태 변경 발생:", {
+      state: event.data,
+      playing,
+      currentTime,
+    });
 
     stompClient.publish({
       destination: "/app/room/update",
@@ -104,29 +115,69 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         `/topic/room/${roomId}`,
         (message) => {
           try {
-            const { currentTime, playing } = JSON.parse(message.body);
+            const parsed = JSON.parse(message.body) as {
+              currentTime: number;
+              playing: boolean;
+              lastUpdated?: number;
+            }
             const player = playerRef.current;
             if (!player) return;
 
-            console.log("[참가자] 메시지 수신:", {
-              currentTime,
-              playing,
-            });
+            const now = Date.now();
+            const expectedTime = 
+              typeof parsed.lastUpdated === "number"
+                ? parsed.currentTime + (now - parsed.lastUpdated) / 1000
+                : parsed.currentTime;
 
-            player.seekTo(currentTime, true);
-            player.mute();
+            const localTime = player.getCurrentTime();
+            const drift = Math.abs(localTime - expectedTime);
 
-            if (playing) {
-              shouldPlayAfterSeek.current = true;
-              player.playVideo();
+            if (parsed.playing) {
+              if (!canWatch) {
+                // 첫 시작: 강제 동기화 후 재생
+                player.seekTo(expectedTime, true);
+                player.mute();
+                justSynced.current = true;
+                player.playVideo();
+                setCanWatch(true);
+                return
+              }
+              // 이미 시청 중
+              if (drift > DRIFT_TOLERANCE) {
+                player.seekTo(expectedTime, true);
+                justSynced.current = true;
+              }
             } else {
-              shouldPlayAfterSeek.current = false;
               player.pauseVideo();
               setCanWatch(false);
             }
           } catch (err) {
-            console.error("[참가자] 메시지 파싱 실패", err);
+            console.error("참가자 메시지 파싱 실패", err)
           }
+          // try {
+          //   const { currentTime, playing } = JSON.parse(message.body);
+          //   const player = playerRef.current;
+          //   if (!player) return;
+
+          //   console.log("[참가자] 메시지 수신:", {
+          //     currentTime,
+          //     playing,
+          //   });
+
+          //   player.seekTo(currentTime, true);
+          //   player.mute();
+
+          //   if (playing) {
+          //     shouldPlayAfterSeek.current = true;
+          //     player.playVideo();
+          //   } else {
+          //     shouldPlayAfterSeek.current = false;
+          //     player.pauseVideo();
+          //     setCanWatch(false);
+          //   }
+          // } catch (err) {
+          //   console.error("[참가자] 메시지 파싱 실패", err);
+          // }
         }
       );
 
@@ -134,7 +185,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
 
     waitAndSubscribe();
-  }, [stompClient, isHost, roomId]);
+  }, [stompClient, isHost, roomId, canWatch]);
 
   // 방장: 주기적 상태 송신
   useEffect(() => {
@@ -154,7 +205,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         lastUpdated: Date.now(),
       };
 
-      console.log("[방장] 2초마다 상태 송신:", {
+      console.log("[방장] 상태 송신:", {
         currentTime: payload.currentTime,
         playing: payload.playing,
       });
@@ -163,7 +214,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         destination: "/app/room/update",
         body: JSON.stringify(payload),
       });
-    }, 2000);
+    }, HEARTBEAT_MS);
 
     return () => clearInterval(interval);
   }, [
