@@ -3,23 +3,13 @@ import type { room } from "../types/Room";
 
 // 방 생성 API
 export const CreateRoom = async (formData: FormData) => {
-  const token = localStorage.getItem("accessToken"); // 개별 요청에서만 토큰 꺼내기
-  const response = await api.post("/rooms", formData, {
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }), // 조건부로 헤더 추가
-    },
-  });
+  const response = await api.post("/rooms", formData);
   return response.data;
 };
 
-// 방 정보 조회 API
+// 방 정보 조회 API -> 일단 비로그인 사용자도 입장 가능하게 수정
 export const fetchRoomById = async (roomId: string) => {
-  const token = localStorage.getItem("accessToken");
-  const response = await api.get(`/rooms/${roomId}`, {
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-  });
+  const response = await api.get(`/rooms/${roomId}`, { skipAuth: true });
   return response.data;
 };
 
@@ -29,16 +19,11 @@ export const fetchRoomById = async (roomId: string) => {
  * @returns 방 목록 배열
  */
 export const getRoomsByArtist = async (artistId: number): Promise<room[]> => {
-  // 지금 로그인 상태에서만 리스트가 불러와지네,,,,
-  const token = localStorage.getItem("accessToken");
-
   const response = await api.get(`/rooms`, {
     params: {
       artistId,
     },
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
+    skipAuth: true,
   });
 
   return response.data.roomInfoList;
@@ -62,18 +47,10 @@ export const getTrendingRooms = async (size = 3): Promise<room[]> => {
 
 // 방 입장(entryAnswer)
 export const enterRoom = async (roomId: string, entryAnswer: string) => {
-  const token = localStorage.getItem("accessToken");
-
   try {
-    const response = await api.post(
-      `/rooms/${roomId}/enter`,
-      { entryAnswer: String(entryAnswer) },
-      {
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      }
-    );
+    const response = await api.post(`/rooms/${roomId}/enter`, {
+      entryAnswer: String(entryAnswer),
+    });
     return response.data;
   } catch (error: any) {
     console.error("방 입장 실패:", error?.response?.data || error);
@@ -82,19 +59,18 @@ export const enterRoom = async (roomId: string, entryAnswer: string) => {
 };
 
 // 방 퇴장
-export const exitRoom = async (roomId: number, artistId: number): Promise<{ message: string }> => {
-	const token = localStorage.getItem("accessToken");
-	if (!roomId) throw new Error("roomId가 없습니다.");
-	if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
-		throw new Error("artistId가 유효하지 않습니다.");
-	}
-	const res = await api.post(
-		`/rooms/${roomId}/exit`,
-		null,
-		{
-			params: { artistId },
-			headers: { ...(token && {Authorization: `Bearer ${token}`}) },
-		}
-	);
-	return res.data
+export const exitRoom = async (
+  roomId: number,
+  artistId: number
+): Promise<{ message: string }> => {
+  const token = localStorage.getItem("accessToken");
+  if (!roomId) throw new Error("roomId가 없습니다.");
+  if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+    throw new Error("artistId가 유효하지 않습니다.");
+  }
+  const res = await api.post(`/rooms/${roomId}/exit`, null, {
+    params: { artistId },
+    headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+  });
+  return res.data;
 };
