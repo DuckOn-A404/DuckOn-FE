@@ -15,6 +15,7 @@ import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
 import { useChatSubscription } from "../../hooks/useChatSubscription";
+import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -35,6 +36,8 @@ const LiveRoomPage = () => {
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
 
+  const [connectionError, setConnectionError] = useState(false);
+
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   const autoEnterTriedRef = useRef(false);
 
@@ -44,6 +47,7 @@ const LiveRoomPage = () => {
     return Number.isFinite(n) && n > 0 ? n : undefined;
   };
   const artistIdFromQuery = parseId(searchParams.get("artistId"));
+
   const artistIdFromRoom =
     room?.artistId && room.artistId > 0 ? room.artistId : undefined;
   const artistIdFromState =
@@ -217,6 +221,11 @@ const LiveRoomPage = () => {
 
     presenceClient.onStompError = (frame) => {
       console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
+      setConnectionError(true);
+    };
+
+    presenceClient.onWebSocketError = (event) => {
+      setConnectionError(true);
     };
 
     presenceClient.activate();
@@ -443,6 +452,15 @@ const LiveRoomPage = () => {
           onExit={() => navigate("/")}
         />
       )}
+      {/* 에러 발생 시 모달 */}
+      <ConnectionErrorModal
+        isOpen={connectionError}
+        onClose={() => {
+          setConnectionError(false);
+          navigate(-1);
+        }}
+      />
+
       {/* 상단 헤더 */}
       <LiveHeader
         isHost={room.hostId === myUserId}
