@@ -5,7 +5,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { fetchRoomById, enterRoom, exitRoom } from "../../api/roomService";
+import { fetchRoomById, enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
@@ -46,8 +46,8 @@ const LiveRoomPage = () => {
     const n = parseInt(raw, 10);
     return Number.isFinite(n) && n > 0 ? n : undefined;
   };
+  
   const artistIdFromQuery = parseId(searchParams.get("artistId"));
-
   const artistIdFromRoom =
     room?.artistId && room.artistId > 0 ? room.artistId : undefined;
   const artistIdFromState =
@@ -81,7 +81,7 @@ const LiveRoomPage = () => {
     try {
       // 퇴장 api 호출
       await exitRoom(Number(roomId), resolvedArtistId);
-    } catch (e) {
+    } catch {
       setRoom((prev: any) =>
         prev
           ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
@@ -92,6 +92,24 @@ const LiveRoomPage = () => {
       try {
         await stompClient?.deactivate();
       } catch {}
+      navigate(-1);
+    }
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!roomId) return;
+    if (!resolvedArtistId) {
+      alert("artistId를 확인할 수 없습니다.");
+      return;
+    }
+    if (!confirm("정말 방을 삭제하시겠습니까?")) return;
+
+    try {
+      await deleteRoom(Number(roomId), resolvedArtistId);
+    } catch (e) {
+      console.warn("방 삭제 중 오류:", e);
+    } finally {
+      try { await stompClient?.deactivate(); } catch {}
       navigate(-1);
     }
   };
@@ -205,7 +223,7 @@ const LiveRoomPage = () => {
     const presenceClient = createStompClient(token || "");
 
     presenceClient.onConnect = () => {
-      console.log("✅ 참가자 수 구독용 STOMP 연결 성공");
+      console.log("참가자 수 구독용 STOMP 연결 성공");
       presenceClient.subscribe(
         `/topic/room/${roomId}/presence`,
         (message: IMessage) => {
@@ -297,7 +315,7 @@ const LiveRoomPage = () => {
     const presenceClient = createStompClient(token || "");
 
     presenceClient.onConnect = () => {
-      console.log("✅ 참가자 수 구독용 STOMP 연결 성공");
+      console.log("참가자 수 구독용 STOMP 연결 성공");
       presenceClient.subscribe(
         `/topic/room/${roomId}/presence`,
         (message: IMessage) => {
@@ -328,36 +346,122 @@ const LiveRoomPage = () => {
   // 2. 영상/채팅 동기화를 위한 useEffect
   // 이 코드는 로그인을 해야만 실행됩니다.
   // ================================================================================
+  // useEffect(() => {
+  //   // 로그인한 유저가 아니거나, 퀴즈 모달이 열려있으면 연결하지 않습니다.
+  //   if (!myUser || isQuizModalOpen) return;
+
+  //   const token = localStorage.getItem("accessToken");
+  //   if (!token) return;
+
+  //   // onConnect 콜백을 createStompClient에 직접 전달하여 코드를 간결하게 만듭니다.
+  //   const syncClient = createStompClient(token);
+
+  //   syncClient.onConnect = () => {
+  //     console.log("영상/채팅 동기화용 STOMP 연결 성공");
+  //     setStompClient(syncClient); // 채팅과 영상 제어에 사용할 클라이언트 설정
+
+  //     // 방장이 아닐 때만 영상 동기화 메시지를 구독합니다.
+  //     if (!isHost) {
+  //       syncClient.subscribe(`/topic/room/${roomId}`, (message) => {
+  //         try {
+  //           const updatedData = JSON.parse(message.body);
+  //           // participantCount는 다른 채널에서 받으므로 이 데이터는 무시합니다.
+  //           const { participantCount, ...restData } = updatedData;
+  //           setRoom((prevRoom: any) => ({
+  //             ...prevRoom,
+  //             ...restData,
+  //           }));
+  //         } catch (error) {
+  //           console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+  //         }
+  //       });
+  //     }
+  //   };
+
+  //   syncClient.onStompError = (frame) => {
+  //     console.error("영상/채팅 동기화 STOMP 에러:", frame);
+  //   };
+
+  //   syncClient.activate();
+
+  //   return () => {
+  //     syncClient.deactivate();
+  //   };
+  // }, [myUser, isQuizModalOpen, roomId, isHost]);
+
   useEffect(() => {
-    // 로그인한 유저가 아니거나, 퀴즈 모달이 열려있으면 연결하지 않습니다.
     if (!myUser || isQuizModalOpen) return;
 
     const token = localStorage.getItem("accessToken");
     if (!token) return;
 
-    // onConnect 콜백을 createStompClient에 직접 전달하여 코드를 간결하게 만듭니다.
     const syncClient = createStompClient(token);
 
     syncClient.onConnect = () => {
-      console.log("✅ 영상/채팅 동기화용 STOMP 연결 성공");
-      setStompClient(syncClient); // 채팅과 영상 제어에 사용할 클라이언트 설정
+      setStompClient(syncClient);
 
-      // 방장이 아닐 때만 영상 동기화 메시지를 구독합니다.
-      if (!isHost) {
-        syncClient.subscribe(`/topic/room/${roomId}`, (message) => {
-          try {
-            const updatedData = JSON.parse(message.body);
-            // participantCount는 다른 채널에서 받으므로 이 데이터는 무시합니다.
-            const { participantCount, ...restData } = updatedData;
-            setRoom((prevRoom: any) => ({
-              ...prevRoom,
-              ...restData,
-            }));
-          } catch (error) {
-            console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+      // 👇 이벤트/상태 동기화 수신 (방장/참가자 공통으로 받아도 무방)
+      syncClient.subscribe(`/topic/room/${roomId}`, (message) => {
+        try {
+          const evt = JSON.parse(message.body);
+          const t = evt?.eventType as string | undefined;
+
+          // 서버가 항상 participantCount를 포함해 주면 여기서 동기화
+          if (typeof evt?.participantCount === "number") {
+            setParticipantCount(evt.participantCount);
           }
-        });
-      }
+
+          if (!t) {
+            // 타입 없는 부분 업데이트 → 안전 병합
+            const { participantCount: _omit, ...rest } = evt ?? {};
+            setRoom((prev: any) => ({ ...prev, ...rest }));
+            return;
+          }
+
+          switch (t) {
+            case "HOST_CHANGED": {
+              setRoom((prev: any) =>
+                prev
+                  ? {
+                      ...prev,
+                      hostId: evt.hostId ?? prev.hostId,
+                      lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                    }
+                  : prev
+              );
+              if (evt.hostId && evt.hostId === myUserId) {
+                console.info("방장 권한이 위임되었습니다.");
+              }
+              return;
+            }
+
+            case "USER_LEFT":
+            case "USER_JOINED": {
+              // participantCount는 위에서 이미 반영
+              return;
+            }
+
+            case "ROOM_DELETED": {
+              console.info("방이 삭제되었습니다.");
+              navigate("/");
+              return;
+            }
+
+            case "STATE_SYNC": {
+              if (evt.room) setRoom(evt.room);
+              return;
+            }
+
+            default: {
+              const { participantCount: _omit, ...rest } = evt ?? {};
+              setRoom((prev: any) => ({ ...prev, ...rest }));
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+        }
+      });
     };
 
     syncClient.onStompError = (frame) => {
@@ -365,7 +469,6 @@ const LiveRoomPage = () => {
     };
 
     syncClient.activate();
-
     return () => {
       syncClient.deactivate();
     };
@@ -468,6 +571,7 @@ const LiveRoomPage = () => {
         hostId={room.hostId}
         participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
+        onDelete={room.hostId === myUserId ? handleDeleteRoom : undefined}
       />
 
       {/* 본문: 영상 + 사이드바 */}
