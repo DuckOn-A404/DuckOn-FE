@@ -9,15 +9,7 @@ type BlockedUser = {
 
 // 현재 사용자 정보 조회
 export const fetchMyProfile = async (): Promise<MyUser> => {
-  // 실제 백엔드 연동용 코드
-  // Authorization 헤더가 빠져있다면 로그인 직후가 아닌 경우에는 헤더가 사라져서 /api/users/me가 로그인 페이지 HTML을 반환
-  const token = localStorage.getItem("accessToken");
-
-  const response = await api.get<MyUser>("/users/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  const response = await api.get<MyUser>("/users/me");
   return response.data;
 };
 
@@ -25,12 +17,7 @@ export const fetchMyProfile = async (): Promise<MyUser> => {
 export const fetchOtherUserProfile = async (
   userId: string
 ): Promise<MyUser> => {
-  // 실제 백엔드 연동 시:
-  const response = await api.get<MyUser>(`/users/${userId}`, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-    },
-  });
+  const response = await api.get<MyUser>(`/users/${userId}`);
   return response.data;
 };
 
@@ -41,16 +28,7 @@ export const fetchOtherUserProfile = async (
  */
 export const verifyPassword = async (password: string): Promise<boolean> => {
   try {
-    const token = localStorage.getItem("accessToken") || "";
-    const response = await api.post(
-      "/users/me/verify-password",
-      { password },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`, // 토큰 반드시 포함해줄것 -> 새로고침시 매번 오류 발생 수정 위해
-        },
-      }
-    );
+    const response = await api.post("/users/me/verify-password", { password });
     return response.data.valid === true;
   } catch (error) {
     console.error("비밀번호 검증 실패", error);
@@ -67,15 +45,10 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  * @param formData - FormData 객체(nickname, language, oldPassword, newPassword, profileImg)
  * @returns 백엔드에서 응답받은 수정된 유저 정보 객체
  */
-
 export const updateUserProfile = async (
   formData: FormData
 ): Promise<MyUser> => {
-  const response = await api.patch("/users/me", formData, {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-    },
-  });
+  const response = await api.patch("/users/me", formData);
   return response.data;
 };
 
@@ -103,12 +76,7 @@ export const blockUser = async (
  */
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
   try {
-    const token = localStorage.getItem("accessToken");
-    const response = await api.get("/block", {
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    });
+    const response = await api.get("/block");
     return response.data.blockedList || [];
   } catch {
     return [];
