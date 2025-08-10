@@ -7,7 +7,7 @@ import {
 import { useEffect, useState, useRef } from "react";
 import { fetchRoomById, enterRoom, exitRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
-import { Client } from "@stomp/stompjs";
+import { Client, type IMessage } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
 
 import EntryQuizModal from "./EntryQuizModal";
@@ -32,6 +32,7 @@ const LiveRoomPage = () => {
   const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
   const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
+  const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
 
   // 비번 없는 방에서 참가자 자동입장 중복 방지
@@ -192,52 +193,172 @@ const LiveRoomPage = () => {
     }));
   };
 
+  // 참가자 수 구독용 useEffect
   useEffect(() => {
-    if (!myUser || isQuizModalOpen) return;
+    if (!roomId) return;
 
-    if (isHost) {
-      const client = createStompClient(
-        localStorage.getItem("accessToken") || ""
-      );
-      client.onConnect = () => {
-        console.log("STOMP 연결 성공 (방장)");
-        setStompClient(client);
-      };
-      client.activate();
-      return () => {
-        client.deactivate();
-      };
-    }
+    const token = localStorage.getItem("accessToken");
+    const presenceClient = createStompClient(token || "");
 
-    const client = createStompClient(localStorage.getItem("accessToken") || "");
-
-    client.onConnect = () => {
-      console.log("STOMP 연결 성공 (참가자) ");
-      setStompClient(client);
-
-      client.subscribe(`/topic/room/${roomId}`, (message) => {
-        try {
-          const updatedData = JSON.parse(message.body);
-          console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
-
-          setRoom((prevRoom: any) => ({
-            ...prevRoom,
-            ...updatedData,
-          }));
-        } catch (error) {
-          console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+    presenceClient.onConnect = () => {
+      console.log("✅ 참가자 수 구독용 STOMP 연결 성공");
+      presenceClient.subscribe(
+        `/topic/room/${roomId}/presence`,
+        (message: IMessage) => {
+          try {
+            const data = JSON.parse(message.body);
+            setParticipantCount(data.participantCount);
+          } catch (e) {
+            console.error("참가자 수 메시지 파싱 실패:", e);
+          }
         }
-      });
+      );
     };
 
-    client.onStompError = (frame) => {
-      console.error("STOMP 에러 발생:", frame);
+    presenceClient.onStompError = (frame) => {
+      console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
     };
 
-    client.activate();
+    presenceClient.activate();
 
     return () => {
-      client.deactivate();
+      presenceClient.deactivate();
+    };
+  }, [roomId]);
+
+  // // 영상/채팅 동기화용 useEffect
+  // useEffect(() => {
+  //   if (!myUser || isQuizModalOpen) return;
+
+  //   if (isHost) {
+  //     const client = createStompClient(
+  //       localStorage.getItem("accessToken") || ""
+  //     );
+  //     client.onConnect = () => {
+  //       console.log("STOMP 연결 성공 (방장)");
+  //       setStompClient(client);
+  //     };
+  //     client.activate();
+  //     return () => {
+  //       client.deactivate();
+  //     };
+  //   }
+
+  //   const client = createStompClient(localStorage.getItem("accessToken") || "");
+
+  //   client.onConnect = () => {
+  //     console.log("STOMP 연결 성공 (참가자) ");
+  //     setStompClient(client);
+
+  //     client.subscribe(`/topic/room/${roomId}`, (message) => {
+  //       try {
+  //         const updatedData = JSON.parse(message.body);
+  //         console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
+
+  //         setRoom((prevRoom: any) => ({
+  //           ...prevRoom,
+  //           ...updatedData,
+  //         }));
+  //       } catch (error) {
+  //         console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+  //       }
+  //     });
+  //   };
+
+  //   client.onStompError = (frame) => {
+  //     console.error("STOMP 에러 발생:", frame);
+  //   };
+
+  //   client.activate();
+
+  //   return () => {
+  //     client.deactivate();
+  //   };
+  // }, [myUser, isQuizModalOpen, roomId, isHost]);
+
+  // ================================================================================
+  // 1. 참가자 수만 전문적으로 구독하는 useEffect
+  // 이 코드는 로그인 여부와 관계없이 페이지에 들어오면 바로 실행됩니다.
+  // ================================================================================
+  useEffect(() => {
+    if (!roomId) return;
+
+    const token = localStorage.getItem("accessToken");
+    // 비로그인 유저도 참가자 수는 볼 수 있어야 하므로, 토큰이 없어도 연결을 시도합니다.
+    const presenceClient = createStompClient(token || "");
+
+    presenceClient.onConnect = () => {
+      console.log("✅ 참가자 수 구독용 STOMP 연결 성공");
+      presenceClient.subscribe(
+        `/topic/room/${roomId}/presence`,
+        (message: IMessage) => {
+          try {
+            const data = JSON.parse(message.body);
+            // 실시간으로 받은 참가자 수를 state에 저장합니다.
+            setParticipantCount(data.participantCount);
+          } catch (e) {
+            console.error("참가자 수 메시지 파싱 실패:", e);
+          }
+        }
+      );
+    };
+
+    presenceClient.onStompError = (frame) => {
+      console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
+    };
+
+    presenceClient.activate();
+
+    // 페이지를 나갈 때 연결을 해제합니다.
+    return () => {
+      presenceClient.deactivate();
+    };
+  }, [roomId]);
+
+  // ================================================================================
+  // 2. 영상/채팅 동기화를 위한 useEffect
+  // 이 코드는 로그인을 해야만 실행됩니다.
+  // ================================================================================
+  useEffect(() => {
+    // 로그인한 유저가 아니거나, 퀴즈 모달이 열려있으면 연결하지 않습니다.
+    if (!myUser || isQuizModalOpen) return;
+
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+
+    // onConnect 콜백을 createStompClient에 직접 전달하여 코드를 간결하게 만듭니다.
+    const syncClient = createStompClient(token);
+
+    syncClient.onConnect = () => {
+      console.log("✅ 영상/채팅 동기화용 STOMP 연결 성공");
+      setStompClient(syncClient); // 채팅과 영상 제어에 사용할 클라이언트 설정
+
+      // 방장이 아닐 때만 영상 동기화 메시지를 구독합니다.
+      if (!isHost) {
+        syncClient.subscribe(`/topic/room/${roomId}`, (message) => {
+          try {
+            const updatedData = JSON.parse(message.body);
+            // participantCount는 다른 채널에서 받으므로 이 데이터는 무시합니다.
+            const { participantCount, ...restData } = updatedData;
+            setRoom((prevRoom: any) => ({
+              ...prevRoom,
+              ...restData,
+            }));
+          } catch (error) {
+            console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+          }
+        });
+      }
+    };
+
+    syncClient.onStompError = (frame) => {
+      console.error("영상/채팅 동기화 STOMP 에러:", frame);
+    };
+
+    syncClient.activate();
+
+    return () => {
+      syncClient.deactivate();
     };
   }, [myUser, isQuizModalOpen, roomId, isHost]);
 
@@ -327,9 +448,7 @@ const LiveRoomPage = () => {
         isHost={room.hostId === myUserId}
         title={room.title}
         hostId={room.hostId}
-        participantCount={
-          room.participantCount ?? room.participants?.length ?? 0
-        }
+        participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
       />
 
