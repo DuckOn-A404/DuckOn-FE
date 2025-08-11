@@ -20,8 +20,7 @@ type SignupFormData = SignupData & {
   이메일 형식을 검증하는 함수
 */
 const isValidEmail = (email: string): boolean => {
-  const regex =
-    /^[a-zA-Z0-9_.+-]+@(gmail.com|naver.com|kakao.com|daum.net|yahoo.com)$/;
+  const regex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
   return regex.test(email);
 };
 
@@ -118,36 +117,43 @@ export const useSignupForm = () => {
   // 회원가입 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!emailChecked) {
+      setError("이메일 중복 확인을 완료해주세요.");
+      return;
+    }
+    if (!userIdChecked) {
+      setError("아이디 중복 확인을 완료해주세요.");
+      return;
+    }
+    if (
+      !formData.email ||
+      !formData.userId ||
+      !formData.password ||
+      !formData.passwordConfirm
+    ) {
+      setError("필수 항목을 모두 입력해주세요.");
+      return;
+    }
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+    if (passwordConfirmError) {
+      setError(passwordConfirmError);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
-    if (!isValidEmail(formData.email)) {
-      setEmailError(
-        "다음 도메인만 사용 가능합니다: gmail, naver, kakao, daum, yahoo"
-      );
-      setError("입력 값을 다시 확인해주세요.");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setPasswordError("비밀번호는 8자리 이상이어야 합니다.");
-      setError("입력 값을 다시 확인해주세요.");
-      setLoading(false);
-      return;
-    }
-
-    // 비밀번호 확인 검사
-    if (formData.password !== formData.passwordConfirm) {
-      setPasswordConfirmError("비밀번호가 일치하지 않습니다.");
-      setError("입력 값을 다시 확인해주세요.");
-      setLoading(false);
-      return;
-    }
-
     try {
       const { passwordConfirm, ...rest } = formData;
-      // 🔧 FormData로 변환
+
+      if (!rest.nickname.trim()) {
+        rest.nickname = "익명의 사용자";
+      }
+
       const form = new FormData();
 
       Object.entries(rest).forEach(([key, value]) => {
