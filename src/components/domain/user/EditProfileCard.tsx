@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
-import {
-  fetchLanguages,
-  type LanguageOption,
-} from "../../../api/languageSelect";
+// import {
+//   fetchLanguages,
+//   type LanguageOption,
+// } from "../../../api/languageSelect";
 import { useUserStore } from "../../../store/useUserStore";
 
 export type EditProfileCardProps = {
@@ -22,8 +22,8 @@ const EditProfileCard = ({
   onUpdate,
 }: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
-  const [language, setLanguage] = useState(user.language);
-  const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
+  // const [language, setLanguage] = useState(user.language);
+  // const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(
     user.imgUrl || DEFAULT_IMG
@@ -37,13 +37,13 @@ const EditProfileCard = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    const loadLanguages = async () => {
-      const langs = await fetchLanguages();
-      setLanguageOptions(langs);
-    };
-    loadLanguages();
-  }, []);
+  // useEffect(() => {
+  //   const loadLanguages = async () => {
+  //     const langs = await fetchLanguages();
+  //     setLanguageOptions(langs);
+  //   };
+  //   loadLanguages();
+  // }, []);
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -87,7 +87,7 @@ const EditProfileCard = ({
 
     const formData = new FormData();
     formData.append("nickname", nickname);
-    formData.append("language", language);
+    formData.append("language", "ko");
 
     if (newPassword) {
       formData.append("newPassword", newPassword);
@@ -236,7 +236,7 @@ const EditProfileCard = ({
               onChange={(e) => setNickname(e.target.value)}
             />
           </div>
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <div className="w-32 text-gray-500 font-medium">주언어</div>
             <select
               className="border px-1 py-1 rounded w-full"
@@ -249,7 +249,7 @@ const EditProfileCard = ({
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
 
           <div className="flex items-start">
             <div className="w-32 text-gray-500 font-medium pt-2">
