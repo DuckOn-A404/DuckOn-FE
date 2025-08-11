@@ -1,5 +1,5 @@
 // 인증 관련 API 함수들
-import {api, buildRefreshHeaders} from "./axiosInstance";
+import {api} from "./axiosInstance";
 
 type ApiMessage = {message: string};
 
@@ -10,7 +10,8 @@ type ApiMessage = {message: string};
  */
 export const postSignup = async (formData: FormData) => {
 	const response = await api.post("/auth/signup", formData, {
-		headers: {"Content-Type": "multipart/form-data"},
+		skipAuth: true,
+    headers: {"Content-Type": "multipart/form-data"},
 	});
 	return response.data;
 };
@@ -24,7 +25,8 @@ export const checkEmailExists = async (
 	email: string
 ): Promise<{isDuplicate: boolean}> => {
 	const response = await api.get("/auth/email/exists", {
-		params: {email},
+		skipAuth: true,
+    params: {email},
 	});
 	return response.data;
 };
@@ -38,7 +40,8 @@ export const checkUserIdExists = async (
 	userId: string
 ): Promise<{isDuplicate: boolean}> => {
 	const response = await api.get("/auth/user-id/exists", {
-		params: {userId},
+		skipAuth: true,
+    params: {userId},
 	});
 	return response.data;
 };
@@ -72,7 +75,8 @@ export const logIn = async (
 			"/auth/login",
 			{email, userId, password},
 			{
-				headers: {"Content-Type": "application/json"},
+				skipAuth: true,
+        headers: {"Content-Type": "application/json"},
 			}
 		);
 
@@ -102,10 +106,20 @@ export const getMyProfileAfterOAuth = async () => {
 };
 
 // 로그아웃: POST /auth/logout
-export const logoutUser = async (
-	refreshOverride?: string
-): Promise<ApiMessage> => {
-	const headers = buildRefreshHeaders(refreshOverride); // 있으면 넣고, 없어도 OK
-	const res = await api.post<ApiMessage>("/auth/logout", null, {headers});
-	return res.data;
+export const logoutUser = async (): Promise<ApiMessage> => {
+  const refresh = localStorage.getItem("refreshToken") || "";
+  
+  const res = await api.post<ApiMessage>(
+    "/auth/logout",
+    null,
+    {
+      skipAuth: true, // access 토큰 자동 첨부 방지
+      headers: {
+        Authorization: `Bearer ${refresh}`, // refresh 토큰을 Bearer로
+      },
+    }
+  );
+  
+  return res.data;
 };
+

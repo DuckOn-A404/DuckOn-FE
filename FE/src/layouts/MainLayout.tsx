@@ -4,6 +4,7 @@ import Footer from "../components/common/Footer";
 import {Outlet, useNavigate} from "react-router-dom";
 import {useUserStore} from "../store/useUserStore";
 import {logoutUser} from "../api/authService";
+import { emitTokenRefreshed } from "../api/axiosInstance";
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -20,6 +21,8 @@ const MainLayout = () => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user-storage");
+      emitTokenRefreshed(null)
+      
       setMyUser(null);
       navigate("/");
     }
