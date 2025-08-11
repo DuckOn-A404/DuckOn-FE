@@ -75,10 +75,10 @@ const MyProfileCard = ({
             <div className="w-32 text-gray-500 font-medium">닉네임</div>
             <div>{user.nickname}</div>
           </div>
-          <div className="flex">
+          {/* <div className="flex">
             <div className="w-32 text-gray-500 font-medium">주언어</div>
             <div>{user.language}</div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
