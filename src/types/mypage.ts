@@ -12,4 +12,5 @@ export type MyUser = {
   imgUrl?: string;
   roomList?: any[];
   penaltyList: any[];
+  socialLogin?: boolean
 };
