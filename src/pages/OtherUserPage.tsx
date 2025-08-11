@@ -12,6 +12,7 @@ const OtherUserPage = () => {
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isFollowLoading, setIsFollowLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!userId) {
@@ -52,7 +53,9 @@ const OtherUserPage = () => {
   // };
 
   const handleToggleFollow = async () => {
-    if (!otherUser) return;
+    if (!otherUser || isFollowLoading) return;
+
+    setIsFollowLoading(true);
 
     try {
       if (otherUser.following) {
@@ -82,7 +85,8 @@ const OtherUserPage = () => {
       }
     } catch (err) {
       console.error("Follow/Unfollow failed", err);
-      // 실패 시 사용자에게 알림을 줄 수 있습니다.
+    } finally {
+      setIsFollowLoading(false);
     }
   };
 
@@ -115,7 +119,11 @@ const OtherUserPage = () => {
 
   return (
     <div key={userId} className="py-10">
-      <OtherProfileCard user={otherUser} onToggleFollow={handleToggleFollow} />
+      <OtherProfileCard
+        user={otherUser}
+        onToggleFollow={handleToggleFollow}
+        isFollowLoading={isFollowLoading}
+      />
     </div>
   );
 };
