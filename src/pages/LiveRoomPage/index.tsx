@@ -531,7 +531,6 @@ const LiveRoomPage = () => {
           } catch (err: any) {
             const status = err?.response?.status;
             if (status === 409) {
-              console.log("statust 409");
             } else if (status === 401 && err?.response?.data?.entryQuestion) {
               setEntryQuestion(err.response.data.entryQuestion);
               setIsQuizModalOpen(true);
