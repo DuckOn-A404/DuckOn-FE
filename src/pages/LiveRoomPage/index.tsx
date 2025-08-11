@@ -21,6 +21,7 @@ import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
 import { useChatSubscription } from "../../hooks/useChatSubscription";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
+import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -41,7 +42,8 @@ const LiveRoomPage = () => {
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
 
-  const [connectionError, setConnectionError] = useState(false);
+  // const [connectionError, setConnectionError] = useState(false);
+  const [roomDeletedOpen, setRoomDeletedOpen] = useState(false)
 
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   const autoEnterTriedRef = useRef(false);
@@ -251,11 +253,11 @@ const LiveRoomPage = () => {
 
     presenceClient.onStompError = (frame) => {
       console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
-      setConnectionError(true);
+      // setConnectionError(true);
     };
 
     presenceClient.onWebSocketError = () => {
-      setConnectionError(true);
+      // setConnectionError(true);
     };
 
     presenceClient.activate();
@@ -502,11 +504,11 @@ const LiveRoomPage = () => {
                 return;
 
               case "ROOM_DELETED": {
-                console.info("방이 삭제되었습니다.");
-                try {
-                  await syncClient.deactivate();
-                } catch {}
-                navigate("/");
+                // try {
+                //   await syncClient.deactivate();
+                // } catch {}
+                // navigate("/");
+                setRoomDeletedOpen(true);
                 return;
               }
 
@@ -530,12 +532,12 @@ const LiveRoomPage = () => {
 
     syncClient.onStompError = (frame) => {
       console.error("영상/채팅 동기화 STOMP 에러:", frame);
-      setConnectionError(true);
+      // setConnectionError(true);
     };
 
     // 👇 소켓 레벨 에러도 표시
     syncClient.onWebSocketError = () => {
-      setConnectionError(true);
+      // setConnectionError(true);
     };
 
     syncClient.activate();
@@ -611,9 +613,16 @@ const LiveRoomPage = () => {
     );
   }
 
-  if (!room) {
+  if (!room || !myUser) {
     return (
       <>
+        <RoomDeletedModal
+          isOpen={roomDeletedOpen}
+          onConfirm={async () => {
+            try { await stompClient?.deactivate(); } catch {}
+            navigate(-1);
+          }}
+        />
         {isQuizModalOpen && entryQuestion && (
           <EntryQuizModal
             question={entryQuestion}
@@ -631,6 +640,13 @@ const LiveRoomPage = () => {
   return (
     // 전체 레이아웃
     <div className="flex flex-col h-screen bg-gray-900 text-white">
+      <RoomDeletedModal
+        isOpen={roomDeletedOpen}
+        onConfirm={async () => {
+          try { await stompClient?.deactivate(); } catch {}
+          navigate(-1);
+        }}
+      />
       {isQuizModalOpen && entryQuestion && (
         <EntryQuizModal
           question={entryQuestion}
@@ -638,14 +654,6 @@ const LiveRoomPage = () => {
           onExit={() => navigate("/")}
         />
       )}
-      {/* 에러 발생 시 모달 */}
-      <ConnectionErrorModal
-        isOpen={connectionError}
-        onClose={() => {
-          setConnectionError(false);
-          navigate(-1);
-        }}
-      />
 
       {/* 상단 헤더 */}
       <LiveHeader
