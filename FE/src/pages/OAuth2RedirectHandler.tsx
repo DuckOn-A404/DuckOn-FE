@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUserStore } from "../store/useUserStore";
-import { api } from "../api/axiosInstance";
 import { getMyProfileAfterOAuth } from "../api/authService";
 import { emitTokenRefreshed } from "../api/axiosInstance";
 
