@@ -96,7 +96,7 @@ const SignupPage = () => {
             <div className="flex-grow">
               <InputField
                 id="email"
-                label="이메일"
+                label="이메일*"
                 type="email"
                 placeholder="이메일을 입력하세요"
                 icon={<Mail className={iconStyle} />}
@@ -118,7 +118,7 @@ const SignupPage = () => {
             <div className="flex-grow">
               <InputField
                 id="userId"
-                label="아이디"
+                label="아이디*"
                 type="text"
                 placeholder="아이디를 입력하세요"
                 icon={<User className={iconStyle} />}
@@ -151,7 +151,7 @@ const SignupPage = () => {
           </div>
           <InputField
             id="password"
-            label="비밀번호"
+            label="비밀번호*"
             type="password"
             placeholder="비밀번호를 입력하세요"
             icon={<LockKeyhole className={iconStyle} />}
@@ -161,7 +161,7 @@ const SignupPage = () => {
           />
           <InputField
             id="passwordConfirm"
-            label="비밀번호 확인"
+            label="비밀번호 확인*"
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
             icon={<LockKeyhole className={iconStyle} />}
@@ -182,7 +182,7 @@ const SignupPage = () => {
               htmlFor="profileImg"
               className="text-gray-700 text-sm font-medium mb-2 flex items-center gap-2"
             >
-              프로필 이미지 (선택)
+              프로필 이미지
             </label>
             <input
               id="profileImg"
@@ -194,9 +194,7 @@ const SignupPage = () => {
           </div>
 
           {/* 에러 메시지 표시 */}
-          {error && (
-            <p className="text-sm text-red-500 text-center mt-2">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
           {/* 회원가입 버튼 */}
           <button
