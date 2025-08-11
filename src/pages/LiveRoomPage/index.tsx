@@ -22,6 +22,7 @@ import RightSidebar from "./RightSidebar";
 import { useChatSubscription } from "../../hooks/useChatSubscription";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
+import ConfirmModal from "../../components/common/modal/ConfirmModal";
 
 const LiveRoomPage = () => {
   const { roomId } = useParams();
@@ -42,6 +43,7 @@ const LiveRoomPage = () => {
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
   const [roomDeletedOpen, setRoomDeletedOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
 
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   const autoEnterTriedRef = useRef(false);
@@ -104,24 +106,37 @@ const LiveRoomPage = () => {
   };
 
   const handleDeleteRoom = async () => {
-    if (!roomId) return;
-    if (!resolvedArtistId) {
-      alert("artistId를 확인할 수 없습니다.");
-      return;
+    // if (!roomId) return;
+    // if (!resolvedArtistId) {
+    //   alert("artistId를 확인할 수 없습니다.");
+    if (!roomId || !resolvedArtistId) {
+      setIsDeleteOpen(false)
+      return
     }
-    if (!confirm("정말 방을 삭제하시겠습니까?")) return;
 
     try {
-      await deleteRoom(Number(roomId), resolvedArtistId);
+      await deleteRoom(Number(roomId), resolvedArtistId)
     } catch (e) {
-      console.warn("방 삭제 중 오류:", e);
+      console.warn("방 삭제 중 오류:", e)
     } finally {
-      try {
-        await stompClient?.deactivate();
-      } catch {}
+      setIsDeleteOpen(false)
+      try { await stompClient?.deactivate(); } catch {}
       navigate("/");
     }
-  };
+  }
+  //   if (!confirm("정말 방을 삭제하시겠습니까?")) return;
+
+  //   try {
+  //     await deleteRoom(Number(roomId), resolvedArtistId);
+  //   } catch (e) {
+  //     console.warn("방 삭제 중 오류:", e);
+  //   } finally {
+  //     try {
+  //       await stompClient?.deactivate();
+  //     } catch {}
+  //     navigate("/");
+  //   }
+  // };
 
   const handleSubmitAnswer = async (answer: string) => {
     try {
@@ -610,7 +625,7 @@ const LiveRoomPage = () => {
         hostId={room.hostId}
         participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
-        onDelete={room.hostId === myUserId ? handleDeleteRoom : undefined}
+        onDelete={room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined}
       />
 
       {/* 본문: 영상 + 사이드바 */}
@@ -676,6 +691,15 @@ const LiveRoomPage = () => {
           />
         </aside>
       </div>
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        title="방 삭제"
+        description="정말 방을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleDeleteRoom}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
     </div>
   );
 };

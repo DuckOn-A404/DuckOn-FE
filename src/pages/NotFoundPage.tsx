@@ -4,7 +4,7 @@ const NotFoundPage = () => {
   return (
     <div style={styles.container}>
       <img
-        src="https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/image/ChatGPT+Image+2025%EB%85%84+8%EC%9B%94+11%EC%9D%BC+%EC%98%A4%EC%A0%84+10_17_05.png"
+        src="https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/image/404.png"
         alt="404 Not Found"
         style={styles.image}
       />
