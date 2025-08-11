@@ -15,7 +15,7 @@ export const createStompClient = (
   const client = new Client({
     webSocketFactory: () => new WebSocket(socketUrl),
     reconnectDelay: 5000,
-    debug: (str) => console.log("[STOMP]", str),
+    debug: () => {},
     onConnect: () => {
       onConnectCallback?.();
     },
