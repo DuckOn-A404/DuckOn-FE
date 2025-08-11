@@ -17,7 +17,6 @@ export const createStompClient = (
     reconnectDelay: 5000,
     debug: (str) => console.log("[STOMP]", str),
     onConnect: () => {
-      console.log("STOMP 연결 성공");
       onConnectCallback?.();
     },
   });

@@ -68,7 +68,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // playerVars.mute=1이 초기 음소거를 보장하므로 여기서 mute()를 다시 호출하지 않는다.
     event.target.setVolume?.(100);
     setMuted(true); // 초기 화면 표시는 음소거로
-    console.log("[공통] YouTube player 준비됨");
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
