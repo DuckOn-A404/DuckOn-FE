@@ -19,6 +19,24 @@ export const getAccessToken = (): string | null => {
 	return v;
 };
 
+export const getRefreshToken = (): string | null => {
+	const raw =
+		localStorage.getItem("refreshToken") ||
+		sessionStorage.getItem("refreshToken");
+	if (!raw) return null;
+	const v = raw.trim();
+	if (!v || v === "null" || v === "undefined") return null;
+	return v;
+};
+
+// 리프레시 토큰 헤더 유틸
+export const buildRefreshHeaders = (override?: string) => {
+	const refresh = override ?? getRefreshToken();
+	const h: Record<string, string> = {};
+	if (refresh) h["X-Refresh-Token"] = refresh;
+	return h;
+};
+
 // --- 옵션 확장: 공개 API는 토큰 건너뛰기 ---
 declare module "axios" {
 	// 호출할 때 { skipAuth: true } 주면 인터셉터가 Authorization을 건너뜀

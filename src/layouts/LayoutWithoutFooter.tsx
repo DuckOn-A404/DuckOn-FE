@@ -1,6 +1,7 @@
 import Header from "../components/common/Header";
-import { Outlet, useNavigate } from "react-router-dom";
-import { useUserStore } from "../store/useUserStore";
+import {Outlet, useNavigate} from "react-router-dom";
+import {useUserStore} from "../store/useUserStore";
+import {logoutUser} from "../api/userService";
 
 /**
  * 푸터(Footer)가 없는 페이지를 위한 레이아웃 컴포넌트입니다.
@@ -8,15 +9,22 @@ import { useUserStore } from "../store/useUserStore";
  */
 const LayoutWithoutFooter = () => {
   const navigate = useNavigate();
-  const { myUser, setMyUser } = useUserStore();
+  const {myUser, setMyUser} = useUserStore();
 
   const handleLogin = () => navigate("/login");
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user-storage");
-    setMyUser(null);
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await logoutUser(); // 서버에 리프레시 블랙리스트 등록
+    } catch (e) {
+      console.warn("서버 로그아웃 실패(무시하고 로컬 정리 진행):", e);
+    } finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user-storage");
+      setMyUser(null);
+      navigate("/");
+    }
   };
 
   const handleSignup = () => {
