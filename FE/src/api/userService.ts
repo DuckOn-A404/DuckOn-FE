@@ -83,15 +83,6 @@ export const blockUser = async (userId: string): Promise<{message: string}> => {
 	}
 };
 
-// 로그아웃: POST /auth/logout
-export const logoutUser = async (
-	refreshOverride?: string
-): Promise<ApiMessage> => {
-	const headers = buildRefreshHeaders(refreshOverride); // 있으면 넣고, 없어도 OK
-	const res = await api.post<ApiMessage>("/auth/logout", null, {headers});
-	return res.data;
-};
-
 // 회원탈퇴: DELETE /users/me (X-Refresh-Token 필수)
 export const deleteMyAccount = async (
 	refreshOverride?: string

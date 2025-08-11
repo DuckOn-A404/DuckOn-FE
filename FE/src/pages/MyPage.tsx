@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { type MyUser } from "../types/mypage";
-import { fetchMyProfile, verifyPassword } from "../api/userService";
+import {useEffect, useState} from "react";
+import {type MyUser} from "../types/mypage";
+import {fetchMyProfile, verifyPassword} from "../api/userService";
 import PasswordConfirm from "../components/common/PasswordConfirm";
 import EditProfileCard from "../components/domain/user/EditProfileCard";
 import FollowerList from "../components/common/modal/FollowerList";
@@ -46,7 +46,7 @@ const MyPage = () => {
         try {
           const updated = await fetchMyProfile();
           setMyUser(updated);
-        } catch {}
+        } catch { }
       };
       reloadProfile();
     }
@@ -94,9 +94,9 @@ const MyPage = () => {
       {/* 일반 로그인일 때만 모달 렌더링 */}
       {!isSocial && (
         <PasswordConfirm
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        onConfirm={handleConfirm}
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          onConfirm={handleConfirm}
         />
       )}
 
@@ -107,6 +107,13 @@ const MyPage = () => {
       {openList === "following" && (
         <FollowingList onClose={() => setOpenList(null)} />
       )}
+
+      <button
+        className="text-sm text-purple-600 font-medium hover:underline transition"
+        onClick={console.log("asdf")}
+      >
+        회원 탈퇴
+      </button>
     </div>
   );
 };
