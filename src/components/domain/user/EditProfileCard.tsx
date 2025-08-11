@@ -30,6 +30,9 @@ const EditProfileCard = ({
   );
   const [showImageOptions, setShowImageOptions] = useState(false);
 
+  const [didPickNewImage, setDidPickNewImage] = useState(false)
+  const [didResetImage, setDidResetImage] = useState(false)
+
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [newPasswordError, setNewPasswordError] = useState("");
@@ -55,6 +58,8 @@ const EditProfileCard = ({
       setProfileImage(file);
       setPreviewUrl(URL.createObjectURL(file));
       setShowImageOptions(false);
+      setDidPickNewImage(true); // 새 파일 선택
+      setDidResetImage(false);
     }
   };
 
@@ -62,6 +67,8 @@ const EditProfileCard = ({
     setPreviewUrl(DEFAULT_IMG);
     setProfileImage(null);
     setShowImageOptions(false);
+    setDidResetImage(true)  // 기본 이미지로 변경 의도
+    setDidPickNewImage(false);
   };
 
   const handleCameraClick = () => {
@@ -99,11 +106,19 @@ const EditProfileCard = ({
     try {
       await updateUserProfile(formData);
       const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
-      useUserStore.getState().setMyUser({
+      const merged: MyUser = {
         ...updated,
-        artistList: updated.artistList ?? [],
+        imgUrl:
+          (didPickNewImage || didResetImage)
+            ? updated.imgUrl ?? (didResetImage ? DEFAULT_IMG: user.imgUrl)
+            : (updated.imgUrl ?? user.imgUrl),
+      };
+
+      useUserStore.getState().setMyUser({
+        ...merged,
+        artistList: merged.artistList ?? [],
       });
-      onUpdate(updated);
+      onUpdate(merged);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
     }
