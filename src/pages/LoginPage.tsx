@@ -165,21 +165,21 @@ const LoginPage = () => {
           카카오로 계속하기
         </a>
         {/* Naver 로그인 */}
-        <a
+        {/* <a
           href={`${API_BASE_URL}/oauth2/authorization/naver`}
           className="w-full flex items-center justify-center gap-2 bg-[#03C75A] py-3 rounded-xl text-sm font-medium text-white transition-colors hover:bg-green-600"
-        >
+        > */}
           {/* Naver 로고 SVG */}
-          <svg
+          {/* <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="white"
             className="w-4 h-4"
           >
             <path d="M4 4h5.5l5 6.5V4H20v16h-5.5l-5-6.5V20H4V4z" />
-          </svg>
-          네이버로 계속하기
-        </a>
+          </svg> */}
+          {/* 네이버로 계속하기 */}
+        {/* </a> */}
         {/* 회원가입 안내 */}
         <p className="text-sm text-gray-500 text-center mt-2">
           계정이 없으신가요?{" "}
