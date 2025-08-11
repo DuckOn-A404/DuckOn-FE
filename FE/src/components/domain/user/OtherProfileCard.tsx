@@ -5,6 +5,7 @@ type OtherProfileCardProps = {
   onToggleFollow: () => void;
   onFollowerClick?: () => void;
   onFollowingClick?: () => void;
+  isFollowLoading?: boolean;
 };
 
 const OtherProfileCard = ({
@@ -12,21 +13,12 @@ const OtherProfileCard = ({
   onToggleFollow,
   onFollowerClick,
   onFollowingClick,
+  isFollowLoading = false,
 }: OtherProfileCardProps) => {
   return (
     <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-lg border border-gray-200">
       <div className="flex justify-between items-center mb-6 pb-4 border-b">
         <h1 className="text-xl font-bold text-gray-800">프로필 정보</h1>
-
-        {/* 팔로우/언팔로우 버튼 */}
-        <button
-          onClick={onToggleFollow}
-          className={`text-sm font-semibold px-4 py-1.5 rounded-full transition-all duration-200 ease-in-out disabled:opacity-60 disabled:cursor-wait ${
-            user.following
-              ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
-              : "text-white bg-purple-600 hover:bg-purple-700 shadow-md"
-          }`}
-        ></button>
       </div>
 
       <div className="flex gap-8 items-center">
@@ -36,7 +28,6 @@ const OtherProfileCard = ({
             alt="프로필 이미지"
             className="w-28 h-28 object-cover rounded-full border-4 border-white shadow-md"
           />
-
           <div className="mt-4 flex gap-6 text-center">
             <div>
               <div className="text-xl font-bold text-gray-800">
@@ -72,7 +63,20 @@ const OtherProfileCard = ({
           </div>
           <div className="flex items-center">
             <div className="w-24 text-gray-500 font-semibold">닉네임</div>
-            <div className="text-gray-800 font-semibold">{user.nickname}</div>
+            <div className="flex items-center gap-4">
+              <div className="text-gray-800 font-semibold">{user.nickname}</div>
+              <button
+                onClick={onToggleFollow}
+                disabled={isFollowLoading}
+                className={`text-xs font-semibold px-3 py-1 rounded-full transition-all duration-200 ease-in-out disabled:opacity-60 disabled:cursor-wait ${
+                  user.following
+                    ? "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    : "text-white bg-purple-600 hover:bg-purple-700 shadow-sm"
+                }`}
+              >
+                {user.following ? "팔로잉" : "팔로우"}
+              </button>
+            </div>
           </div>
         </div>
       </div>
