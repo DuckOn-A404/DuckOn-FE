@@ -81,10 +81,6 @@ export const logIn = async (
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
     api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
-    // console.log(
-    //   " Authorization 헤더 설정 완료:",
-    //   api.defaults.headers.common["Authorization"]
-    // );
 
     return response.data;
   } catch (error) {
