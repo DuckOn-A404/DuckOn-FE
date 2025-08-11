@@ -13,23 +13,18 @@ const FollowingList = ({ onClose }: FollowingListProps) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await fetchFollowingList()
-        setFollowingList(data)
-      } catch (err) {
-        console.error("팔로잉 목록 조회 실패:", err)
-      }
-    }
-    load()
+        const data = await fetchFollowingList();
+        setFollowingList(data);
+      } catch {}
+    };
+    load();
   }, []);
 
   const toggleFollow = async (user: FollowUser) => {
     try {
       await unfollowUser(user.userId);
-      setFollowingList((prev) =>
-        prev.filter((f) => f.userId !== user.userId)
-      );
-    } catch (error) {
-      console.error("언팔로우 실패: ", error);
+      setFollowingList((prev) => prev.filter((f) => f.userId !== user.userId));
+    } catch {
       alert("팔로우 처리 중 문제가 발생했습니다.");
     }
   };
@@ -55,7 +50,9 @@ const FollowingList = ({ onClose }: FollowingListProps) => {
                   alt="profile"
                   className="w-10 h-10 rounded-full object-cover"
                 />
-                <span className="text-sm font-medium text-gray-700">{user.nickname}</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {user.nickname}
+                </span>
               </div>
               <button
                 onClick={() => toggleFollow(user)}

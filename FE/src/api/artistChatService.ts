@@ -13,21 +13,16 @@ export const getArtistMessages = async (
   since?: string
 ): Promise<artistChatMessage[]> => {
   try {
-    const response = await api.get(`/api/chat/artist/${artistId}/message`, {
+    const response = await api.get(`/chat/artist/${artistId}/message`, {
       params: { since },
     });
 
     if (Array.isArray(response.data)) {
       return response.data;
     } else {
-      console.warn(
-        "API 응답이 배열이 아닙니다. 빈 배열을 반환합니다.",
-        response.data
-      );
       return [];
     }
-  } catch (error) {
-    console.error("채팅 메시지 로딩 API 호출에 실패했습니다:", error);
+  } catch {
     return [];
   }
 };
@@ -42,7 +37,7 @@ export const postArtistMessage = async (
   artistId: string,
   content: string
 ): Promise<any> => {
-  const response = await api.post(`/api/chat/artist/${artistId}/message`, {
+  const response = await api.post(`/chat/artist/${artistId}/message`, {
     content,
   });
   return response.data;

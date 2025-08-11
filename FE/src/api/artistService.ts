@@ -1,4 +1,4 @@
-import { api } from "./axiosInstance";
+import { api, getAccessToken } from "./axiosInstance";
 
 /**
  * 아티스트 목록 조회 API 요청
@@ -7,13 +7,9 @@ import { api } from "./axiosInstance";
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
  */
 export const getArtistList = async (page = 1, size = 12) => {
-  const token = localStorage.getItem("accessToken");
-
-  const response = await api.get("/api/artists", {
+  const response = await api.get("/artists", {
     params: { page, size },
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    skipAuth: true, // 공개 API → 토큰 절대 안 보냄
   });
 
   const artistList = response.data?.artistList ?? [];
@@ -33,15 +29,10 @@ export const getArtistList = async (page = 1, size = 12) => {
  * @returns - 성공 시 서버로부터 받은 아티스트 검색 결과 데이터
  */
 export const searchArtists = async (keyword: string) => {
-  const token = localStorage.getItem("accessToken");
-
-  const response = await api.get("/api/artists", {
+  const response = await api.get("/artists", {
     params: { keyword },
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    skipAuth: true, // 공개 API
   });
-
   return response.data.artistList ?? [];
 };
 
@@ -51,15 +42,8 @@ export const searchArtists = async (keyword: string) => {
  * @returns 아티스트 정보 + 로그인 유저의 팔로우 여부
  */
 export const getArtistDetail = async (artistId: number) => {
-  const token = localStorage.getItem("accessToken");
-
-  const response = await api.get(`/api/artists/${artistId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-  return response.data;
+  const res = await api.get(`/artists/${artistId}`, { skipAuth: true });
+  return res.data;
 };
 
 /**
@@ -67,24 +51,11 @@ export const getArtistDetail = async (artistId: number) => {
  * @param artistId - 팔로우할 아티스트 ID
  */
 export const followArtist = async (artistId: number) => {
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
+  if (!getAccessToken()) {
     throw new Error("로그인이 필요합니다.");
   }
-
-  const response = await api.post(
-    `/api/artists/${artistId}/follow`,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  return response.data;
+  const res = await api.post(`/artists/${artistId}/follow`);
+  return res.data;
 };
 
 /**
@@ -93,19 +64,11 @@ export const followArtist = async (artistId: number) => {
  * 아 근데 이거는 delete 최대한 없애기로 했으니까 나중에 수정해야할듯
  */
 export const unfollowArtist = async (artistId: number) => {
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
+  if (!getAccessToken()) {
     throw new Error("로그인이 필요합니다.");
   }
-
-  const response = await api.delete(`/api/artists/${artistId}/follow`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  return response.data;
+  const res = await api.delete(`/artists/${artistId}/follow`);
+  return res.data;
 };
 
 /**
@@ -115,21 +78,11 @@ export const unfollowArtist = async (artistId: number) => {
  * @returns 아티스트 목록과 페이징 정보
  */
 export const getFollowedArtists = async (page = 1, size = 10) => {
-  const token = localStorage.getItem("accessToken");
-
-  if (!token) {
+  if (!getAccessToken()) {
     throw new Error("로그인이 필요합니다.");
   }
-
-  const response = await api.get("/api/artists/me", {
-    params: { page, size },
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
-
-  return response.data;
+  const res = await api.get("/artists/me", { params: { page, size } });
+  return res.data;
 };
 
 /**
@@ -137,10 +90,10 @@ export const getFollowedArtists = async (page = 1, size = 10) => {
  * @param size - 조회할 아티스트 수
  * @returns - 성공 시 서버로부터 받은 아티스트 목록 배열
  */
-export const getRandomArtists = async (size = 4) => {
-  const response = await api.get("/api/artists/random", {
+export const getRandomArtists = async (size = 5) => {
+  const res = await api.get("/artists/random", {
     params: { size },
+    skipAuth: true,
   });
-
-  return response.data.artistList;
+  return res.data.artistList;
 };

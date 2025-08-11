@@ -4,14 +4,19 @@ export const createStompClient = (
   accessToken: string,
   onConnectCallback?: () => void
 ): Client => {
-  const socketUrl = `ws://${window.location.host}/ws-chat?token=${accessToken}`;
+  const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+  const path = "/ws-chat";
+  let socketUrl = `${scheme}://${window.location.host}${path}`;
+
+  if (accessToken) {
+    socketUrl += `?token=${accessToken}`;
+  }
 
   const client = new Client({
     webSocketFactory: () => new WebSocket(socketUrl),
     reconnectDelay: 5000,
-    debug: (str) => console.log("[STOMP]", str),
+    debug: () => {},
     onConnect: () => {
-      console.log("STOMP 연결 성공");
       onConnectCallback?.();
     },
   });

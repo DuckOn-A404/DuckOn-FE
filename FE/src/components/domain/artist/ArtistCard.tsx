@@ -10,7 +10,7 @@ type ArtistCardProps = {
 };
 
 const PLACEHOLDER_URL =
-  "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
+  "https://placehold.co/240x240/f8f8f8/999999?text=No+Image&font=roboto";
 
 /*
   name: ArtistCard
@@ -27,10 +27,10 @@ const ArtistCard = ({
 
   return (
     <div
-      className="w-full max-w-[220px] bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1"
+      className="w-full max-w-[220px] bg-gray-100 rounded-2xl border border-gray-200 p-5 flex flex-col items-center cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-1"
       onClick={onClick}
     >
-      <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-lg mb-4">
+      <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-md mb-4 bg-white">
         <img
           src={thumbnailUrl}
           alt={nameEn}
@@ -42,7 +42,7 @@ const ArtistCard = ({
         <p className="font-bold text-lg text-gray-800 truncate" title={nameKr}>
           {nameKr}
         </p>
-        <p className="text-sm text-gray-400 truncate" title={nameEn}>
+        <p className="text-sm text-gray-500 truncate" title={nameEn}>
           {nameEn}
         </p>
       </div>

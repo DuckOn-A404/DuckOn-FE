@@ -30,10 +30,11 @@ const HomePage = () => {
   useEffect(() => {
     const fetchRandomArtists = async () => {
       try {
-        const data = await getRandomArtists(4);
+        const data = await getRandomArtists(5);
         setRecommendedArtists(data);
       } catch (error) {
-        console.error("추천 아티스트를 불러오는 데 실패했습니다. !!!", error);
+        console.error("추천 아티스트를 불러오는 데 실패했습니다.", error);
+        setRecommendedArtists([]);
       } finally {
         setIsLoadingArtists(false);
       }
@@ -85,7 +86,6 @@ const HomePage = () => {
                 {trendingError}
               </p>
             ) : trendingRooms.length > 0 ? (
-              // 데이터가 있을 때
               trendingRooms.map((room) => (
                 <VideoCard key={room.roomId} {...room} />
               ))
@@ -104,7 +104,7 @@ const HomePage = () => {
         {/* 아티스트 목록 영역 */}
         <section>
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold mb-8">주목해야 할 아티스트!</h2>
+            <h2 className="text-3xl font-bold">주목해야 할 아티스트!</h2>
             <Link
               to="/artist-list"
               className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
@@ -112,9 +112,9 @@ const HomePage = () => {
               더보기 →
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+          <div className="flex flex-wrap justify-center gap-4">
             {isLoadingArtists
-              ? Array.from({ length: 4 }).map((_, i) => (
+              ? Array.from({ length: 5 }).map((_, i) => (
                   <ArtistCardSkeleton key={i} />
                 ))
               : recommendedArtists.map((artist) => (
