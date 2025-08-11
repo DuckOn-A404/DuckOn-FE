@@ -55,13 +55,23 @@ const MyPage = () => {
   if (loading) return <div className="p-6">불러오는 중...</div>;
   if (!myUser) return <div className="p-6 text-red-500">사용자 정보 없음</div>;
 
+  const isSocial = !!myUser.socialLogin // true면 소셜, false/undefined면 일반 로그인
+
   return (
     <div className="px-8 py-6">
       {!isEditing ? (
         <MyProfileCard
           key={`mypage-${myUser.userId}`}
           user={myUser}
-          onEditClick={() => setShowModal(true)}
+          onEditClick={() => {
+            if (isSocial) {
+              // 소셜 로그인: 모달 없이 바로 편집
+              setIsEditing(true)
+            } else {
+              // 일반 로그인: 비밀번호 확인 모달
+              setShowModal(true);
+            }
+          }}
           onFollowerClick={() => setOpenList("follower")}
           onFollowingClick={() => setOpenList("following")}
         />
@@ -76,11 +86,14 @@ const MyPage = () => {
         />
       )}
 
-      <PasswordConfirm
+      {/* 일반 로그인일 때만 모달 렌더링 */}
+      {!isSocial && (
+        <PasswordConfirm
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onConfirm={handleConfirm}
-      />
+        />
+      )}
 
       {/* 팔로워/팔로잉 모달 */}
       {openList === "follower" && (
