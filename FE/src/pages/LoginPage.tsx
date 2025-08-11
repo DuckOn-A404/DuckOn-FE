@@ -1,11 +1,11 @@
-import {useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
-import {logIn} from "../api/authService";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { logIn } from "../api/authService";
 import LoginSignupCard from "../components/common/LoginSignupCard";
-import {Mail, LockKeyhole, ArrowLeft} from "lucide-react";
-import {useUserStore} from "../store/useUserStore";
-import {buildLoginCredentials} from "../utils/authUtils";
-import {fetchMyProfile} from "../api/userService";
+import { Mail, LockKeyhole, ArrowLeft } from "lucide-react";
+import { useUserStore } from "../store/useUserStore";
+import { buildLoginCredentials } from "../utils/authUtils";
+import { fetchMyProfile } from "../api/userService";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const LoginPage = () => {
 
   const setUser = useUserStore((state) => state.setMyUser);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
   const handleLogin = async () => {
     setError("");
@@ -45,9 +45,9 @@ const LoginPage = () => {
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-purple-600 to-pink-500">
       <LoginSignupCard>
         {/* 로고 & 문구 */}
-        <div className="flex flex-col items-center gap-x-2 mb-12">
+        <div className="flex flex-col items-center gap-x-2 mb-10">
           <img className="h-8" src="/logo.svg" alt="Duck On 로고" />
-          <p className="mt-4 text-sm text-gray-600 text-center">
+          <p className="text-sm text-gray-600 text-center">
             좋아하는 아티스트와 함께하는 시간
           </p>
         </div>
@@ -165,21 +165,21 @@ const LoginPage = () => {
           카카오로 계속하기
         </a>
         {/* Naver 로그인 */}
-        <a
+        {/* <a
           href={`${API_BASE_URL}/oauth2/authorization/naver`}
           className="w-full flex items-center justify-center gap-2 bg-[#03C75A] py-3 rounded-xl text-sm font-medium text-white transition-colors hover:bg-green-600"
-        >
+        > */}
           {/* Naver 로고 SVG */}
-          <svg
+          {/* <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="white"
             className="w-4 h-4"
           >
             <path d="M4 4h5.5l5 6.5V4H20v16h-5.5l-5-6.5V20H4V4z" />
-          </svg>
-          네이버로 계속하기
-        </a>
+          </svg> */}
+          {/* 네이버로 계속하기 */}
+        {/* </a> */}
         {/* 회원가입 안내 */}
         <p className="text-sm text-gray-500 text-center mt-2">
           계정이 없으신가요?{" "}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, MoreVertical, UserX } from "lucide-react";
+import { Send, MoreVertical, UserX, LockKeyhole } from "lucide-react";
 import { Popover } from "@headlessui/react";
 import { useUserStore } from "../../store/useUserStore";
 import type { ChatMessage } from "../../types/chat";
@@ -108,23 +108,42 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
 
       {/* 메시지 입력 영역 */}
       <div className="py-3 border-t border-gray-700 bg-gray-800/80">
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="메시지를 입력하세요..."
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
-          >
-            <Send size={18} className="text-white" />
-          </button>
-        </div>
+        {myUser ? (
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder="메시지를 입력하세요..."
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
+            >
+              <Send size={18} className="text-white" />
+            </button>
+          </div>
+        ) : (
+          // ======================== 로그아웃 상태일 때: 안내 메시지 표시 ========================
+          <div className="rounded-xl border border-gray-700 bg-gray-900/50 p-4 mx-2">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-800">
+                <LockKeyhole className="text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-200">
+                  로그인 후 채팅 가능
+                </p>
+                <p className="text-xs text-gray-400">
+                  로그인하고 대화에 참여하세요.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

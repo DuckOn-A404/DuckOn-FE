@@ -17,6 +17,14 @@ type SignupFormData = SignupData & {
 };
 
 /* 
+  이메일 형식을 검증하는 함수
+*/
+const isValidEmail = (email: string): boolean => {
+  const regex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  return regex.test(email);
+};
+
+/* 
   useSignupForm : 회원가입 폼, 중복확인 로직 관리 커스텀 훅
   1. 폼 상태 관리 (이메일, 아이디, 비밀번호 등 입력 값과 프로필 이미지)
   2. 각 입력 필드에 대한 중복 확인 (이메일, 아이디)
@@ -33,7 +41,7 @@ export const useSignupForm = () => {
     password: "",
     passwordConfirm: "",
     nickname: "",
-    language: "",
+    language: "ko",
     profileImg: null,
   });
 
@@ -62,24 +70,34 @@ export const useSignupForm = () => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
+    if (error) {
+      setError(null);
+    }
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // 유효성 검사
     if (name === "email") {
       setEmailError("");
+      setEmailSuccess("");
+      setEmailChecked(false);
+      if (value && !isValidEmail(value)) {
+        setEmailError("유효한 이메일 형식이 아닙니다.");
+      }
     } else if (name === "userId") {
       setUserIdError("");
+      setUserIdSuccess("");
+      setUserIdChecked(false);
     } else if (name === "passwordConfirm") {
       setPasswordConfirmError(
         value !== formData.password ? "비밀번호가 일치하지 않습니다." : ""
       );
     } else if (name === "password") {
-      // 8자리 미만이면 에러 메시지 설정, 이상이면 빈 문자열로 초기화
       if (value.length > 0 && value.length < 8) {
         setPasswordError("8자리 이상 입력해 주세요.");
       } else {
         setPasswordError("");
       }
-
       setPasswordConfirmError(
         formData.passwordConfirm && value !== formData.passwordConfirm
           ? "비밀번호가 일치하지 않습니다."
@@ -99,30 +117,47 @@ export const useSignupForm = () => {
   // 회원가입 폼 제출 핸들러
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!emailChecked) {
+      setError("이메일 중복 확인을 완료해주세요.");
+      return;
+    }
+    if (!userIdChecked) {
+      setError("아이디 중복 확인을 완료해주세요.");
+      return;
+    }
+    if (
+      !formData.email ||
+      !formData.userId ||
+      !formData.password ||
+      !formData.passwordConfirm
+    ) {
+      setError("필수 항목을 모두 입력해주세요.");
+      return;
+    }
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+    if (passwordConfirmError) {
+      setError(passwordConfirmError);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
-    if (formData.password.length < 8) {
-      setPasswordError("비밀번호는 8자리 이상이어야 합니다.");
-      setError("입력 값을 다시 확인해주세요.");
-      return;
-    }
-
-    // 비밀번호 확인 검사
-    if (formData.password !== formData.passwordConfirm) {
-      setError(passwordConfirmError);
-      setLoading(false);
-      return;
-    }
-
     try {
       const { passwordConfirm, ...rest } = formData;
-      // 🔧 FormData로 변환
+
+      if (!rest.nickname.trim()) {
+        rest.nickname = "익명의 사용자";
+      }
+
       const form = new FormData();
 
       Object.entries(rest).forEach(([key, value]) => {
         if (value === null || value === undefined) return;
-
         if (value instanceof File) {
           form.append(key, value);
         } else {
@@ -131,7 +166,6 @@ export const useSignupForm = () => {
       });
 
       await postSignup(form);
-      alert("회원가입이 완료되었습니다.");
       navigate("/login");
     } catch (err: any) {
       setError(err.response?.data?.message || "오류가 발생했습니다.");
@@ -149,6 +183,12 @@ export const useSignupForm = () => {
       setEmailError("이메일을 입력해주세요.");
       return;
     }
+
+    if (!isValidEmail(formData.email)) {
+      setEmailError("유효한 이메일 형식이 아닙니다.");
+      return;
+    }
+
     try {
       const res = await checkEmailExists(formData.email);
       setEmailChecked(true);
