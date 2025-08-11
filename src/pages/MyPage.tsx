@@ -114,7 +114,7 @@ const MyPage = () => {
                 : prev.imgUrl;
 
             const next: MyUser = {...prev, ...updated, imgUrl: nextImgUrl};
-            syncGlobal(next); // ✅ 헤더 갱신
+            syncGlobal(next); // 헤더 갱신
             return next;
           });
         } catch { }
@@ -151,7 +151,7 @@ const MyPage = () => {
           user={myUser}
           onCancel={() => setIsEditing(false)}
           onUpdate={(updatedUser) => {
-            // ✅ onUpdate 병합: undefined/""는 이전 유지, 문자열은 교체
+            // onUpdate 병합: undefined/""는 이전 유지, 문자열은 교체
             setMyUser((prev) => {
               if (!prev) {
                 syncGlobal(updatedUser as any);
@@ -164,25 +164,12 @@ const MyPage = () => {
                   : prev.imgUrl;                // 유지
 
               const next: MyUser = {...prev, ...updatedUser, imgUrl: nextImgUrl};
-              syncGlobal(next); // ✅ 헤더 즉시 반영
+              syncGlobal(next); // 헤더 즉시 반영
               return next;
             });
             setIsEditing(false);
           }}
         />
-        // <EditProfileCard
-        //   user={myUser}
-        //   onCancel={() => setIsEditing(false)}
-        //   onUpdate={(updatedUser) => {
-        //     const merged = {
-        //       ...myUser,
-        //       ...updatedUser,
-        //       imgUrl: updatedUser.imgUrl ?? myUser.imgUrl,
-        //     }
-        //     setMyUser(merged);
-        //     setIsEditing(false);
-        //   }}
-        // />
       )}
 
       {/* 일반 로그인일 때만 모달 렌더링 */}
@@ -205,7 +192,7 @@ const MyPage = () => {
       <div className="mt-10 flex flex-col items-center text-center">
         <button
           type="button"
-          onClick={handleOpenDeleteModal} // ⬅️ API 호출 없음
+          onClick={handleOpenDeleteModal} // API 호출 없음
           disabled={deleting}
           className="inline-flex items-center gap-2 rounded-xl border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition
                hover:bg-red-100 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400 disabled:opacity-60"
@@ -226,7 +213,7 @@ const MyPage = () => {
         isOpen={showDeleteModal}
         loading={deleting}
         onCancel={() => setShowDeleteModal(false)}
-        onConfirm={handleConfirmDelete} // ⬅️ 여기서 실제 API 호출
+        onConfirm={handleConfirmDelete} // 여기서 실제 API 호출
       />
 
     </div>
