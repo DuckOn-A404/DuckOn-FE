@@ -41,8 +41,6 @@ const LiveRoomPage = () => {
 
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
-
-  // const [connectionError, setConnectionError] = useState(false);
   const [roomDeletedOpen, setRoomDeletedOpen] = useState(false)
 
   // 비번 없는 방에서 참가자 자동입장 중복 방지
@@ -253,11 +251,9 @@ const LiveRoomPage = () => {
 
     presenceClient.onStompError = (frame) => {
       console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
-      // setConnectionError(true);
     };
 
     presenceClient.onWebSocketError = () => {
-      // setConnectionError(true);
     };
 
     presenceClient.activate();
@@ -266,56 +262,6 @@ const LiveRoomPage = () => {
       presenceClient.deactivate();
     };
   }, [roomId]);
-
-  // // 영상/채팅 동기화용 useEffect
-  // useEffect(() => {
-  //   if (!myUser || isQuizModalOpen) return;
-
-  //   if (isHost) {
-  //     const client = createStompClient(
-  //       localStorage.getItem("accessToken") || ""
-  //     );
-  //     client.onConnect = () => {
-  //       console.log("STOMP 연결 성공 (방장)");
-  //       setStompClient(client);
-  //     };
-  //     client.activate();
-  //     return () => {
-  //       client.deactivate();
-  //     };
-  //   }
-
-  //   const client = createStompClient(localStorage.getItem("accessToken") || "");
-
-  //   client.onConnect = () => {
-  //     console.log("STOMP 연결 성공 (참가자) ");
-  //     setStompClient(client);
-
-  //     client.subscribe(`/topic/room/${roomId}`, (message) => {
-  //       try {
-  //         const updatedData = JSON.parse(message.body);
-  //         console.log("서버로부터 방 상태 업데이트 수신:", updatedData);
-
-  //         setRoom((prevRoom: any) => ({
-  //           ...prevRoom,
-  //           ...updatedData,
-  //         }));
-  //       } catch (error) {
-  //         console.error("방 상태 업데이트 메시지 파싱 실패:", error);
-  //       }
-  //     });
-  //   };
-
-  //   client.onStompError = (frame) => {
-  //     console.error("STOMP 에러 발생:", frame);
-  //   };
-
-  //   client.activate();
-
-  //   return () => {
-  //     client.deactivate();
-  //   };
-  // }, [myUser, isQuizModalOpen, roomId, isHost]);
 
   // ================================================================================
   // 2. 영상/채팅 동기화를 위한 useEffect
@@ -464,7 +410,7 @@ const LiveRoomPage = () => {
     syncClient.onConnect = () => {
       setStompClient(syncClient);
 
-      // 👇 async 콜백 + syncClient 사용
+      // async 콜백 + syncClient 사용
       sub = syncClient.subscribe(
         `/topic/room/${roomId}`,
         async (message: IMessage) => {
@@ -483,31 +429,36 @@ const LiveRoomPage = () => {
             }
 
             switch (t) {
+              // case "HOST_CHANGED": {
+              //   setRoom((prev: any) =>
+              //     prev
+              //       ? {
+              //           ...prev,
+              //           hostId: evt.hostId ?? prev.hostId,
+              //           lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+              //         }
+              //       : prev
+              //   );
+              //   if (evt.hostId && evt.hostId === myUserId) {
+              //     console.info("방장 권한이 위임되었습니다.");
+              //   }
+              //   return;
+              // }
+
               case "HOST_CHANGED": {
                 setRoom((prev: any) =>
-                  prev
-                    ? {
-                        ...prev,
-                        hostId: evt.hostId ?? prev.hostId,
-                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                      }
-                    : prev
+                  prev ? { ...prev, hostId: evt.hostId ?? prev.hostId, lastUpdated: evt.lastUpdated ?? prev.lastUpdated } : prev
                 );
-                if (evt.hostId && evt.hostId === myUserId) {
-                  console.info("방장 권한이 위임되었습니다.");
-                }
+                if (evt.hostId === myUserId) console.info("방장 권한이 위임되었습니다.");
                 return;
               }
+
 
               case "USER_LEFT":
               case "USER_JOINED":
                 return;
 
               case "ROOM_DELETED": {
-                // try {
-                //   await syncClient.deactivate();
-                // } catch {}
-                // navigate("/");
                 setRoomDeletedOpen(true);
                 return;
               }
@@ -532,12 +483,10 @@ const LiveRoomPage = () => {
 
     syncClient.onStompError = (frame) => {
       console.error("영상/채팅 동기화 STOMP 에러:", frame);
-      // setConnectionError(true);
     };
 
-    // 👇 소켓 레벨 에러도 표시
+    // 소켓 레벨 에러도 표시
     syncClient.onWebSocketError = () => {
-      // setConnectionError(true);
     };
 
     syncClient.activate();
