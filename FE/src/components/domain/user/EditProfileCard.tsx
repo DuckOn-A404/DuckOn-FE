@@ -31,7 +31,6 @@ const EditProfileCard = ({
   const [showImageOptions, setShowImageOptions] = useState(false);
 
   const [didPickNewImage, setDidPickNewImage] = useState(false)
-  // const [didResetImage, setDidResetImage] = useState(false)
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,7 +58,6 @@ const EditProfileCard = ({
       setPreviewUrl(URL.createObjectURL(file));
       setShowImageOptions(false);
       setDidPickNewImage(true); // 새 파일 선택
-      // setDidResetImage(false);
     }
   };
 
@@ -67,7 +65,6 @@ const EditProfileCard = ({
     setPreviewUrl(DEFAULT_IMG);
     setProfileImage(null);
     setShowImageOptions(false);
-    // setDidResetImage(true)  // 기본 이미지로 변경 의도
     setDidPickNewImage(false);
   };
 
@@ -92,6 +89,8 @@ const EditProfileCard = ({
       return;
     }
 
+    const isReset = !profileImage && !!user.imgUrl && previewUrl === DEFAULT_IMG;
+
     const formData = new FormData();
     formData.append("nickname", nickname);
     formData.append("language", "ko");
@@ -105,19 +104,45 @@ const EditProfileCard = ({
 
     try {
       await updateUserProfile(formData);
-      if (didPickNewImage) {
-        const refreshed = await fetchMyProfile()
-        const next = { ...refreshed }
-        useUserStore.getState().setMyUser({ ...next, artistList: next. artistList ?? [] })
-        onUpdate(next)
-      } else {
-        const next = {
-          ...user,
-          nickname,
-        }
-        useUserStore.getState().setMyUser({ ...next, artistList: next.artistList ?? [] })
-        onUpdate(next)
-      }
+      const refreshed = didPickNewImage ? await fetchMyProfile() : null;
+
+      // next를 만들어 전역+상위에 즉시 반영
+      const next: MyUser = {
+        ...(refreshed ?? user),
+        nickname,
+        imgUrl: didPickNewImage
+          ? (refreshed?.imgUrl ?? user.imgUrl) // 업로드했으면 서버가 준 URL 사용
+          : (isReset
+              ? DEFAULT_IMG                   // 리셋이면 즉시 기본 이미지로
+              : (user.imgUrl ?? undefined)),  // 닉네임만 변경이면 기존 유지
+      };
+
+      // 전역(헤더 포함) 즉시 갱신
+      useUserStore.getState().setMyUser({
+        ...next,
+        artistList: next.artistList ?? [],
+      });
+
+      // 상위(MyPage)에도 전달
+      onUpdate(next);
+    } catch (err) {
+      alert("프로필 수정 중 오류가 발생했습니다.");
+    }
+  };
+      // if (didPickNewImage) {
+      //   const refreshed = await fetchMyProfile()
+      //   const next = { ...refreshed }
+      //   useUserStore.getState().setMyUser({ ...next, artistList: next. artistList ?? [] })
+      //   onUpdate(next)
+      // } else {
+      //   const next = {
+      //     ...user,
+      //     nickname,
+      //   }
+      //   useUserStore.getState().setMyUser({ ...next, artistList: next.artistList ?? [] })
+      //   onUpdate(next)
+      // }
+
       // const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
       // const merged: MyUser = {
       //   ...updated,
@@ -132,10 +157,10 @@ const EditProfileCard = ({
       //   artistList: merged.artistList ?? [],
       // });
       // onUpdate(merged);
-    } catch (err) {
-      alert("프로필 수정 중 오류가 발생했습니다.");
-    }
-  };
+  //   } catch (err) {
+  //     alert("프로필 수정 중 오류가 발생했습니다.");
+  //   }
+  // };
 
   const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -192,7 +217,7 @@ const EditProfileCard = ({
         <div className="flex flex-col items-center w-32 shrink-0">
           <div className="relative">
             <img
-              src={(didPickNewImage ? previewUrl : (user.imgUrl ?? DEFAULT_IMG))}
+              src={previewUrl}
               alt="프로필 이미지"
               className="w-24 h-24 rounded-full object-cover"
             />
