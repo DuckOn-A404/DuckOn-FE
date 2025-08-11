@@ -32,36 +32,26 @@ const LiveHeader = ({
         </div>
       </div>
 
-      {/* {isHost ? (
-          <div>
-            <Settings size={20} />
-          </div>
-        ) : (
-          <div>
-            <Siren size={20} color="red"/>
-          </div>
-        )} */}
-      {/* <button
-        onClick={onExit}
-        className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black"
-      >
-        나가기
-      </button> */}
       <div className="flex items-center gap-x-3">
-        {isHost && onDelete && (
+        {isHost ? (
+          onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
+            >
+              방 삭제
+            </button>
+          )
+        ) : (
           <button
-            onClick={onDelete}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
+            type="button"
+            onClick={onExit}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black"
           >
-            방 삭제
+            나가기
           </button>
         )}
-        <button
-          onClick={onExit}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black"
-        >
-          나가기
-        </button>
       </div>
     </div>
   );
