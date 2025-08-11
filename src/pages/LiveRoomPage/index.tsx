@@ -337,7 +337,7 @@ const LiveRoomPage = () => {
   //   syncClient.onConnect = () => {
   //     setStompClient(syncClient);
 
-  //     // 👇 이벤트/상태 동기화 수신 (방장/참가자 공통으로 받아도 무방)
+  //     // 이벤트/상태 동기화 수신 (방장/참가자 공통으로 받아도 무방)
   //     syncClient.subscribe(`/topic/room/${roomId}`, (message) => {
   //       try {
   //         const evt = JSON.parse(message.body);
