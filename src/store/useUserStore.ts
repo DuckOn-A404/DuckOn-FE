@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User } from '../types';
+import { emitTokenRefreshed } from '../api/axiosInstance';
 
 type UserState = {
   myUser: User | null // 내 정보
@@ -17,10 +18,16 @@ export const useUserStore = create<UserState>()(
       otherUser: null,
       setMyUser: (user) => set({ myUser: user }),
       setOtherUser: (user) => set({ otherUser: user }),
+      logout: () => {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        emitTokenRefreshed(null); // 토큰 null 브로드캐스트
+        set({ myUser: null, otherUser: null });
+      },
     }),
     {
       name: 'user-storage',
-      storage: createJSONStorage(() => localStorage),
+      // storage: createJSONStorage(() => localStorage),
     }
   )
 );
