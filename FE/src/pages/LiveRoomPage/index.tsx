@@ -5,7 +5,12 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { fetchRoomById, enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
+import {
+  fetchRoomById,
+  enterRoom,
+  exitRoom,
+  deleteRoom,
+} from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
@@ -46,7 +51,7 @@ const LiveRoomPage = () => {
     const n = parseInt(raw, 10);
     return Number.isFinite(n) && n > 0 ? n : undefined;
   };
-  
+
   const artistIdFromQuery = parseId(searchParams.get("artistId"));
   const artistIdFromRoom =
     room?.artistId && room.artistId > 0 ? room.artistId : undefined;
@@ -76,7 +81,9 @@ const LiveRoomPage = () => {
           }
         : prev
     );
-    setParticipantCount((prev) => (typeof prev === "number" ? Math.max(0, prev - 1) : prev));
+    setParticipantCount((prev) =>
+      typeof prev === "number" ? Math.max(0, prev - 1) : prev
+    );
 
     try {
       // 퇴장 api 호출
@@ -109,7 +116,9 @@ const LiveRoomPage = () => {
     } catch (e) {
       console.warn("방 삭제 중 오류:", e);
     } finally {
-      try { await stompClient?.deactivate(); } catch {}
+      try {
+        await stompClient?.deactivate();
+      } catch {}
       navigate("/");
     }
   };
@@ -306,7 +315,6 @@ const LiveRoomPage = () => {
   //   };
   // }, [myUser, isQuizModalOpen, roomId, isHost]);
 
-
   // ================================================================================
   // 2. 영상/채팅 동기화를 위한 useEffect
   // 이 코드는 로그인을 해야만 실행됩니다.
@@ -455,64 +463,69 @@ const LiveRoomPage = () => {
       setStompClient(syncClient);
 
       // 👇 async 콜백 + syncClient 사용
-      sub = syncClient.subscribe(`/topic/room/${roomId}`, async (message: IMessage) => {
-        try {
-          const evt = JSON.parse(message.body);
-          const t = evt?.eventType as string | undefined;
+      sub = syncClient.subscribe(
+        `/topic/room/${roomId}`,
+        async (message: IMessage) => {
+          try {
+            const evt = JSON.parse(message.body);
+            const t = evt?.eventType as string | undefined;
 
-          if (typeof evt?.participantCount === "number") {
-            setParticipantCount(evt.participantCount);
-          }
-
-          if (!t) {
-            const { participantCount: _omit, ...rest } = evt ?? {};
-            setRoom((prev: any) => ({ ...prev, ...rest }));
-            return;
-          }
-
-          switch (t) {
-            case "HOST_CHANGED": {
-              setRoom((prev: any) =>
-                prev
-                  ? {
-                      ...prev,
-                      hostId: evt.hostId ?? prev.hostId,
-                      lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                    }
-                  : prev
-              );
-              if (evt.hostId && evt.hostId === myUserId) {
-                console.info("방장 권한이 위임되었습니다.");
-              }
-              return;
+            if (typeof evt?.participantCount === "number") {
+              setParticipantCount(evt.participantCount);
             }
 
-            case "USER_LEFT":
-            case "USER_JOINED":
-              return;
-
-            case "ROOM_DELETED": {
-              console.info("방이 삭제되었습니다.");
-              try { await syncClient.deactivate(); } catch {}
-              navigate("/");
-              return;
-            }
-
-            case "STATE_SYNC": {
-              if (evt.room) setRoom(evt.room);
-              return;
-            }
-
-            default: {
+            if (!t) {
               const { participantCount: _omit, ...rest } = evt ?? {};
               setRoom((prev: any) => ({ ...prev, ...rest }));
               return;
             }
+
+            switch (t) {
+              case "HOST_CHANGED": {
+                setRoom((prev: any) =>
+                  prev
+                    ? {
+                        ...prev,
+                        hostId: evt.hostId ?? prev.hostId,
+                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                      }
+                    : prev
+                );
+                if (evt.hostId && evt.hostId === myUserId) {
+                  console.info("방장 권한이 위임되었습니다.");
+                }
+                return;
+              }
+
+              case "USER_LEFT":
+              case "USER_JOINED":
+                return;
+
+              case "ROOM_DELETED": {
+                console.info("방이 삭제되었습니다.");
+                try {
+                  await syncClient.deactivate();
+                } catch {}
+                navigate("/");
+                return;
+              }
+
+              case "STATE_SYNC": {
+                if (evt.room) setRoom(evt.room);
+                return;
+              }
+
+              default: {
+                const { participantCount: _omit, ...rest } = evt ?? {};
+                setRoom((prev: any) => ({ ...prev, ...rest }));
+                return;
+              }
+            }
+          } catch (error) {
+            console.error("방 상태 업데이트 메시지 파싱 실패:", error);
           }
-        } catch (error) {
-          console.error("방 상태 업데이트 메시지 파싱 실패:", error);
         }
-      });
+      );
     };
 
     syncClient.onStompError = (frame) => {
@@ -528,7 +541,9 @@ const LiveRoomPage = () => {
     syncClient.activate();
 
     return () => {
-      try { sub?.unsubscribe(); } catch {}
+      try {
+        sub?.unsubscribe();
+      } catch {}
       syncClient.deactivate();
     };
     // isHost 제거, 대신 myUserId/navigate 추가
@@ -589,7 +604,14 @@ const LiveRoomPage = () => {
   }, [roomId, myUser?.userId]);
 
   // if (!room || !stompClient?.connected || !myUser) {
-  if (!room || !myUser) {
+  // 로그인 안되어있으면 못들어가게..
+  if (!myUser) {
+    return (
+      <ConnectionErrorModal isOpen={true} onClose={() => navigate("/login")} />
+    );
+  }
+
+  if (!room) {
     return (
       <>
         {isQuizModalOpen && entryQuestion && (
