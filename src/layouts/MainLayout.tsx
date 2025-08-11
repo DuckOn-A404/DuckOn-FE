@@ -3,7 +3,7 @@ import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import {Outlet, useNavigate} from "react-router-dom";
 import {useUserStore} from "../store/useUserStore";
-import {logoutUser} from "../api/userService";
+import {logoutUser} from "../api/authService";
 
 const MainLayout = () => {
   const navigate = useNavigate();
