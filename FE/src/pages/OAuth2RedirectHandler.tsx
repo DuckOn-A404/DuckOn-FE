@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useUserStore } from "../store/useUserStore";
 import { api } from "../api/axiosInstance";
 import { getMyProfileAfterOAuth } from "../api/authService";
+import { emitTokenRefreshed } from "../api/axiosInstance";
 
 /**
  * 소셜 로그인 성공 후, 백엔드로부터 리다이렉트되는 페이지입니다.
@@ -28,12 +29,19 @@ const OAuth2RedirectHandler = () => {
         localStorage.setItem("accessToken", accessToken);
         localStorage.setItem("refreshToken", refreshToken);
 
-        api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+        emitTokenRefreshed(accessToken)
 
         const userData = await getMyProfileAfterOAuth();
         setMyUser(userData);
 
         navigate("/");
+
+        // api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+        // const userData = await getMyProfileAfterOAuth();
+        // setMyUser(userData);
+
+        // navigate("/");
       } catch {
         navigate("/login");
       }
