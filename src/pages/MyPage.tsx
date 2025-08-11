@@ -80,7 +80,12 @@ const MyPage = () => {
           user={myUser}
           onCancel={() => setIsEditing(false)}
           onUpdate={(updatedUser) => {
-            setMyUser(updatedUser);
+            const merged = {
+              ...myUser,
+              ...updatedUser,
+              imgUrl: updatedUser.imgUrl ?? myUser.imgUrl,
+            }
+            setMyUser(merged);
             setIsEditing(false);
           }}
         />
