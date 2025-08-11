@@ -1,7 +1,7 @@
 import Header from "../components/common/Header";
 import {Outlet, useNavigate} from "react-router-dom";
 import {useUserStore} from "../store/useUserStore";
-import {logoutUser} from "../api/userService";
+import {logoutUser} from "../api/authService";
 
 /**
  * 푸터(Footer)가 없는 페이지를 위한 레이아웃 컴포넌트입니다.
