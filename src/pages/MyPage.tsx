@@ -6,6 +6,9 @@ import EditProfileCard from "../components/domain/user/EditProfileCard";
 import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
+
+const isEmptyImg = (v: unknown): boolean =>
+  v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 import {useUserStore} from "../store/useUserStore";
 import {useNavigate} from "react-router-dom";
 import DeleteAccountModal from "../components/common/modal/DeleteAccountModal";
@@ -19,6 +22,14 @@ const MyPage = () => {
   const [openList, setOpenList] = useState<"follower" | "following" | null>(
     null
   );
+
+  const syncGlobal = (u: MyUser) => {
+    useUserStore.getState().setMyUser({
+      ...(u as any),
+      // 프로젝트 타입 차이를 피하려고 artistList 기본값 보정
+      artistList: (u as any).artistList ?? [],
+    } as any);
+  };
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -65,6 +76,7 @@ const MyPage = () => {
       try {
         const data = await fetchMyProfile();
         setMyUser(data);
+        syncGlobal(data)
       } finally {
         setLoading(false);
       }
@@ -73,12 +85,38 @@ const MyPage = () => {
     loadUser();
   }, []);
 
+  // useEffect(() => {
+  //   if (openList === null) {
+  //     const reloadProfile = async () => {
+  //       try {
+  //         const updated = await fetchMyProfile();
+  //         setMyUser(updated);
+  //       } catch {}
+  //     };
+  //     reloadProfile();
+  //   }
+  // }, [openList]);
+
   useEffect(() => {
     if (openList === null) {
       const reloadProfile = async () => {
         try {
           const updated = await fetchMyProfile();
-          setMyUser(updated);
+          setMyUser((prev) => {
+            if (!prev) {
+              syncGlobal(updated);
+              return updated;
+            }
+            // imgUrl 병합: undefined/""면 이전 유지, 문자열이면 교체
+            const nextImgUrl =
+              !isEmptyImg((updated as any).imgUrl)
+                ? (updated as any).imgUrl
+                : prev.imgUrl;
+
+            const next: MyUser = {...prev, ...updated, imgUrl: nextImgUrl};
+            syncGlobal(next); // ✅ 헤더 갱신
+            return next;
+          });
         } catch { }
       };
       reloadProfile();
@@ -113,15 +151,38 @@ const MyPage = () => {
           user={myUser}
           onCancel={() => setIsEditing(false)}
           onUpdate={(updatedUser) => {
-            const merged = {
-              ...myUser,
-              ...updatedUser,
-              imgUrl: updatedUser.imgUrl ?? myUser.imgUrl,
-            }
-            setMyUser(merged);
+            // ✅ onUpdate 병합: undefined/""는 이전 유지, 문자열은 교체
+            setMyUser((prev) => {
+              if (!prev) {
+                syncGlobal(updatedUser as any);
+                return updatedUser;
+              }
+              const nextImgUrl =
+                (updatedUser as any).imgUrl !== undefined &&
+                  !isEmptyImg((updatedUser as any).imgUrl)
+                  ? (updatedUser as any).imgUrl // 문자열(새 URL 또는 DEFAULT_IMG)
+                  : prev.imgUrl;                // 유지
+
+              const next: MyUser = {...prev, ...updatedUser, imgUrl: nextImgUrl};
+              syncGlobal(next); // ✅ 헤더 즉시 반영
+              return next;
+            });
             setIsEditing(false);
           }}
         />
+        // <EditProfileCard
+        //   user={myUser}
+        //   onCancel={() => setIsEditing(false)}
+        //   onUpdate={(updatedUser) => {
+        //     const merged = {
+        //       ...myUser,
+        //       ...updatedUser,
+        //       imgUrl: updatedUser.imgUrl ?? myUser.imgUrl,
+        //     }
+        //     setMyUser(merged);
+        //     setIsEditing(false);
+        //   }}
+        // />
       )}
 
       {/* 일반 로그인일 때만 모달 렌더링 */}
