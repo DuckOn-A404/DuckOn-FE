@@ -12,6 +12,7 @@ import LayoutWithoutFooter from "./layouts/LayoutWithoutFooter";
 import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ScrollToTop from "./components/common/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
+import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
 
 function App() {
   return (
@@ -41,6 +42,8 @@ function App() {
           {/* 404 페이지 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+
+        <SmallScreenBlocker />
       </BrowserRouter>
     </>
   );
