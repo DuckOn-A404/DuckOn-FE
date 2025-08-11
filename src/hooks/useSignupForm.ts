@@ -17,6 +17,15 @@ type SignupFormData = SignupData & {
 };
 
 /* 
+  이메일 형식을 검증하는 함수
+*/
+const isValidEmail = (email: string): boolean => {
+  const regex =
+    /^[a-zA-Z0-9_.+-]+@(gmail.com|naver.com|kakao.com|daum.net|yahoo.com)$/;
+  return regex.test(email);
+};
+
+/* 
   useSignupForm : 회원가입 폼, 중복확인 로직 관리 커스텀 훅
   1. 폼 상태 관리 (이메일, 아이디, 비밀번호 등 입력 값과 프로필 이미지)
   2. 각 입력 필드에 대한 중복 확인 (이메일, 아이디)
@@ -73,6 +82,9 @@ export const useSignupForm = () => {
       setEmailError("");
       setEmailSuccess("");
       setEmailChecked(false);
+      if (value && !isValidEmail(value)) {
+        setEmailError("유효한 이메일 형식이 아닙니다.");
+      }
     } else if (name === "userId") {
       setUserIdError("");
       setUserIdSuccess("");
@@ -108,6 +120,15 @@ export const useSignupForm = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!isValidEmail(formData.email)) {
+      setEmailError(
+        "다음 도메인만 사용 가능합니다: gmail, naver, kakao, daum, yahoo"
+      );
+      setError("입력 값을 다시 확인해주세요.");
+      setLoading(false);
+      return;
+    }
 
     if (formData.password.length < 8) {
       setPasswordError("비밀번호는 8자리 이상이어야 합니다.");
@@ -156,6 +177,12 @@ export const useSignupForm = () => {
       setEmailError("이메일을 입력해주세요.");
       return;
     }
+
+    if (!isValidEmail(formData.email)) {
+      setEmailError("유효한 이메일 형식이 아닙니다.");
+      return;
+    }
+
     try {
       const res = await checkEmailExists(formData.email);
       setEmailChecked(true);
