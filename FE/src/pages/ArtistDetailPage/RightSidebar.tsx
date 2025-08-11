@@ -72,7 +72,7 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
               scrollContainerRef={scrollContainerRef}
             />
           ) : (
-            <RecommendTab />
+            <RecommendTab artistId={artistId} />
           )}
         </div>
 
