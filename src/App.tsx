@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -13,11 +13,23 @@ import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ScrollToTop from "./components/common/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
 import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
+import {useEffect} from "react";
+import {sendPageView} from "./analytics";
+
+function RouteChangeTracker() {
+  const loc = useLocation();
+  useEffect(() => {
+    sendPageView(loc.pathname + loc.search);
+  }, [loc.pathname, loc.search]);
+  return null; // UI 없음
+}
+
 
 function App() {
   return (
     <>
       <BrowserRouter>
+        <RouteChangeTracker />
         <ScrollToTop />
         <Routes>
           {/* 공통 레이아웃이 적용되는 페이지들 */}
