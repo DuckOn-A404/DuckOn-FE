@@ -118,7 +118,7 @@ export const getRecommendedUsers = async (
         size,
         includeReasons,
       },
-      //   skipAuth: true,
+      skipAuth: true,
     }
   );
 
