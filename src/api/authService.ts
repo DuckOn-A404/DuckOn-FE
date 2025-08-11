@@ -1,5 +1,5 @@
 // 인증 관련 API 함수들
-import {api, buildRefreshHeaders} from "./axiosInstance";
+import {api} from "./axiosInstance";
 
 type ApiMessage = {message: string};
 
