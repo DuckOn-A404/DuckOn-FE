@@ -1,4 +1,4 @@
-import {api, buildRefreshHeaders, getRefreshToken} from "./axiosInstance";
+import {api, getRefreshToken} from "./axiosInstance";
 import {type MyUser} from "../types/mypage";
 
 type BlockedUser = {
