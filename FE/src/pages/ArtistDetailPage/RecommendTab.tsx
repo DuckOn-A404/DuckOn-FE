@@ -119,7 +119,7 @@ const RecommendTab = ({ artistId }: { artistId: number }) => {
       <div className="flex-1 overflow-y-auto">
         {users.map((user: RecommendedUser) => (
           <Link key={user.userId} to={`/user/${user.userId}`} className="block">
-            <div className="flex items-center justify-between p-2 hover:bg-gray-50 border-b">
+            <div className="flex items-center justify-between p-2 hover:bg-gray-50">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <img
                   src={user.imgUrl || "/default_image.png"}
