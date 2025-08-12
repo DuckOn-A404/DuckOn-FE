@@ -6,7 +6,6 @@ import {
 } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import {
-  fetchRoomById,
   enterRoom,
   exitRoom,
   deleteRoom,
@@ -50,7 +49,7 @@ const LiveRoomPage = () => {
   const syncRef = useRef<Client | null>(null)
   const lastTokenRef = useRef<string | null>(null);
   // 비번 없는 방에서 참가자 자동입장 중복 방지
-  const autoEnterTriedRef = useRef(false);
+  // const autoEnterTriedRef = useRef(false);
 
   const parseId = (raw: string | null) => {
     if (!raw) return undefined;
@@ -114,7 +113,6 @@ const LiveRoomPage = () => {
       setIsDeleteOpen(false)
       return
     }
-
     try {
       await deleteRoom(Number(roomId), resolvedArtistId)
     } catch (e) {
@@ -126,24 +124,42 @@ const LiveRoomPage = () => {
     }
   }
 
+  // const handleSubmitAnswer = async (answer: string) => {
+  //   try {
+  //     await enterRoom(roomId!, answer);
+  //     const roomData = await fetchRoomById(roomId!);
+  //     setRoom(roomData);
+  //     setIsQuizModalOpen(false); // 성공 시 모달 닫기
+  //   } catch (error: any) {
+  //     const status = error.response?.status;
+
+  //     if (status === 401) {
+  //       const serverMessage = error.response?.data?.message || "";
+
+  //       if (serverMessage.includes("정답")) {
+  //         // 정답이 틀렸을 경우 => EntryQuizModal.tsx에서 "wrong_answer"로 처리
+  //         throw new Error("wrong_answer");
+  //       }
+
+  //       // 그 외의 인증 오류는 로그인 필요
+  //       alert("로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.");
+  //       navigate("/login");
+  //       return;
+  //     }
+  //     throw error;
+  //   }
+  // };
+
   const handleSubmitAnswer = async (answer: string) => {
     try {
-      await enterRoom(roomId!, answer);
-      const roomData = await fetchRoomById(roomId!);
-      setRoom(roomData);
-      setIsQuizModalOpen(false); // 성공 시 모달 닫기
+      const data = await enterRoom(roomId!, answer);
+      setRoom(data);
+      setIsQuizModalOpen(false);
     } catch (error: any) {
       const status = error.response?.status;
-
       if (status === 401) {
-        const serverMessage = error.response?.data?.message || "";
-
-        if (serverMessage.includes("정답")) {
-          // 정답이 틀렸을 경우 => EntryQuizModal.tsx에서 "wrong_answer"로 처리
-          throw new Error("wrong_answer");
-        }
-
-        // 그 외의 인증 오류는 로그인 필요
+        const msg = error.response?.data?.message || "";
+        if (msg.includes("정답")) throw new Error("wrong_answer");
         alert("로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.");
         navigate("/login");
         return;
@@ -234,8 +250,8 @@ const LiveRoomPage = () => {
   useEffect(() => {
     if (!roomId) return;
 
-    const token = localStorage.getItem("accessToken");
-    const presenceClient = createStompClient(token || "");
+    const token = localStorage.getItem("accessToken") || "";
+    const presenceClient = createStompClient(token);
     presenceRef.current = presenceClient; // ref에 보관
 
     presenceClient.onConnect = () => {
@@ -252,20 +268,23 @@ const LiveRoomPage = () => {
       );
     };
 
-    presenceClient.onStompError = (frame) => {
-      console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
-    };
-
-    presenceClient.onWebSocketError = () => {
-    };
-
     presenceClient.activate();
-
-    return () => {
-      try { presenceClient.deactivate(); } catch {}
-      presenceRef.current = null
-    };
+    return () => { try { presenceClient.deactivate(); } catch {}; presenceRef.current = null; };
   }, [roomId]);
+  //   presenceClient.onStompError = (frame) => {
+  //     console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
+  //   };
+
+  //   presenceClient.onWebSocketError = () => {
+  //   };
+
+  //   presenceClient.activate();
+
+  //   return () => {
+  //     try { presenceClient.deactivate(); } catch {}
+  //     presenceRef.current = null
+  //   };
+  // }, [roomId]);
 
   // ================================================================================
   // 2. 영상/채팅 동기화를 위한 useEffect
@@ -321,27 +340,27 @@ const LiveRoomPage = () => {
               //   return;
               // }
 
-              case "HOST_CHANGED": {
+              case "HOST_CHANGED": 
                 setRoom((prev: any) =>
                   prev ? { ...prev, hostId: evt.hostId ?? prev.hostId, lastUpdated: evt.lastUpdated ?? prev.lastUpdated } : prev
                 );
                 if (evt.hostId === myUserId) console.info("방장 권한이 위임되었습니다.");
                 return;
-              }
+              
 
               case "USER_LEFT":
               case "USER_JOINED":
                 return;
 
-              case "ROOM_DELETED": {
+              case "ROOM_DELETED": 
                 setRoomDeletedOpen(true);
                 return;
-              }
+              
 
-              case "STATE_SYNC": {
+              case "STATE_SYNC": 
                 if (evt.room) setRoom(evt.room);
                 return;
-              }
+              
 
               default: {
                 const { participantCount: _omit, ...rest } = evt ?? {};
@@ -356,12 +375,12 @@ const LiveRoomPage = () => {
       );
     };
 
-    syncClient.onStompError = (frame) => {
-      console.error("영상/채팅 동기화 STOMP 에러:", frame);
-    };
+    // syncClient.onStompError = (frame) => {
+    //   console.error("영상/채팅 동기화 STOMP 에러:", frame);
+    // };
 
-    // 소켓 레벨 에러도 표시
-    syncClient.onWebSocketError = () => {};
+    // // 소켓 레벨 에러도 표시
+    // syncClient.onWebSocketError = () => {};
 
     syncClient.activate();
 
@@ -378,62 +397,85 @@ const LiveRoomPage = () => {
   }, [myUser, myUserId, isQuizModalOpen, roomId, navigate]);
 
   // 방 정보 로딩, 비잠금 자동 입장 처리
+  // useEffect(() => {
+  //   let isMounted = true;
+
+  //   const loadRoom = async () => {
+  //     try {
+  //       if (!roomId || !myUser) return;
+
+  //       const roomData = await fetchRoomById(roomId);
+  //       if (!isMounted) return;
+
+  //       const isHostView = roomData.hostId === myUser?.userId;
+  //       const hasQuiz = Boolean(roomData.entryQuestion);
+
+  //       // 1. 방장
+  //       if (isHostView) {
+  //         setRoom(roomData);
+  //         return;
+  //       }
+
+  //       // 2. 참가자, 비번 존재. 모달 오픈, 정답 제출 시 enterRoom 호출
+  //       if (hasQuiz) {
+  //         setEntryQuestion(roomData.entryQuestion);
+  //         setIsQuizModalOpen(true);
+  //         return;
+  //       }
+
+  //       // 3. 참가자, 비번 존재x 최초 진입 시 자동으로 enterRoom 1회 호출
+  //       if (!autoEnterTriedRef.current) {
+  //         autoEnterTriedRef.current = true;
+  //         try {
+  //           await enterRoom(roomId, ""); // 빈 문자열로 자동 입장
+  //         } catch (err: any) {
+  //           const status = err?.response?.status;
+  //           if (status === 409) {
+  //           } else if (status === 401 && err?.response?.data?.entryQuestion) {
+  //             setEntryQuestion(err.response.data.entryQuestion);
+  //             setIsQuizModalOpen(true);
+  //             return;
+  //           } else {
+  //             console.warn("입장 실패", err);
+  //           }
+  //         } finally {
+  //           const fresh = await fetchRoomById(roomId);
+  //           if (!isMounted) return;
+  //           setRoom(fresh);
+  //         }
+  //         return;
+  //       }
+
+  //       setRoom(roomData);
+  //     } catch (error) {
+  //       if (isMounted) console.error("방 정보 불러오기 실패:", error);
+  //     }
+  //   };
+  //   loadRoom();
+  // }, [roomId, myUser]);
+
   useEffect(() => {
     let isMounted = true;
-
     const loadRoom = async () => {
       try {
-        if (!roomId || !myUser) return;
-
-        const roomData = await fetchRoomById(roomId);
+        if (!roomId) return;
+        const data = await enterRoom(roomId, ""); // 항상 JSON 바디 {entryAnswer:""} 전송
         if (!isMounted) return;
-
-        const isHostView = roomData.hostId === myUser?.userId;
-        const hasQuiz = Boolean(roomData.entryQuestion);
-
-        // 1. 방장
-        if (isHostView) {
-          setRoom(roomData);
-          return;
-        }
-
-        // 2. 참가자, 비번 존재. 모달 오픈, 정답 제출 시 enterRoom 호출
-        if (hasQuiz) {
-          setEntryQuestion(roomData.entryQuestion);
+        setRoom(data); // 성공이면 비잠금. 방장/참가자 여부는 data.hostId === myUser?.userId 로 판단
+      } catch (err: any) {
+        const status = err?.response?.status;
+        if (status === 401 && err?.response?.data?.entryQuestion) {
+          setEntryQuestion(err.response.data.entryQuestion);
           setIsQuizModalOpen(true);
           return;
         }
-
-        // 3. 참가자, 비번 존재x 최초 진입 시 자동으로 enterRoom 1회 호출
-        if (!autoEnterTriedRef.current) {
-          autoEnterTriedRef.current = true;
-          try {
-            await enterRoom(roomId, ""); // 빈 문자열로 자동 입장
-          } catch (err: any) {
-            const status = err?.response?.status;
-            if (status === 409) {
-            } else if (status === 401 && err?.response?.data?.entryQuestion) {
-              setEntryQuestion(err.response.data.entryQuestion);
-              setIsQuizModalOpen(true);
-              return;
-            } else {
-              console.warn("입장 실패", err);
-            }
-          } finally {
-            const fresh = await fetchRoomById(roomId);
-            if (!isMounted) return;
-            setRoom(fresh);
-          }
-          return;
-        }
-
-        setRoom(roomData);
-      } catch (error) {
-        if (isMounted) console.error("방 정보 불러오기 실패:", error);
+        console.error("방 정보 불러오기 실패:", err);
       }
     };
     loadRoom();
-  }, [roomId, myUser]);
+    return () => { isMounted = false; };
+  }, [roomId]);
+
 
   // ================================================================================
   // 4) 액세스 토큰 갱신 이벤트 → 모든 STOMP 재연결
@@ -489,14 +531,13 @@ const LiveRoomPage = () => {
         setStompClient(s);
 
         s.onConnect = () => {
-          s.subscribe(`/topic/room/${roomId}`, async (message: IMessage) => {
+          s.subscribe(`/topic/room/${roomId}`, (message: IMessage) => {
             try {
               const evt = JSON.parse(message.body);
               const t = evt?.eventType as string | undefined;
 
-              if (typeof evt?.participantCount === "number") {
+              if (typeof evt?.participantCount === "number") 
                 setParticipantCount(evt.participantCount);
-              }
 
               if (!t) {
                 const { participantCount: _omit, ...rest } = evt ?? {};
