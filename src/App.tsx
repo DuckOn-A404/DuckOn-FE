@@ -1,4 +1,4 @@
-import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -13,8 +13,9 @@ import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ScrollToTop from "./components/common/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
 import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
-import {useEffect} from "react";
-import {sendPageView} from "./analytics";
+// import RoomListPage from "./pages/RoomListPage";
+import { useEffect } from "react";
+import { sendPageView } from "./analytics";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -23,7 +24,6 @@ function RouteChangeTracker() {
   }, [loc.pathname, loc.search]);
   return null; // UI 없음
 }
-
 
 function App() {
   return (
@@ -42,6 +42,7 @@ function App() {
 
           {/* 푸터가 없는 페이지들 */}
           <Route element={<LayoutWithoutFooter />}>
+            {/* <Route path="/room-list" element={<RoomListPage />}></Route> */}
             <Route path="/artist-list" element={<ArtistListPage />} />
           </Route>
 
