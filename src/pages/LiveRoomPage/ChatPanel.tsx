@@ -54,11 +54,9 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
                 isMyMessage ? "items-end" : "items-start"
               }`}
             >
-              {msg.senderId !== myUser?.userId && (
-                <span className="text-xs text-gray-500 mb-1">
-                  {msg.senderNickName}
-                </span>
-              )}
+              <span className="text-xs text-gray-500 mb-1">
+                {msg.senderNickName}
+              </span>
 
               <div
                 className={`flex items-end gap-2 max-w-[85%] ${

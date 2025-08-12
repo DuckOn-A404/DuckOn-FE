@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Wrench, LoaderCircle, AlertTriangle } from "lucide-react";
 import { getRecommendedUsers } from "../../api/userService";
-import { followUser } from "../../api/follow/followService";
+import { followUser, unfollowUser } from "../../api/follow/followService";
 import { type RecommendedUser } from "../../types";
 
 const RecommendTab = ({ artistId }: { artistId: number }) => {
@@ -33,26 +33,46 @@ const RecommendTab = ({ artistId }: { artistId: number }) => {
   }, [artistId]);
 
   // 팔로우 버튼
-  const handleFollow = async (e: React.MouseEvent, userIdToFollow: string) => {
+  const handleToggleFollow = async (
+    e: React.MouseEvent,
+    userIdToFollow: string
+  ) => {
     e.preventDefault();
     e.stopPropagation();
 
     const targetUser = users?.find((u) => u.userId === userIdToFollow);
-    if (!users || !targetUser || targetUser.following) {
+    if (!users || !targetUser) {
       return;
     }
 
     try {
-      await followUser(userIdToFollow);
-
-      setUsers((currentUsers) => {
-        if (!currentUsers) return null;
-        return currentUsers.map((user) =>
-          user.userId === userIdToFollow ? { ...user, following: true } : user
+      if (targetUser.following) {
+        // [언팔로우 로직]
+        await unfollowUser(userIdToFollow);
+        setUsers((currentUsers) =>
+          currentUsers
+            ? currentUsers.map((user) =>
+                user.userId === userIdToFollow
+                  ? { ...user, following: false }
+                  : user
+              )
+            : null
         );
-      });
+      } else {
+        // [팔로우 로직]
+        await followUser(userIdToFollow);
+        setUsers((currentUsers) =>
+          currentUsers
+            ? currentUsers.map((user) =>
+                user.userId === userIdToFollow
+                  ? { ...user, following: true }
+                  : user
+              )
+            : null
+        );
+      }
     } catch (err) {
-      console.error("팔로우 요청에 실패했습니다.", err);
+      console.error("팔로우/언팔로우 요청에 실패했습니다.", err);
     }
   };
 
@@ -96,25 +116,19 @@ const RecommendTab = ({ artistId }: { artistId: number }) => {
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="p-4 border-b">
-        <h3 className="font-semibold text-gray-700">
-          나와 비슷한 취향의 팬 🎸
-        </h3>
-        <p className="text-sm text-gray-500 mt-1">이런 팬들은 어떠세요?</p>
-      </div>
       <div className="flex-1 overflow-y-auto">
         {users.map((user: RecommendedUser) => (
           <Link key={user.userId} to={`/user/${user.userId}`} className="block">
-            <div className="flex items-center justify-between p-3 hover:bg-gray-50">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between p-2 hover:bg-gray-50">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
                 <img
                   src={user.imgUrl || "/default_image.png"}
                   alt={`${user.nickname}의 프로필`}
-                  className="w-12 h-12 rounded-full object-cover"
+                  className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                 />
-                <div className="flex flex-col">
+                <div className="flex-1 min-w-0">
                   <span
-                    className="font-medium text-gray-800"
+                    className="font-medium text-gray-800 block truncate"
                     title={user.nickname}
                   >
                     {user.nickname}
@@ -122,11 +136,10 @@ const RecommendTab = ({ artistId }: { artistId: number }) => {
                 </div>
               </div>
               <button
-                onClick={(e) => handleFollow(e, user.userId)}
-                disabled={user.following}
-                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+                onClick={(e) => handleToggleFollow(e, user.userId)}
+                className={`w-20 flex-shrink-0 px-2 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                   user.following
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    ? "bg-gray-200 text-gray-500 hover:bg-gray-300"
                     : "bg-purple-500 text-white hover:bg-purple-600"
                 }`}
               >
