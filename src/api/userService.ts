@@ -102,8 +102,8 @@ export const deleteMyAccount = async (
 
 /**
  * 특정 아티스트 기반으로 비슷한 취향의 유저를 추천받는 API 함수
- * @param artistId - 현재 보고 있는 아티스트의 ID
- * @returns 추천 유저 목록 (Promise)
+ * - 로그인 상태면 Authorization 헤더 자동 첨부
+ * - 비로그인 상태면 헤더 없이 공개 호출
  */
 export const getRecommendedUsers = async (
   artistId?: number,
@@ -113,14 +113,8 @@ export const getRecommendedUsers = async (
   const response = await api.get<{ users: RecommendedUser[] }>(
     "/users/recommendations",
     {
-      params: {
-        artistId,
-        size,
-        includeReasons,
-      },
-      skipAuth: true,
+      params: { artistId, size, includeReasons },
     }
   );
-
-  return response.data.users;
+  return response.data.users ?? [];
 };
