@@ -549,29 +549,64 @@ const LiveRoomPage = () => {
     };
   }, [roomId, myUser, isQuizModalOpen, myUserId]);
 
-  // 페이지 이탈했을 때 자동 정리 로직
+  // // 페이지 이탈했을 때 자동 정리 로직
+  // useEffect(() => {
+  //   return () => {
+  //     // 아직 입장 전이거나, 이미 나가는 중이면 아무 것도 안 함
+  //     if (!joinedRef.current || leavingRef.current) return;
+
+  //     leavingRef.current = true;
+  //     if (isHostRef.current) {
+  //       void performDelete();
+  //     } else {
+  //       void performExit();
+  //     }
+  //   };
+  // }, []);
+
+  // // 브라우저 차원에서 방을 나갔을 경우 처리 로직
+  // useEffect(() => {
+  //   if (!roomId || !resolvedArtistId) return;
+
+  //   const onPageHide = () => {
+  //     if (!joinedRef.current || leavingRef.current) return;
+
+  //     leavingRef.current = true;
+  //     if (isHostRef.current) {
+  //       fireAndForget(
+  //         `/rooms/${roomId}?artistId=${resolvedArtistId}`,
+  //         "DELETE"
+  //       );
+  //     } else {
+  //       fireAndForget(
+  //         `/rooms/${roomId}/exit?artistId=${resolvedArtistId}`,
+  //         "POST"
+  //       );
+  //     }
+  //   };
+
+  //   window.addEventListener("pagehide", onPageHide);
+  //   window.addEventListener("beforeunload", onPageHide);
+
+  //   return () => {
+  //     window.removeEventListener("pagehide", onPageHide);
+  //     window.removeEventListener("beforeunload", onPageHide);
+  //   };
+  // }, [roomId, resolvedArtistId]);
+
+  // 1. 페이지 이탈/언마운트 시 실행될 정리 로직을 하나로 통합합니다.
   useEffect(() => {
-    return () => {
-      // 아직 입장 전이거나, 이미 나가는 중이면 아무 것도 안 함
-      if (!joinedRef.current || leavingRef.current) return;
+    // 아직 방에 입장하지 않았거나, 필수 ID가 없으면 아무것도 등록하지 않음
+    if (!joinedRef.current || !roomId || !resolvedArtistId) {
+      return;
+    }
 
+    const cleanup = () => {
+      // 중복 실행 방지
+      if (leavingRef.current) return;
       leavingRef.current = true;
-      if (isHostRef.current) {
-        void performDelete();
-      } else {
-        void performExit();
-      }
-    };
-  }, []);
 
-  // 브라우저 차원에서 방을 나갔을 경우 처리 로직
-  useEffect(() => {
-    if (!roomId || !resolvedArtistId) return;
-
-    const onPageHide = () => {
-      if (!joinedRef.current || leavingRef.current) return;
-
-      leavingRef.current = true;
+      // state 대신 ref를 사용하여 가장 최신 isHost 값을 기준으로 판단
       if (isHostRef.current) {
         fireAndForget(
           `/rooms/${roomId}?artistId=${resolvedArtistId}`,
@@ -585,12 +620,13 @@ const LiveRoomPage = () => {
       }
     };
 
-    window.addEventListener("pagehide", onPageHide);
-    window.addEventListener("beforeunload", onPageHide);
+    // 브라우저 탭/창 닫기 등
+    window.addEventListener("pagehide", cleanup);
 
+    // 컴포넌트 언마운트 시 (뒤로가기, 다른 페이지로 이동 등)
     return () => {
-      window.removeEventListener("pagehide", onPageHide);
-      window.removeEventListener("beforeunload", onPageHide);
+      window.removeEventListener("pagehide", cleanup);
+      cleanup();
     };
   }, [roomId, resolvedArtistId]);
 
