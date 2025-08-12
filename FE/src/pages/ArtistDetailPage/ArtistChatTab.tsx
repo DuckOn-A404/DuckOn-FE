@@ -28,18 +28,13 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
       try {
         await blockUser(userId);
         alert(`${userNickname}님을 차단했습니다.`);
-      } catch (error) {
+      } catch {
         alert("차단 요청에 실패했습니다. 다시 시도해주세요.");
-        console.error("차단 API 호출 실패:", error);
       }
     }
   };
 
   if (!Array.isArray(messages)) {
-    console.error(
-      "ArtistChatTab이 배열이 아닌 messages prop을 받았습니다:",
-      messages
-    );
     return (
       <div className="p-4 text-sm text-gray-500">채팅을 불러오는 중...</div>
     );
@@ -67,17 +62,16 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
               msg.userId === myUser?.userId ? "items-end" : "items-start"
             }`}
           >
-            {msg.userId !== myUser?.userId && (
-              <span className="text-sm font-semibold text-gray-700 mb-1">
-                {msg.userNickname}
-              </span>
-            )}
+            <span className="text-sm font-semibold text-gray-700 mb-1">
+              {msg.userNickname}
+            </span>
+
             <div className="flex items-end gap-2">
               {msg.userId === myUser?.userId ? (
                 // 내가 보낸 메시지: 시간이 왼쪽
                 <>
                   <span className="text-xs text-gray-400 self-end">
-                    {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
+                    {new Date(msg.sentAt).toLocaleTimeString(undefined, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -119,7 +113,7 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
                     </Popover>
                   </div>
                   <span className="text-xs text-gray-400 self-end">
-                    {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
+                    {new Date(msg.sentAt).toLocaleTimeString(undefined, {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

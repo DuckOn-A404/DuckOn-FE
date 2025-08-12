@@ -1,23 +1,23 @@
-import { useState } from "react";
-import {
-  Send,
-  MoreVertical,
-  ShieldAlert,
-  UserX,
-  Wifi,
-  WifiOff,
-} from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Send, MoreVertical, UserX, LockKeyhole } from "lucide-react";
 import { Popover } from "@headlessui/react";
-import { useChat } from "../../hooks/useChat";
 import { useUserStore } from "../../store/useUserStore";
+import type { ChatMessage } from "../../types/chat";
 
-const ChatPanel = ({ roomId }: { roomId: string }) => {
-  const { messages, isConnected, sendMessage } = useChat(roomId);
+type ChatPanelProps = {
+  messages: ChatMessage[];
+  sendMessage: (content: string) => void;
+};
+
+const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const handleReport = (senderId: string) =>
-    alert(`${senderId}님을 신고합니다.`);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleBlock = (senderId: string) =>
     alert(`${senderId}님을 차단합니다.`);
 
@@ -29,116 +29,119 @@ const ChatPanel = ({ roomId }: { roomId: string }) => {
   };
 
   return (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full bg-gray-800 text-white">
       {/* 메시지 목록 영역 */}
-      <div className="flex-1 space-y-4 overflow-y-auto">
-        {messages.map((msg) => (
-          <div
-            key={msg.messageId}
-            className={`flex flex-col ${
-              msg.senderId === myUser?.userId ? "items-end" : "items-start"
-            }`}
-          >
-            {msg.senderId !== myUser?.userId && (
-              <span className="text-xs text-gray-400 mb-1">
-                {msg.senderName}
-              </span>
-            )}
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        {messages.map((msg, index) => {
+          if (msg.chatType === "ENTER") {
+            return (
+              <div
+                key={`system-${index}`}
+                className="text-center text-xs text-gray-500 py-1"
+              >
+                {msg.content}
+              </div>
+            );
+          }
 
+          const uniqueKey = `${msg.senderId}-${msg.sentAt || index}`;
+          const isMyMessage = msg.senderId === myUser?.userId;
+
+          return (
             <div
-              className={`flex items-end gap-2 max-w-[85%] ${
-                msg.senderId === myUser?.userId ? "flex-row-reverse" : ""
+              key={uniqueKey}
+              className={`flex flex-col ${
+                isMyMessage ? "items-end" : "items-start"
               }`}
             >
+              <span className="text-xs text-gray-500 mb-1">
+                {msg.senderNickName}
+              </span>
+
               <div
-                // 1. 말풍선을 기준점(relative) 및 호버 그룹(group)으로 만듭니다.
-                className={`relative group px-3 py-2 rounded-lg break-words ${
-                  msg.senderId === myUser?.userId
-                    ? "bg-purple-600 rounded-br-none"
-                    : "bg-gray-700 rounded-bl-none"
+                className={`flex items-end gap-2 max-w-[85%] ${
+                  isMyMessage ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                {/* 메시지 텍스트 */}
-                <span>{msg.content}</span>
+                <div
+                  className={`px-4 py-2 rounded-lg break-words text-sm ${
+                    isMyMessage ? "bg-purple-600" : "bg-gray-700"
+                  }`}
+                >
+                  <span>{msg.content}</span>
 
-                {/* 2. Popover 컴포넌트 */}
-                {msg.senderId !== myUser?.userId && (
-                  <Popover>
-                    {/* 3. 버튼을 절대 위치(absolute)로 오른쪽 위에 배치합니다. */}
-                    {/* 평소엔 투명했다가, group(말풍선)에 호버하면 나타납니다. */}
-                    <Popover.Button className="absolute top-1 right-1 p-0.5 rounded-full bg-black/20 text-white opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:opacity-100">
-                      <MoreVertical size={14} />
-                    </Popover.Button>
+                  {msg.senderId !== myUser?.userId && (
+                    <Popover>
+                      <Popover.Button className="absolute top-1 right-1 p-0.5 rounded-full bg-black/20 text-white opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:opacity-100">
+                        <MoreVertical size={14} />
+                      </Popover.Button>
 
-                    <Popover.Panel className="absolute z-10 bottom-full right-0 mb-2 w-36 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
-                      <div className="flex flex-col p-1">
-                        <button
-                          onClick={() => handleReport(msg.senderId)}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
-                        >
-                          <ShieldAlert size={14} />
-                          <span>신고하기</span>
-                        </button>
-                        <button
-                          onClick={() => handleBlock(msg.senderId)}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
-                        >
-                          <UserX size={14} />
-                          <span>차단하기</span>
-                        </button>
-                      </div>
-                    </Popover.Panel>
-                  </Popover>
-                )}
+                      <Popover.Panel className="absolute z-10 bottom-full right-0 mb-2 w-36 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
+                        <div className="flex flex-col p-1">
+                          <button
+                            onClick={() => handleBlock(msg.senderId)}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
+                          >
+                            <UserX size={14} />
+                            <span>차단하기</span>
+                          </button>
+                        </div>
+                      </Popover.Panel>
+                    </Popover>
+                  )}
+                </div>
+
+                <span className="text-xs text-gray-500 whitespace-nowrap">
+                  {new Date(msg.sentAt).toLocaleTimeString("ko-KR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
               </div>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
 
-              <span className="text-xs text-gray-500 whitespace-nowrap">
-                {new Date(msg.timestamp).toLocaleTimeString("ko-KR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+      {/* 메시지 입력 영역 */}
+      <div className="py-3 border-t border-gray-700 bg-gray-800/80">
+        {myUser ? (
+          <div className="relative flex items-center">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder="메시지를 입력하세요..."
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
+            >
+              <Send size={18} className="text-white" />
+            </button>
+          </div>
+        ) : (
+          // ======================== 로그아웃 상태일 때: 안내 메시지 표시 ========================
+          <div className="rounded-xl border border-gray-700 bg-gray-900/50 p-4 mx-2">
+            <div className="flex items-center gap-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-800">
+                <LockKeyhole className="text-gray-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-200">
+                  로그인 후 채팅 가능
+                </p>
+                <p className="text-xs text-gray-400">
+                  로그인하고 대화에 참여하세요.
+                </p>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-      {/* 메시지 입력 영역 */}
-      <div className="py-2 border-t border-gray-700">
-        <div className="flex items-center gap-2 mb-1">
-          {/* 5. isConnected 상태에 따라 연결 상태 아이콘을 표시합니다. */}
-          {isConnected ? (
-            <Wifi size={14} className="text-green-400" />
-          ) : (
-            <WifiOff size={14} className="text-red-400" />
-          )}
-          <span
-            className={`text-xs ${
-              isConnected ? "text-gray-400" : "text-red-400"
-            }`}
-          >
-            {isConnected
-              ? "실시간 채팅에 연결됨"
-              : "연결이 끊겼습니다. 재연결 중..."}
-          </span>
-        </div>
-        <div className="relative">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="메시지를 입력하세요..."
-            className="w-full bg-gray-600 text-white rounded-lg py-2 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            disabled={!isConnected}
-          />
-          <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-500"
-            disabled={!newMessage.trim() || !isConnected}
-            onClick={handleSendMessage}
-          >
-            <Send size={16} />
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

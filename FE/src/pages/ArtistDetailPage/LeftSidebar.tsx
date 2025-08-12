@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { List } from "lucide-react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -14,11 +13,9 @@ const LeftSidebar = () => {
 
   return (
     <aside className="w-72 p-4">
-      {/* 모든 콘텐츠를 포함하는 하나의 큰 하얀색 카드 */}
-      <div className="bg-white rounded-2xl shadow p-4 flex flex-col min-h-[calc(100vh-6rem)]">
+      <div className="bg-white rounded-2xl shadow p-4 flex flex-col h-[calc(100vh-6rem)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">팔로우한 아티스트</h2>
-          <List className="w-5 h-5 text-gray-500" />
         </div>
 
         {followedArtists.length > 0 ? (
@@ -47,10 +44,10 @@ const LeftSidebar = () => {
               })}
             </ul>
             <button
-              className="mt-auto w-full bg-purple-600 text-white text-sm py-2 rounded-xl"
+              className="flex-shrink-0 w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
-              + 아티스트 더보기
+              <span>아티스트 더보기</span>
             </button>
           </>
         ) : (
@@ -60,10 +57,10 @@ const LeftSidebar = () => {
               팔로우한 아티스트가 없습니다.
             </p>
             <button
-              className="mt-auto w-full bg-purple-600 text-white text-sm py-2 rounded-xl cursor-pointer"
+              className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
               onClick={() => navigate("/artist-list")}
             >
-              + 아티스트 팔로우 하러가기
+              <span>아티스트 팔로우 하러가기</span>
             </button>
           </div>
         )}
