@@ -732,11 +732,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import {
-  enterRoom,
-  exitRoom,
-  deleteRoom,
-} from "../../api/roomService";
+import { enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
@@ -761,6 +757,8 @@ const LiveRoomPage = () => {
   const navigate = useNavigate();
 
   const [room, setRoom] = useState<any>(null);
+  const [hostNickname, setHostNickname] = useState<string | null>(null);
+
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
@@ -847,7 +845,33 @@ const LiveRoomPage = () => {
       } catch {}
       navigate("/");
     }
-  };
+  }
+
+  // const handleSubmitAnswer = async (answer: string) => {
+  //   try {
+  //     await enterRoom(roomId!, answer);
+  //     const roomData = await fetchRoomById(roomId!);
+  //     setRoom(roomData);
+  //     setIsQuizModalOpen(false); // 성공 시 모달 닫기
+  //   } catch (error: any) {
+  //     const status = error.response?.status;
+
+  //     if (status === 401) {
+  //       const serverMessage = error.response?.data?.message || "";
+
+  //       if (serverMessage.includes("정답")) {
+  //         // 정답이 틀렸을 경우 => EntryQuizModal.tsx에서 "wrong_answer"로 처리
+  //         throw new Error("wrong_answer");
+  //       }
+
+  //       // 그 외의 인증 오류는 로그인 필요
+  //       alert("로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.");
+  //       navigate("/login");
+  //       return;
+  //     }
+  //     throw error;
+  //   }
+  // };
 
   const handleSubmitAnswer = async (answer: string) => {
     try {
@@ -1073,7 +1097,7 @@ const LiveRoomPage = () => {
         if (!roomId) return;
         const data = await enterRoom(roomId, ""); // 항상 JSON 바디 {entryAnswer:""} 전송
         if (!isMounted) return;
-        setRoom(data);
+        setRoom(data); // 성공이면 비잠금. 방장/참가자 여부는 data.hostId === myUser?.userId 로 판단
       } catch (err: any) {
         const status = err?.response?.status;
         if (status === 401 && err?.response?.data?.entryQuestion) {
@@ -1090,7 +1114,12 @@ const LiveRoomPage = () => {
     };
   }, [roomId]);
 
-  // 4) 액세스 토큰 갱신 시 재연결
+
+  // ================================================================================
+  // 4) 액세스 토큰 갱신 이벤트 → 모든 STOMP 재연결
+  //    - null 토큰(로그아웃/리프레시 실패) 처리
+  //    - 동일 토큰이면 재연결 스킵
+  // ================================================================================
   useEffect(() => {
     const off = onTokenRefreshed(async (newToken) => {
       if (lastTokenRef.current === newToken) return;
@@ -1145,8 +1174,8 @@ const LiveRoomPage = () => {
               const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
               const t = evt?.eventType;
 
-              if (typeof (evt as any)?.participantCount === "number")
-                setParticipantCount((evt as any).participantCount);
+              if (typeof evt?.participantCount === "number") 
+                setParticipantCount(evt.participantCount);
 
               switch (t) {
                 case "ROOM_DELETED": {
@@ -1265,9 +1294,12 @@ const LiveRoomPage = () => {
         isHost={room.hostId === myUserId}
         title={room.title}
         hostId={room.hostId}
+        hostNickname={hostNickname ?? room.hostNickname}
         participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
-        onDelete={room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined}
+        onDelete={
+          room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
+        }
       />
 
       {/* 본문: 영상 + 사이드바 */}

@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { CreateRoom, enterRoom } from "../../../api/roomService";
-import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import {useState, useEffect} from "react";
+import {CreateRoom, enterRoom} from "../../../api/roomService";
+import {useNavigate} from "react-router-dom";
+import {X} from "lucide-react";
 
 // 다양한 YouTube URL에서 videoId를 추출하는 함수
 const extractVideoId = (url: string): string | null => {
@@ -16,6 +16,7 @@ type CreateRoomModalProps = {
   onClose: () => void;
   artistId: number;
   hostId: string;
+  hostNickname: string;
 };
 
 const CreateRoomModal = ({
@@ -23,6 +24,7 @@ const CreateRoomModal = ({
   onClose,
   artistId,
   hostId,
+  hostNickname
 }: CreateRoomModalProps) => {
   const [title, setTitle] = useState("");
   const [locked, setLocked] = useState(false);
@@ -62,10 +64,11 @@ const CreateRoomModal = ({
     formData.append("hostId", hostId);
     formData.append("locked", locked.toString());
     formData.append("videoId", videoId);
+    formData.append("hostNickname", hostNickname)
 
     if (thumbnailPreview) {
       const blob = await fetch(thumbnailPreview).then((res) => res.blob());
-      const file = new File([blob], "thumbnail.jpg", { type: blob.type });
+      const file = new File([blob], "thumbnail.jpg", {type: blob.type});
       formData.append("thumbnailImg", file);
     }
 
