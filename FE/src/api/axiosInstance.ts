@@ -136,12 +136,21 @@ api.interceptors.response.use(
       if (!refresh) throw error;
 
       // 명세서: /auth/refresh 호출
-      const resp = await axios.post(
-        `/auth/refresh`,
+      // const resp = await axios.post(
+      //   `/auth/refresh`,
+      //   null,
+      //   {
+      //     headers: buildRefreshHeaders(refresh),
+      //     withCredentials: true,
+      //   }
+      // );
+      const resp = await api.post(
+        "/auth/refresh",
         null,
         {
           headers: buildRefreshHeaders(refresh),
           withCredentials: true,
+          skipAuth: true, // 리프레시는 access 토큰 없이
         }
       );
 
