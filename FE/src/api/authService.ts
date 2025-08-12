@@ -124,7 +124,7 @@
 // };
 
 // 인증 관련 API 함수들
-import { api } from "./axiosInstance";
+import { api, buildRefreshHeaders } from "./axiosInstance";
 
 type ApiMessage = { message: string };
 
@@ -205,7 +205,7 @@ export const logIn = async (
     // 저장 및 Authorization 헤더 설정
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
-    api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+    // api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
     return response.data;
   } catch (error) {
@@ -228,18 +228,27 @@ export const getMyProfileAfterOAuth = async () => {
  * - 요청 헤더에 refresh 토큰을 Bearer로 전달
  * - 요청에서 skipAuth 제거 (요청 인터셉터 동작 가정)
  */
-export const logoutUser = async (): Promise<ApiMessage> => {
-  const refresh = localStorage.getItem("refreshToken") || "";
+// export const logoutUser = async (): Promise<ApiMessage> => {
+//   const refresh = localStorage.getItem("refreshToken") || "";
 
+//   const res = await api.post<ApiMessage>(
+//     "/auth/logout",
+//     null,
+//     {
+//       headers: {
+//         Authorization: `Bearer ${refresh}`, // refresh 토큰을 Bearer로
+//       },
+//     }
+//   );
+
+//   return res.data;
+// };
+
+export const logoutUser = async (): Promise<ApiMessage> => {
   const res = await api.post<ApiMessage>(
     "/auth/logout",
     null,
-    {
-      headers: {
-        Authorization: `Bearer ${refresh}`, // refresh 토큰을 Bearer로
-      },
-    }
+    { headers: buildRefreshHeaders() }
   );
-
   return res.data;
 };
