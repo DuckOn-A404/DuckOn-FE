@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { useUserStore } from "../../store/useUserStore";
-import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { useArtistRooms } from "../../hooks/useArtistRooms";
+import {useState, useEffect} from "react";
+import {useLocation} from "react-router-dom";
+import {useUserStore} from "../../store/useUserStore";
+import {useArtistFollowStore} from "../../store/useArtistFollowStore";
+import {useArtistRooms} from "../../hooks/useArtistRooms";
 import {
   followArtist,
   unfollowArtist,
@@ -11,8 +11,8 @@ import {
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
-import { type Artist } from "../../types/artist";
-import { Video, Plus } from "lucide-react";
+import {type Artist} from "../../types/artist";
+import {Video, Plus} from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 
 const PLACEHOLDER_URL =
@@ -31,7 +31,7 @@ const ArtistDetailPage = () => {
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { myUser } = useUserStore();
+  const {myUser} = useUserStore();
   const {
     isFollowing: followingSet,
     addFollow,
@@ -144,12 +144,12 @@ const ArtistDetailPage = () => {
       if (isFollowing) {
         await unfollowArtist(artist.artistId);
         removeFollow(artist.artistId);
-        setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
+        setArtist((prev) => (prev ? {...prev, followedAt: null} : prev));
       } else {
         await followArtist(artist.artistId);
         addFollow(artist);
         setArtist((prev) =>
-          prev ? { ...prev, followedAt: new Date().toISOString() } : prev
+          prev ? {...prev, followedAt: new Date().toISOString()} : prev
         );
       }
     } catch {
@@ -288,6 +288,7 @@ const ArtistDetailPage = () => {
         onClose={() => setIsModalOpen(false)}
         artistId={artist.artistId}
         hostId={myUser?.userId ?? ""}
+        hostNickname={myUser?.nickname ?? ""}
       />
     </div>
   );
