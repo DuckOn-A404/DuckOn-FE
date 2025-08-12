@@ -2,6 +2,9 @@ import {useState, useEffect} from "react";
 import {CreateRoom, enterRoom} from "../../../api/roomService";
 import {useNavigate} from "react-router-dom";
 import {X} from "lucide-react";
+import { fetchYouTubeMeta } from "../../../utils/youtubeMeta";
+
+
 
 // 다양한 YouTube URL에서 videoId를 추출하는 함수
 const extractVideoId = (url: string): string | null => {
@@ -34,16 +37,19 @@ const CreateRoomModal = ({
   const [videoId, setVideoId] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<string>("");
-
+  const [videoMeta, setVideoMeta] = useState<{ title?: string; author?: string } | null>(null);
+  
   const navigate = useNavigate();
-
+  
   useEffect(() => {
     const id = extractVideoId(videoUrl);
     setVideoId(id);
     if (id) {
       setThumbnailPreview(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+      fetchYouTubeMeta(id).then((m) => m && setVideoMeta({ title: m.title, author: m.author }));
     } else {
       setThumbnailPreview(null);
+      setVideoMeta(null);
     }
   }, [videoUrl]);
 
@@ -154,6 +160,13 @@ const CreateRoomModal = ({
                 alt="썸네일 미리보기"
                 className="w-full h-full object-cover"
               />
+            </div>
+          )}
+          
+          {videoMeta && (videoMeta.title || videoMeta.author) && (
+            <div className="mt-2 text-sm text-gray-800">
+              <div className="font-semibold truncate">{videoMeta.title || "제목 로딩 중..."}</div>
+              <div className="text-gray-600 truncate">{videoMeta.author || "채널 로딩 중..."}</div>
             </div>
           )}
 
