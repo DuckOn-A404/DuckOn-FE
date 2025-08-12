@@ -366,7 +366,6 @@ import YouTube from "react-youtube";
 import { Client } from "@stomp/stompjs";
 import type { User } from "../../types";
 import type { LiveRoomSyncDTO } from "../../types/Room";
-import { fetchYouTubeMeta } from "../../utils/youtubeMeta";
 
 type VideoPlayerProps = {
   videoId: string;
@@ -403,15 +402,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
 
-  // 시청/오디오
-  const [canWatch, setCanWatch] = useState(false);
-  const justSynced = useRef(false);
-  const [muted, setMuted] = useState(true);
-  const [showUnmuteHint, setShowUnmuteHint] = useState(false);
+  // 시청 관련 상태
+  const [canWatch, setCanWatch] = useState(false);   // 참가자 재생 허용(재생 중) 여부
+  const justSynced = useRef(false);                  // sync 직후 onStateChange 가드
 
-  // 메타
-  const [videoTitle, setVideoTitle] = useState<string>("");
-  const [channelName, setChannelName] = useState<string>("");
+  // 오디오 상태 (초기 무조건 음소거)
+  const [muted, setMuted] = useState(true);          // 참가자 음소거 상태
+  const [showUnmuteHint, setShowUnmuteHint] = useState(false); // "사운드 켜기" 안내 버튼
 
   // 소프트 보정 타이머
   const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -439,12 +436,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     event.target.pauseVideo();
     event.target.setVolume?.(100);
     setMuted(true);
-    readFromPlayer();
-    fetchYouTubeMeta(videoId).then((m) => {
-      if (!m) return;
-      if (!videoTitle && m.title) setVideoTitle(m.title);
-      if (!channelName && m.author) setChannelName(m.author);
-    });
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
@@ -608,12 +599,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return () => clearInterval(interval);
   }, [isHost, stompClient, isPlaylistUpdating, user, roomId, playlist, currentVideoIndex]);
 
-  // videoId 변경 시: 호스트는 load(즉시 재생), 참가자는 cue(호스트 신호 대기)
   useEffect(() => {
     if (!videoId) { setVideoTitle(""); setChannelName(""); return; }
-
-    const p = playerRef.current;
-    // 메타 초기화 및 프리패치
+    // 새 영상으로 바뀌면 초기화 후 oEmbed 먼저
     setVideoTitle("");
     setChannelName("");
     fetchYouTubeMeta(videoId).then((m) => {
@@ -621,29 +609,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (m.title) setVideoTitle(m.title);
       if (m.author) setChannelName(m.author);
     });
+    // 플레이어가 준비되면 IFrame API가 더 정확히 채워줌
     setTimeout(readFromPlayer, 400);
-
-    // 보정/힌트 상태 초기화
-    clearRateTimer();
-    restoreNormalRate();
-    setShowUnmuteHint(false);
-    setMuted(true);
-    setCanWatch(isHost ? true : false); // 참가자는 새 영상에선 다시 대기
-
-    if (!p) return;
-
-    try {
-      if (isHost) {
-        // 방장: 즉시 새 영상 로드 및 재생 시작
-        p.loadVideoById(videoId, 0);
-      } else {
-        // 참가자: 썸네일만 준비, 플레이는 SYNC_STATE를 따른다
-        p.cueVideoById(videoId, 0);
-      }
-    } catch (e) {
-      console.warn("videoId 적용 실패", e);
-    }
-  }, [videoId, isHost]);
+  }, [videoId]);
 
   // 참가자: "사운드 켜기"
   const handleUnmute = () => {
@@ -671,6 +639,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     } catch {}
   };
 
+
   return (
     <div className="relative w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black flex items-center justify-center">
       {videoId ? (
@@ -695,16 +664,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 },
               }}
             />
-            {videoId && (videoTitle || channelName) && (
-              <div className="absolute top-2 left-2 z-20 max-w-[80%] bg-black/50 backdrop-blur-sm px-3 py-2 rounded-md">
-                <div className="text-white text-sm font-semibold truncate">
-                  {videoTitle || "제목 불러오는 중..."}
-                </div>
-                <div className="text-gray-300 text-xs truncate">
-                  {channelName || "채널 불러오는 중..."}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* 참가자: 호스트 재생 중 + 음소거 상태면 "사운드 켜기" 버튼 */}
