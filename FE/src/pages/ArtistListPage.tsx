@@ -48,9 +48,9 @@ const ArtistListPage = () => {
   return (
     <div className="px-4 md:px-10 py-8">
       {/* 제목 영역 */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-1">아티스트</h1>
-        <p className="text-gray-500 text-sm">
+      <div className="text-center py-8 mb-5">
+        <h1 className="text-4xl font-extrabold text-gray-800 mb-2">아티스트</h1>
+        <p className="text-lg text-gray-500">
           다양한 K-pop 아티스트를 만나보세요.
         </p>
       </div>

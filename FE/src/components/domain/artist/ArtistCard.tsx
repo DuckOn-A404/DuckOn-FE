@@ -9,6 +9,9 @@ type ArtistCardProps = {
   onClick: () => void;
 };
 
+const PLACEHOLDER_URL =
+  "https://placehold.co/240x240/f8f8f8/999999?text=No+Image&font=roboto";
+
 /*
   name: ArtistCard
   summary: 아티스트 목록에서 사용하는 카드 컴포넌트
@@ -20,28 +23,30 @@ const ArtistCard = ({
   followerCount,
   onClick,
 }: ArtistCardProps) => {
+  const thumbnailUrl = imgUrl || PLACEHOLDER_URL;
+
   return (
-    // 1. 카드 전체 컨테이너: 패딩과 보더를 추가하여 더 깔끔하게 만듭니다.
     <div
-      className="w-full max-w-[220px] bg-white rounded-2xl shadow-md border border-gray-100 p-6 flex flex-col items-center cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1"
+      className="w-full max-w-[220px] bg-gray-100 rounded-2xl border border-gray-200 p-5 flex flex-col items-center cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-1"
       onClick={onClick}
     >
-      {/* 2. 원형 이미지: 크기를 키우고 그림자를 추가해 입체감을 줍니다. */}
-      <div className="relative w-32 h-32 rounded-full overflow-hidden shadow-lg mb-4">
-        <img src={imgUrl} alt={nameEn} className="w-full h-full object-cover" />
+      <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-md mb-4 bg-white">
+        <img
+          src={thumbnailUrl}
+          alt={nameEn}
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      {/* 3. 텍스트 영역: 중앙 정렬하고 폰트와 색상을 조정합니다. */}
       <div className="text-center">
         <p className="font-bold text-lg text-gray-800 truncate" title={nameKr}>
           {nameKr}
         </p>
-        <p className="text-sm text-gray-400 truncate" title={nameEn}>
+        <p className="text-sm text-gray-500 truncate" title={nameEn}>
           {nameEn}
         </p>
       </div>
 
-      {/* 4. 팔로워 수: 페이지의 포인트 컬러(보라색)를 사용해 강조합니다. */}
       {followerCount !== undefined && (
         <div className="mt-4 flex items-center gap-1.5 text-sm text-purple-600">
           <Users className="h-4 w-4" />

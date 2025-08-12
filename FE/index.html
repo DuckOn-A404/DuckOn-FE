@@ -1,13 +1,60 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/duck.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>DuckON</title>
+	</head>
+	<script
+		async
+		src="https://www.googletagmanager.com/gtag/js?id=G-0BZPBK1SSX"
+	></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() {
+			dataLayer.push(arguments);
+		}
+
+		// 배포 도메인에서만 활성화 (개발/프리뷰엔 비활성)
+		if (location.hostname.endsWith("duckon.site")) {
+			gtag("js", new Date());
+			// SPA: 라우터로 직접 pageview를 보낼 것이므로 자동 전송은 끔
+			gtag("config", "G-0BZPBK1SSX", {send_page_view: false});
+		} else {
+			console.log("[GA] disabled on", location.hostname);
+		}
+	</script>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/duck.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="google-site-verification" content="XFlPmLQ5e79G0zchStPxc92gvR0pBnPDPv_vz0VLPAQ" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="DuckON - 새로운 K-POP 경험" />
+    <meta
+      property="og:description"
+      content="실시간 영상 재생부터 채팅까지! DuckON에서 아티스트와 함께하세요."
+    />
+    <meta
+      property="og:image"
+      content="https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/image/thumbnail.png"
+    />
+    <meta property="og:url" content="https://www.duckon.site/" />
+
+		<title>DuckON</title>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script type="module" src="/src/main.tsx"></script>
+	</body>
 </html>

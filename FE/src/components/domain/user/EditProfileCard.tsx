@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
-import { fetchLanguages, type LanguageOption } from "../../../api/languageSelect";
+// import {
+//   fetchLanguages,
+//   type LanguageOption,
+// } from "../../../api/languageSelect";
 import { useUserStore } from "../../../store/useUserStore";
 
 export type EditProfileCardProps = {
@@ -19,11 +22,15 @@ const EditProfileCard = ({
   onUpdate,
 }: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
-  const [language, setLanguage] = useState(user.language);
-  const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
+  // const [language, setLanguage] = useState(user.language);
+  // const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl || DEFAULT_IMG)
-  const [showImageOptions, setShowImageOptions] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    user.imgUrl ?? DEFAULT_IMG
+  );
+  const [showImageOptions, setShowImageOptions] = useState(false);
+
+  const [didPickNewImage, setDidPickNewImage] = useState(false)
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,13 +39,13 @@ const EditProfileCard = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    const loadLanguages = async () => {
-      const langs = await fetchLanguages();
-      setLanguageOptions(langs);
-    };
-    loadLanguages();
-  }, []);
+  // useEffect(() => {
+  //   const loadLanguages = async () => {
+  //     const langs = await fetchLanguages();
+  //     setLanguageOptions(langs);
+  //   };
+  //   loadLanguages();
+  // }, []);
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -47,11 +54,10 @@ const EditProfileCard = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setProfileImage(file)
-      setPreviewUrl(URL.createObjectURL(file))
-      setShowImageOptions(false)
-    } else {
-      console.log("파일 선택 취소됨 또는 파일 없음")
+      setProfileImage(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setShowImageOptions(false);
+      setDidPickNewImage(true); // 새 파일 선택
     }
   };
 
@@ -59,6 +65,7 @@ const EditProfileCard = ({
     setPreviewUrl(DEFAULT_IMG);
     setProfileImage(null);
     setShowImageOptions(false);
+    setDidPickNewImage(false);
   };
 
   const handleCameraClick = () => {
@@ -78,13 +85,15 @@ const EditProfileCard = ({
     }
 
     if (newPassword && newPassword.length < 8) {
-      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.")
-      return
+      setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
+      return;
     }
+
+    const isReset = !profileImage && !!user.imgUrl && previewUrl === DEFAULT_IMG;
 
     const formData = new FormData();
     formData.append("nickname", nickname);
-    formData.append("language", language);
+    formData.append("language", "ko");
 
     if (newPassword) {
       formData.append("newPassword", newPassword);
@@ -95,16 +104,63 @@ const EditProfileCard = ({
 
     try {
       await updateUserProfile(formData);
-      const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
+      const refreshed = didPickNewImage ? await fetchMyProfile() : null;
+
+      // next를 만들어 전역+상위에 즉시 반영
+      const next: MyUser = {
+        ...(refreshed ?? user),
+        nickname,
+        imgUrl: didPickNewImage
+          ? (refreshed?.imgUrl ?? user.imgUrl) // 업로드했으면 서버가 준 URL 사용
+          : (isReset
+              ? DEFAULT_IMG                   // 리셋이면 즉시 기본 이미지로
+              : (user.imgUrl ?? undefined)),  // 닉네임만 변경이면 기존 유지
+      };
+
+      // 전역(헤더 포함) 즉시 갱신
       useUserStore.getState().setMyUser({
-        ...updated,
-        artistList: updated.artistList ?? [],
-      })
-      onUpdate(updated);
+        ...next,
+        artistList: next.artistList ?? [],
+      });
+
+      // 상위(MyPage)에도 전달
+      onUpdate(next);
     } catch (err) {
       alert("프로필 수정 중 오류가 발생했습니다.");
     }
   };
+      // if (didPickNewImage) {
+      //   const refreshed = await fetchMyProfile()
+      //   const next = { ...refreshed }
+      //   useUserStore.getState().setMyUser({ ...next, artistList: next. artistList ?? [] })
+      //   onUpdate(next)
+      // } else {
+      //   const next = {
+      //     ...user,
+      //     nickname,
+      //   }
+      //   useUserStore.getState().setMyUser({ ...next, artistList: next.artistList ?? [] })
+      //   onUpdate(next)
+      // }
+
+      // const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
+      // const merged: MyUser = {
+      //   ...updated,
+      //   imgUrl:
+      //     (didPickNewImage || didResetImage)
+      //       ? updated.imgUrl ?? (didResetImage ? DEFAULT_IMG: user.imgUrl)
+      //       : (updated.imgUrl ?? user.imgUrl),
+      // };
+
+      // useUserStore.getState().setMyUser({
+      //   ...merged,
+      //   artistList: merged.artistList ?? [],
+      // });
+      // onUpdate(merged);
+  //   } catch (err) {
+  //     alert("프로필 수정 중 오류가 발생했습니다.");
+  //   }
+  // };
 
   const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -161,7 +217,7 @@ const EditProfileCard = ({
         <div className="flex flex-col items-center w-32 shrink-0">
           <div className="relative">
             <img
-              src={previewUrl || DEFAULT_IMG}
+              src={previewUrl}
               alt="프로필 이미지"
               className="w-24 h-24 rounded-full object-cover"
             />
@@ -233,7 +289,7 @@ const EditProfileCard = ({
               onChange={(e) => setNickname(e.target.value)}
             />
           </div>
-          <div className="flex items-center">
+          {/* <div className="flex items-center">
             <div className="w-32 text-gray-500 font-medium">주언어</div>
             <select
               className="border px-1 py-1 rounded w-full"
@@ -246,7 +302,7 @@ const EditProfileCard = ({
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
 
           <div className="flex items-start">
             <div className="w-32 text-gray-500 font-medium pt-2">

@@ -4,7 +4,7 @@ import { formatCompactNumber } from "../../../utils/formatters";
 import { type room } from "../../../types/Room";
 
 const PLACEHOLDER_URL =
-  "https://via.placeholder.com/1280x720.png?text=Image+Not+Available";
+  "https://placehold.co/1280x720?text=No+Image&font=roboto";
 
 /* 
   name : VideoCard
