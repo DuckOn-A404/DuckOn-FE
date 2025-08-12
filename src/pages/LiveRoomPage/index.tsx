@@ -4,31 +4,31 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import {useEffect, useState, useRef} from "react";
 import {
   enterRoom,
   exitRoom,
   deleteRoom,
 } from "../../api/roomService";
-import { useUserStore } from "../../store/useUserStore";
-import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
-import { createStompClient } from "../../socket";
+import {useUserStore} from "../../store/useUserStore";
+import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
+import {createStompClient} from "../../socket";
 
 import EntryQuizModal from "./EntryQuizModal";
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
-import { useChatSubscription } from "../../hooks/useChatSubscription";
+import {useChatSubscription} from "../../hooks/useChatSubscription";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
-import { onTokenRefreshed } from "../../api/axiosInstance";
+import {onTokenRefreshed} from "../../api/axiosInstance";
 
 const LiveRoomPage = () => {
-  const { roomId } = useParams();
+  const {roomId} = useParams();
   const [searchParams] = useSearchParams();
-  const location = useLocation() as { state?: { artistId?: number } };
-  const { myUser } = useUserStore();
+  const location = useLocation() as {state?: {artistId?: number}};
+  const {myUser} = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
 
@@ -38,7 +38,7 @@ const LiveRoomPage = () => {
 
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
-  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
+  const {messages, sendMessage} = useChatSubscription(stompClient, roomId);
 
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
@@ -81,9 +81,9 @@ const LiveRoomPage = () => {
     setRoom((prev: any) =>
       prev
         ? {
-            ...prev,
-            participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
-          }
+          ...prev,
+          participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
+        }
         : prev
     );
     setParticipantCount((prev) =>
@@ -96,14 +96,14 @@ const LiveRoomPage = () => {
     } catch {
       setRoom((prev: any) =>
         prev
-          ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
+          ? {...prev, participantCount: (prev.participantCount ?? 0) + 1}
           : prev
       );
     } finally {
       // 이전 페이지 이동
       try {
         await stompClient?.deactivate();
-      } catch {}
+      } catch { }
       navigate(-1);
     }
   };
@@ -119,7 +119,7 @@ const LiveRoomPage = () => {
       console.warn("방 삭제 중 오류:", e)
     } finally {
       setIsDeleteOpen(false)
-      try { await stompClient?.deactivate(); } catch {}
+      try {await stompClient?.deactivate();} catch { }
       navigate("/");
     }
   }
@@ -212,7 +212,7 @@ const LiveRoomPage = () => {
     // 방장이 아니거나, 플레이리스트가 없으면 아무것도 안 함
     if (!isHost || !room || !room.playlist || !myUser) return;
 
-    const { currentVideoIndex, playlist } = room;
+    const {currentVideoIndex, playlist} = room;
 
     if (currentVideoIndex >= playlist.length - 1) {
       return;
@@ -269,7 +269,7 @@ const LiveRoomPage = () => {
     };
 
     presenceClient.activate();
-    return () => { try { presenceClient.deactivate(); } catch {}; presenceRef.current = null; };
+    return () => {try {presenceClient.deactivate();} catch { }; presenceRef.current = null;};
   }, [roomId]);
   //   presenceClient.onStompError = (frame) => {
   //     console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
@@ -318,8 +318,8 @@ const LiveRoomPage = () => {
             }
 
             if (!t) {
-              const { participantCount: _omit, ...rest } = evt ?? {};
-              setRoom((prev: any) => ({ ...prev, ...rest }));
+              const {participantCount: _omit, ...rest} = evt ?? {};
+              setRoom((prev: any) => ({...prev, ...rest}));
               return;
             }
 
@@ -340,31 +340,31 @@ const LiveRoomPage = () => {
               //   return;
               // }
 
-              case "HOST_CHANGED": 
+              case "HOST_CHANGED":
                 setRoom((prev: any) =>
-                  prev ? { ...prev, hostId: evt.hostId ?? prev.hostId, lastUpdated: evt.lastUpdated ?? prev.lastUpdated } : prev
+                  prev ? {...prev, hostId: evt.hostId ?? prev.hostId, lastUpdated: evt.lastUpdated ?? prev.lastUpdated} : prev
                 );
                 if (evt.hostId === myUserId) console.info("방장 권한이 위임되었습니다.");
                 return;
-              
+
 
               case "USER_LEFT":
               case "USER_JOINED":
                 return;
 
-              case "ROOM_DELETED": 
+              case "ROOM_DELETED":
                 setRoomDeletedOpen(true);
                 return;
-              
 
-              case "STATE_SYNC": 
+
+              case "STATE_SYNC":
                 if (evt.room) setRoom(evt.room);
                 return;
-              
+
 
               default: {
-                const { participantCount: _omit, ...rest } = evt ?? {};
-                setRoom((prev: any) => ({ ...prev, ...rest }));
+                const {participantCount: _omit, ...rest} = evt ?? {};
+                setRoom((prev: any) => ({...prev, ...rest}));
                 return;
               }
             }
@@ -387,10 +387,10 @@ const LiveRoomPage = () => {
     return () => {
       try {
         sub?.unsubscribe();
-      } catch {}
+      } catch { }
       try {
         syncClient.deactivate();
-      } catch {}
+      } catch { }
       syncRef.current = null;
     };
     // isHost 제거, 대신 myUserId/navigate 추가
@@ -473,7 +473,7 @@ const LiveRoomPage = () => {
       }
     };
     loadRoom();
-    return () => { isMounted = false; };
+    return () => {isMounted = false;};
   }, [roomId]);
 
 
@@ -491,10 +491,10 @@ const LiveRoomPage = () => {
       if (!newToken) {
         try {
           await presenceRef.current?.deactivate();
-        } catch {}
+        } catch { }
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         presenceRef.current = null;
         syncRef.current = null;
         setStompClient(null);
@@ -505,7 +505,7 @@ const LiveRoomPage = () => {
       if (roomId) {
         try {
           await presenceRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const p = createStompClient(newToken);
         presenceRef.current = p;
         p.onConnect = () => {
@@ -525,7 +525,7 @@ const LiveRoomPage = () => {
       if (myUser && !isQuizModalOpen && roomId) {
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const s = createStompClient(newToken);
         syncRef.current = s;
         setStompClient(s);
@@ -536,12 +536,12 @@ const LiveRoomPage = () => {
               const evt = JSON.parse(message.body);
               const t = evt?.eventType as string | undefined;
 
-              if (typeof evt?.participantCount === "number") 
+              if (typeof evt?.participantCount === "number")
                 setParticipantCount(evt.participantCount);
 
               if (!t) {
-                const { participantCount: _omit, ...rest } = evt ?? {};
-                setRoom((prev: any) => ({ ...prev, ...rest }));
+                const {participantCount: _omit, ...rest} = evt ?? {};
+                setRoom((prev: any) => ({...prev, ...rest}));
                 return;
               }
 
@@ -550,10 +550,10 @@ const LiveRoomPage = () => {
                   setRoom((prev: any) =>
                     prev
                       ? {
-                          ...prev,
-                          hostId: evt.hostId ?? prev.hostId,
-                          lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                        }
+                        ...prev,
+                        hostId: evt.hostId ?? prev.hostId,
+                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                      }
                       : prev
                   );
                   if (evt.hostId === myUserId)
@@ -569,8 +569,8 @@ const LiveRoomPage = () => {
                   if (evt.room) setRoom(evt.room);
                   return;
                 default: {
-                  const { participantCount: _omit, ...rest } = evt ?? {};
-                  setRoom((prev: any) => ({ ...prev, ...rest }));
+                  const {participantCount: _omit, ...rest} = evt ?? {};
+                  setRoom((prev: any) => ({...prev, ...rest}));
                   return;
                 }
               }
@@ -584,7 +584,7 @@ const LiveRoomPage = () => {
       }
     });
 
-    return () => { off() };
+    return () => {off()};
   }, [roomId, myUser, isQuizModalOpen, myUserId]);
 
   // if (!room || !stompClient?.connected || !myUser) {
@@ -601,7 +601,7 @@ const LiveRoomPage = () => {
         <RoomDeletedModal
           isOpen={roomDeletedOpen}
           onConfirm={async () => {
-            try { await stompClient?.deactivate(); } catch {}
+            try {await stompClient?.deactivate();} catch { }
             navigate(-1);
           }}
         />
@@ -625,7 +625,7 @@ const LiveRoomPage = () => {
       <RoomDeletedModal
         isOpen={roomDeletedOpen}
         onConfirm={async () => {
-          try { await stompClient?.deactivate(); } catch {}
+          try {await stompClient?.deactivate();} catch { }
           navigate(-1);
         }}
       />
@@ -642,6 +642,7 @@ const LiveRoomPage = () => {
         isHost={room.hostId === myUserId}
         title={room.title}
         hostId={room.hostId}
+        hostNickname={room.hostNickname}
         participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
         onDelete={room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined}
@@ -678,21 +679,19 @@ const LiveRoomPage = () => {
           <div className="flex border-b border-gray-700">
             <button
               onClick={() => setActiveTab("chat")}
-              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-                activeTab === "chat"
-                  ? "text-white border-b-2 border-fuchsia-500"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "chat"
+                ? "text-white border-b-2 border-fuchsia-500"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               실시간 채팅
             </button>
             <button
               onClick={() => setActiveTab("playlist")}
-              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-                activeTab === "playlist"
-                  ? "text-white border-b-2 border-fuchsia-500"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "playlist"
+                ? "text-white border-b-2 border-fuchsia-500"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               플레이리스트
             </button>
