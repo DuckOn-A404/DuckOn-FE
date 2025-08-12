@@ -35,7 +35,7 @@ export const getRoomsByArtist = async (artistId: number): Promise<room[]> => {
  * @param size - 페이지당 방 수 (기본값: 10)
  * @returns 트렌딩 방 목록 배열
  */
-export const getTrendingRooms = async (page: 1, size = 10): Promise<TrendingRoomsResponse> => {
+export const getTrendingRooms = async (page: number, size = 10): Promise<TrendingRoomsResponse> => {
 	const response = await api.get("/rooms/trending", {
 		params: { page,size },
 		skipAuth: true,
