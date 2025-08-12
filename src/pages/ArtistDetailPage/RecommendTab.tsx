@@ -87,12 +87,14 @@ const RecommendTab = ({ artistId }: { artistId: number }) => {
     }
   };
 
-  const handleUserClick = (userId: string, nameEn: string) => {
+  const handleUserClick = (userId: string, nickname: string) => {
     if (!isLoggedIn) {
       setIsModalOpen(true);
       return;
     }
-    navigate(`/user/${nameEn}`, { state: { artistId: userId } });
+    navigate(`/user/${userId}`, {
+      state: { nickname },
+    });
   };
 
   // 로딩 중일 때 보여줄 UI
