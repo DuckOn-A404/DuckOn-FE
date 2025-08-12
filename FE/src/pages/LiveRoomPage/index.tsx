@@ -49,6 +49,8 @@ const LiveRoomPage = () => {
   const syncRef = useRef<Client | null>(null);
   const lastTokenRef = useRef<string | null>(null);
   const leavingRef = useRef(false);
+  const isHostRef = useRef(false);
+  const joinedRef = useRef(false);
 
   const parseId = (raw: string | null) => {
     if (!raw) return undefined;
@@ -161,15 +163,10 @@ const LiveRoomPage = () => {
       return;
     }
     try {
-      await deleteRoom(Number(roomId), resolvedArtistId);
-    } catch (e) {
-      console.warn("방 삭제 중 오류:", e);
+      await performDelete();
     } finally {
       setIsDeleteOpen(false);
-      try {
-        await stompClient?.deactivate();
-      } catch {}
-      navigate("/");
+      navigate("/"); // 삭제 후 홈으로
     }
   };
 
@@ -192,6 +189,10 @@ const LiveRoomPage = () => {
   };
 
   const isHost = room?.hostId === myUserId;
+
+  useEffect(() => {
+    isHostRef.current = room?.hostId === myUserId; // 최신 역할을 ref에 유지
+  }, [room?.hostId, myUserId]);
 
   // 방장이 playlist 영상 추가 시 update publish
   const handleAddToPlaylist = (newVideoId: string) => {
@@ -408,6 +409,7 @@ const LiveRoomPage = () => {
         if (data && data.hostNickname) {
           setHostNickname(data.hostNickname);
         }
+        joinedRef.current = true;
       } catch (err: any) {
         const status = err?.response?.status;
         if (status === 401 && err?.response?.data?.entryQuestion) {
@@ -549,37 +551,33 @@ const LiveRoomPage = () => {
 
   // 페이지 이탈했을 때 자동 정리 로직
   useEffect(() => {
-    const cleanup = async () => {
-      if (isHost) {
-        // 방장이 페이지를 떠나면 방 삭제
-        await performDelete();
-      } else {
-        // 참가자가 페이지를 떠나면 방 나가기
-        await performExit();
-      }
-    };
-
-    // 컴포넌트가 사라질 때(unmount) cleanup 함수를 실행
     return () => {
-      if (!leavingRef.current) {
-        cleanup();
+      // 아직 입장 전이거나, 이미 나가는 중이면 아무 것도 안 함
+      if (!joinedRef.current || leavingRef.current) return;
+
+      leavingRef.current = true;
+      if (isHostRef.current) {
+        void performDelete();
+      } else {
+        void performExit();
       }
     };
-  }, [isHost, performExit, performDelete]);
+  }, []);
 
   // 브라우저 차원에서 방을 나갔을 경우 처리 로직
   useEffect(() => {
     if (!roomId || !resolvedArtistId) return;
 
     const onPageHide = () => {
-      if (isHost) {
-        // 방장일 경우
+      if (!joinedRef.current || leavingRef.current) return;
+
+      leavingRef.current = true;
+      if (isHostRef.current) {
         fireAndForget(
           `/rooms/${roomId}?artistId=${resolvedArtistId}`,
           "DELETE"
         );
       } else {
-        // 일반 사용자일 경우 (POST)
         fireAndForget(
           `/rooms/${roomId}/exit?artistId=${resolvedArtistId}`,
           "POST"
@@ -594,7 +592,7 @@ const LiveRoomPage = () => {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("beforeunload", onPageHide);
     };
-  }, [roomId, resolvedArtistId, isHost]);
+  }, [roomId, resolvedArtistId]);
 
   if (!myUser) {
     return (
@@ -602,18 +600,10 @@ const LiveRoomPage = () => {
     );
   }
 
-  if (!room || !myUser) {
+  if (!room) {
+    // 로딩 상태를 room 존재 여부로 단순화
     return (
       <>
-        <RoomDeletedModal
-          isOpen={roomDeletedOpen}
-          onConfirm={async () => {
-            try {
-              await stompClient?.deactivate();
-            } catch {}
-            navigate(-1);
-          }}
-        />
         {isQuizModalOpen && entryQuestion && (
           <EntryQuizModal
             question={entryQuestion}
@@ -621,12 +611,38 @@ const LiveRoomPage = () => {
             onExit={() => navigate("/")}
           />
         )}
-        <div className="flex justify-center items-center h-24">
+        <div className="flex justify-center items-center h-screen bg-gray-900">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         </div>
       </>
     );
   }
+
+  // if (!room || !myUser) {
+  //   return (
+  //     <>
+  //       <RoomDeletedModal
+  //         isOpen={roomDeletedOpen}
+  //         onConfirm={async () => {
+  //           try {
+  //             await stompClient?.deactivate();
+  //           } catch {}
+  //           navigate(-1);
+  //         }}
+  //       />
+  //       {isQuizModalOpen && entryQuestion && (
+  //         <EntryQuizModal
+  //           question={entryQuestion}
+  //           onSubmit={handleSubmitAnswer}
+  //           onExit={() => navigate("/")}
+  //         />
+  //       )}
+  //       <div className="flex justify-center items-center h-24">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+  //       </div>
+  //     </>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
