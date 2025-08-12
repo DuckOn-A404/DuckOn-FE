@@ -4,7 +4,7 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
@@ -19,6 +19,7 @@ import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorM
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
 import { onTokenRefreshed } from "../../api/axiosInstance";
+import { fireAndForget } from "../../utils/fireAndForget";
 import type { LiveRoomSyncDTO } from "../../types/Room";
 
 const LiveRoomPage = () => {
@@ -66,42 +67,94 @@ const LiveRoomPage = () => {
   const resolvedArtistId =
     artistIdFromQuery ?? artistIdFromRoom ?? artistIdFromState;
 
-  const handleExit = async () => {
-    if (!roomId || leavingRef.current) return;
-    if (!resolvedArtistId) {
-      return;
-    }
-    leavingRef.current = true;
+  // [참가자 퇴장 로직]
+  const performExit = useCallback(async () => {
+    if (!roomId || !resolvedArtistId || leavingRef.current) return;
+    leavingRef.current = true; // 중복 실행 방지
 
-    // 내 화면에서 즉시 카운트 -1
-    setRoom((prev: any) =>
-      prev
-        ? {
-            ...prev,
-            participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
-          }
-        : prev
-    );
+    try {
+      await exitRoom(Number(roomId), resolvedArtistId);
+    } catch (err) {
+      console.error("퇴장 API 호출 실패:", err);
+      throw err;
+    } finally {
+      // API 성공/실패와 관계없이 소켓 연결은 항상 종료
+      try {
+        await stompClient?.deactivate();
+      } catch {}
+    }
+  }, [roomId, resolvedArtistId, stompClient]);
+
+  // [방장 삭제 로직]
+  const performDelete = useCallback(async () => {
+    if (!roomId || !resolvedArtistId || leavingRef.current) return;
+    leavingRef.current = true;
+    try {
+      await deleteRoom(Number(roomId), resolvedArtistId);
+    } catch (err) {
+      console.error("방 삭제 API 호출 실패:", err);
+    } finally {
+      try {
+        await stompClient?.deactivate();
+      } catch {}
+    }
+  }, [roomId, resolvedArtistId, stompClient]);
+
+  const handleExit = async () => {
     setParticipantCount((prev) =>
       typeof prev === "number" ? Math.max(0, prev - 1) : prev
     );
 
     try {
-      await exitRoom(Number(roomId), resolvedArtistId);
+      await performExit(); // 핵심 정리 로직 호출
     } catch {
-      setRoom((prev: any) =>
-        prev
-          ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
-          : prev
+      // API 호출 실패 시 UI를 원래대로 되돌림
+      setParticipantCount((prev) =>
+        typeof prev === "number" ? prev + 1 : prev
       );
     } finally {
-      try {
-        await stompClient?.deactivate();
-      } catch {}
-      navigate(-1);
+      navigate(-1); // 모든 작업이 끝난 후 페이지 이동
     }
   };
 
+  // 기존 퇴장 코드
+  // const handleExit = async () => {
+  //   if (!roomId || leavingRef.current) return;
+  //   if (!resolvedArtistId) {
+  //     return;
+  //   }
+  //   leavingRef.current = true;
+
+  //   // 내 화면에서 즉시 카운트 -1
+  //   setRoom((prev: any) =>
+  //     prev
+  //       ? {
+  //           ...prev,
+  //           participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
+  //         }
+  //       : prev
+  //   );
+  //   setParticipantCount((prev) =>
+  //     typeof prev === "number" ? Math.max(0, prev - 1) : prev
+  //   );
+
+  //   try {
+  //     await exitRoom(Number(roomId), resolvedArtistId);
+  //   } catch {
+  //     setRoom((prev: any) =>
+  //       prev
+  //         ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
+  //         : prev
+  //     );
+  //   } finally {
+  //     try {
+  //       await stompClient?.deactivate();
+  //     } catch {}
+  //     navigate(-1);
+  //   }
+  // };
+
+  // 방삭제 버튼 클릭 시 실행되는 로직
   const handleDeleteRoom = async () => {
     if (!roomId || !resolvedArtistId) {
       setIsDeleteOpen(false);
@@ -118,7 +171,7 @@ const LiveRoomPage = () => {
       } catch {}
       navigate("/");
     }
-  }
+  };
 
   const handleSubmitAnswer = async (answer: string) => {
     try {
@@ -365,7 +418,6 @@ const LiveRoomPage = () => {
     };
   }, [roomId]);
 
-
   // ================================================================================
   // 4) 액세스 토큰 갱신 이벤트 → 모든 STOMP 재연결
   //    - null 토큰(로그아웃/리프레시 실패) 처리
@@ -425,7 +477,7 @@ const LiveRoomPage = () => {
               const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
               const t = evt?.eventType;
 
-              if (typeof evt?.participantCount === "number") 
+              if (typeof evt?.participantCount === "number")
                 setParticipantCount(evt.participantCount);
 
               switch (t) {
@@ -488,6 +540,55 @@ const LiveRoomPage = () => {
       off();
     };
   }, [roomId, myUser, isQuizModalOpen, myUserId]);
+
+  // 페이지 이탈했을 때 자동 정리 로직
+  useEffect(() => {
+    const cleanup = async () => {
+      if (isHost) {
+        // 방장이 페이지를 떠나면 방 삭제
+        await performDelete();
+      } else {
+        // 참가자가 페이지를 떠나면 방 나가기
+        await performExit();
+      }
+    };
+
+    // 컴포넌트가 사라질 때(unmount) cleanup 함수를 실행
+    return () => {
+      if (!leavingRef.current) {
+        cleanup();
+      }
+    };
+  }, [isHost, performExit, performDelete]);
+
+  // 브라우저 차원에서 방을 나갔을 경우 처리 로직
+  useEffect(() => {
+    if (!roomId || !resolvedArtistId) return;
+
+    const onPageHide = () => {
+      if (isHost) {
+        // 방장일 경우
+        fireAndForget(
+          `/rooms/${roomId}?artistId=${resolvedArtistId}`,
+          "DELETE"
+        );
+      } else {
+        // 일반 사용자일 경우 (POST)
+        fireAndForget(
+          `/rooms/${roomId}/exit?artistId=${resolvedArtistId}`,
+          "POST"
+        );
+      }
+    };
+
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onPageHide);
+
+    return () => {
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onPageHide);
+    };
+  }, [roomId, resolvedArtistId, isHost]);
 
   if (!myUser) {
     return (
