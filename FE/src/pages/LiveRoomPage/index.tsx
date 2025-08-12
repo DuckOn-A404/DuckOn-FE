@@ -4,7 +4,7 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
@@ -19,6 +19,7 @@ import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorM
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
 import { onTokenRefreshed } from "../../api/axiosInstance";
+import { fireAndForget } from "../../utils/fireAndForget";
 import type { LiveRoomSyncDTO } from "../../types/Room";
 
 const LiveRoomPage = () => {
@@ -48,6 +49,8 @@ const LiveRoomPage = () => {
   const syncRef = useRef<Client | null>(null);
   const lastTokenRef = useRef<string | null>(null);
   const leavingRef = useRef(false);
+  const isHostRef = useRef(false);
+  const joinedRef = useRef(false);
 
   const parseId = (raw: string | null) => {
     if (!raw) return undefined;
@@ -66,59 +69,106 @@ const LiveRoomPage = () => {
   const resolvedArtistId =
     artistIdFromQuery ?? artistIdFromRoom ?? artistIdFromState;
 
-  const handleExit = async () => {
-    if (!roomId || leavingRef.current) return;
-    if (!resolvedArtistId) {
-      return;
-    }
-    leavingRef.current = true;
+  // [참가자 퇴장 로직]
+  const performExit = useCallback(async () => {
+    if (!roomId || !resolvedArtistId || leavingRef.current) return;
+    leavingRef.current = true; // 중복 실행 방지
 
-    // 내 화면에서 즉시 카운트 -1
-    setRoom((prev: any) =>
-      prev
-        ? {
-            ...prev,
-            participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
-          }
-        : prev
-    );
+    try {
+      await exitRoom(Number(roomId), resolvedArtistId);
+    } catch (err) {
+      console.error("퇴장 API 호출 실패:", err);
+      throw err;
+    } finally {
+      // API 성공/실패와 관계없이 소켓 연결은 항상 종료
+      try {
+        await stompClient?.deactivate();
+      } catch {}
+    }
+  }, [roomId, resolvedArtistId, stompClient]);
+
+  // [방장 삭제 로직]
+  const performDelete = useCallback(async () => {
+    if (!roomId || !resolvedArtistId || leavingRef.current) return;
+    leavingRef.current = true;
+    try {
+      await deleteRoom(Number(roomId), resolvedArtistId);
+    } catch (err) {
+      console.error("방 삭제 API 호출 실패:", err);
+    } finally {
+      try {
+        await stompClient?.deactivate();
+      } catch {}
+    }
+  }, [roomId, resolvedArtistId, stompClient]);
+
+  const handleExit = async () => {
     setParticipantCount((prev) =>
       typeof prev === "number" ? Math.max(0, prev - 1) : prev
     );
 
     try {
-      await exitRoom(Number(roomId), resolvedArtistId);
+      await performExit(); // 핵심 정리 로직 호출
     } catch {
-      setRoom((prev: any) =>
-        prev
-          ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
-          : prev
+      // API 호출 실패 시 UI를 원래대로 되돌림
+      setParticipantCount((prev) =>
+        typeof prev === "number" ? prev + 1 : prev
       );
     } finally {
-      try {
-        await stompClient?.deactivate();
-      } catch {}
-      navigate(-1);
+      navigate(-1); // 모든 작업이 끝난 후 페이지 이동
     }
   };
 
+  // 기존 퇴장 코드
+  // const handleExit = async () => {
+  //   if (!roomId || leavingRef.current) return;
+  //   if (!resolvedArtistId) {
+  //     return;
+  //   }
+  //   leavingRef.current = true;
+
+  //   // 내 화면에서 즉시 카운트 -1
+  //   setRoom((prev: any) =>
+  //     prev
+  //       ? {
+  //           ...prev,
+  //           participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
+  //         }
+  //       : prev
+  //   );
+  //   setParticipantCount((prev) =>
+  //     typeof prev === "number" ? Math.max(0, prev - 1) : prev
+  //   );
+
+  //   try {
+  //     await exitRoom(Number(roomId), resolvedArtistId);
+  //   } catch {
+  //     setRoom((prev: any) =>
+  //       prev
+  //         ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
+  //         : prev
+  //     );
+  //   } finally {
+  //     try {
+  //       await stompClient?.deactivate();
+  //     } catch {}
+  //     navigate(-1);
+  //   }
+  // };
+
+  // 방삭제 버튼 클릭 시 실행되는 로직
   const handleDeleteRoom = async () => {
     if (!roomId || !resolvedArtistId) {
       setIsDeleteOpen(false);
       return;
     }
     try {
-      await deleteRoom(Number(roomId), resolvedArtistId);
-    } catch (e) {
-      console.warn("방 삭제 중 오류:", e);
+      await performDelete();
     } finally {
       setIsDeleteOpen(false);
-      try {
-        await stompClient?.deactivate();
-      } catch {}
-      navigate("/");
+      navigate("/"); // 삭제 후 홈으로
     }
-  }
+  };
 
   const handleSubmitAnswer = async (answer: string) => {
     try {
@@ -139,6 +189,10 @@ const LiveRoomPage = () => {
   };
 
   const isHost = room?.hostId === myUserId;
+
+  useEffect(() => {
+    isHostRef.current = room?.hostId === myUserId; // 최신 역할을 ref에 유지
+  }, [room?.hostId, myUserId]);
 
   // 방장이 playlist 영상 추가 시 update publish
   const handleAddToPlaylist = (newVideoId: string) => {
@@ -381,6 +435,7 @@ const LiveRoomPage = () => {
         if (data && data.hostNickname) {
           setHostNickname(data.hostNickname);
         }
+        joinedRef.current = true;
       } catch (err: any) {
         const status = err?.response?.status;
         if (status === 401 && err?.response?.data?.entryQuestion) {
@@ -396,7 +451,6 @@ const LiveRoomPage = () => {
       isMounted = false;
     };
   }, [roomId]);
-
 
   // ================================================================================
   // 4) 액세스 토큰 갱신 이벤트 → 모든 STOMP 재연결
@@ -457,7 +511,7 @@ const LiveRoomPage = () => {
               const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
               const t = evt?.eventType;
 
-              if (typeof evt?.participantCount === "number") 
+              if (typeof evt?.participantCount === "number")
                 setParticipantCount(evt.participantCount);
 
               switch (t) {
@@ -521,24 +575,97 @@ const LiveRoomPage = () => {
     };
   }, [roomId, myUser, isQuizModalOpen, myUserId]);
 
+  // // 페이지 이탈했을 때 자동 정리 로직
+  // useEffect(() => {
+  //   return () => {
+  //     // 아직 입장 전이거나, 이미 나가는 중이면 아무 것도 안 함
+  //     if (!joinedRef.current || leavingRef.current) return;
+
+  //     leavingRef.current = true;
+  //     if (isHostRef.current) {
+  //       void performDelete();
+  //     } else {
+  //       void performExit();
+  //     }
+  //   };
+  // }, []);
+
+  // // 브라우저 차원에서 방을 나갔을 경우 처리 로직
+  // useEffect(() => {
+  //   if (!roomId || !resolvedArtistId) return;
+
+  //   const onPageHide = () => {
+  //     if (!joinedRef.current || leavingRef.current) return;
+
+  //     leavingRef.current = true;
+  //     if (isHostRef.current) {
+  //       fireAndForget(
+  //         `/rooms/${roomId}?artistId=${resolvedArtistId}`,
+  //         "DELETE"
+  //       );
+  //     } else {
+  //       fireAndForget(
+  //         `/rooms/${roomId}/exit?artistId=${resolvedArtistId}`,
+  //         "POST"
+  //       );
+  //     }
+  //   };
+
+  //   window.addEventListener("pagehide", onPageHide);
+  //   window.addEventListener("beforeunload", onPageHide);
+
+  //   return () => {
+  //     window.removeEventListener("pagehide", onPageHide);
+  //     window.removeEventListener("beforeunload", onPageHide);
+  //   };
+  // }, [roomId, resolvedArtistId]);
+
+  // 1. 페이지 이탈/언마운트 시 실행될 정리 로직을 하나로 통합합니다.
+  useEffect(() => {
+    // 아직 방에 입장하지 않았거나, 필수 ID가 없으면 아무것도 등록하지 않음
+    if (!joinedRef.current || !roomId || !resolvedArtistId) {
+      return;
+    }
+
+    const cleanup = () => {
+      // 중복 실행 방지
+      if (leavingRef.current) return;
+      leavingRef.current = true;
+
+      // state 대신 ref를 사용하여 가장 최신 isHost 값을 기준으로 판단
+      if (isHostRef.current) {
+        fireAndForget(
+          `/rooms/${roomId}?artistId=${resolvedArtistId}`,
+          "DELETE"
+        );
+      } else {
+        fireAndForget(
+          `/rooms/${roomId}/exit?artistId=${resolvedArtistId}`,
+          "POST"
+        );
+      }
+    };
+
+    // 브라우저 탭/창 닫기 등
+    window.addEventListener("pagehide", cleanup);
+
+    // 컴포넌트 언마운트 시 (뒤로가기, 다른 페이지로 이동 등)
+    return () => {
+      window.removeEventListener("pagehide", cleanup);
+      cleanup();
+    };
+  }, [roomId, resolvedArtistId]);
+
   if (!myUser) {
     return (
       <ConnectionErrorModal isOpen={true} onClose={() => navigate("/login")} />
     );
   }
 
-  if (!room || !myUser) {
+  if (!room) {
+    // 로딩 상태를 room 존재 여부로 단순화
     return (
       <>
-        <RoomDeletedModal
-          isOpen={roomDeletedOpen}
-          onConfirm={async () => {
-            try {
-              await stompClient?.deactivate();
-            } catch {}
-            navigate(-1);
-          }}
-        />
         {isQuizModalOpen && entryQuestion && (
           <EntryQuizModal
             question={entryQuestion}
@@ -546,12 +673,38 @@ const LiveRoomPage = () => {
             onExit={() => navigate("/")}
           />
         )}
-        <div className="flex justify-center items-center h-24">
+        <div className="flex justify-center items-center h-screen bg-gray-900">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         </div>
       </>
     );
   }
+
+  // if (!room || !myUser) {
+  //   return (
+  //     <>
+  //       <RoomDeletedModal
+  //         isOpen={roomDeletedOpen}
+  //         onConfirm={async () => {
+  //           try {
+  //             await stompClient?.deactivate();
+  //           } catch {}
+  //           navigate(-1);
+  //         }}
+  //       />
+  //       {isQuizModalOpen && entryQuestion && (
+  //         <EntryQuizModal
+  //           question={entryQuestion}
+  //           onSubmit={handleSubmitAnswer}
+  //           onExit={() => navigate("/")}
+  //         />
+  //       )}
+  //       <div className="flex justify-center items-center h-24">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+  //       </div>
+  //     </>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
