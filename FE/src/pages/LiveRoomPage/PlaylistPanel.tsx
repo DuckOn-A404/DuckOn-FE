@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Youtube } from "lucide-react";
+import { fetchYouTubeMeta } from "../../utils/youtubeMeta";
 
 type PlaylistPanelProps = {
   isHost: boolean;
@@ -8,6 +9,8 @@ type PlaylistPanelProps = {
   onAddToPlaylist: (videoId: string) => void;
   onSelect?: (index: number) => void;
 };
+
+type Meta = { title?: string; author?: string; thumbnail?: string };
 
 const PlaylistPanel = ({
   isHost,
@@ -18,6 +21,7 @@ const PlaylistPanel = ({
 }: PlaylistPanelProps) => {
   const [inputId, setInputId] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [metaMap, setMetaMap] = useState<Record<string, Meta>>({});
 
   const toVideoId = (value: string): string | null => {
     const trimmed = value.trim();
@@ -35,7 +39,10 @@ const PlaylistPanel = ({
   };
 
   const toThumbUrl = (videoId: string): string => {
-    return `https://img.youtube.com/vi/${videoId}/default.jpg`;
+    return (
+      metaMap[videoId]?.thumbnail ||
+      `https://img.youtube.com/vi/${videoId}/default.jpg`
+    );
   };
 
   const handleAdd = () => {
@@ -48,6 +55,24 @@ const PlaylistPanel = ({
     onAddToPlaylist(id);
     setInputId("");
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      const tasks = playlist
+        .filter((id) => !metaMap[id])
+        .map(async (id) => {
+          const m = await fetchYouTubeMeta(id);
+          if (!mounted || !m) return;
+          setMetaMap((prev) => ({ ...prev, [id]: m }));
+        });
+      await Promise.allSettled(tasks);
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [playlist, metaMap]);
 
   return (
     <div className="flex flex-col h-full bg-gray-800 text-white">
@@ -64,6 +89,7 @@ const PlaylistPanel = ({
         ) : (
           playlist.map((videoId, index) => {
             const isPlaying = index === currentVideoIndex;
+            const meta = metaMap[videoId] || {};
 
             const handleSelect = () => {
               // 호스트만 제어, 현재 곡은 무시 (원하면 여기서 재시작 로직으로 바꿔도 됨)
@@ -85,11 +111,17 @@ const PlaylistPanel = ({
                   }
                 }}
                 className={`p-2 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out
-                  ${isPlaying
-                    ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
-                    : `bg-gray-800 ${isHost ? "hover:bg-gray-700 cursor-pointer" : "cursor-default"}`}`}
+                  ${
+                    isPlaying
+                      ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
+                      : `bg-gray-800 ${
+                          isHost
+                            ? "hover:bg-gray-700 cursor-pointer"
+                            : "cursor-default"
+                        }`
+                  }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 w-full">
                   <div className="w-2/5 flex-shrink-0">
                     <img
                       src={toThumbUrl(videoId)}
@@ -99,14 +131,18 @@ const PlaylistPanel = ({
                   </div>
                   <div className="flex-1 flex flex-col overflow-hidden">
                     <span className="font-semibold truncate text-sm">
-                      {`Video ID: ${videoId}`}
+                      {meta.title || `Video ID: ${videoId}`}
                     </span>
                     <span
-                      className={`text-xs ${
-                        isPlaying ? "text-white" : "text-gray-400"
+                      className={`text-xs truncate ${
+                        isPlaying ? "text-white" : "text-gray-300"
                       }`}
                     >
-                      {isPlaying ? "지금 재생 중" : `재생목록 #${index + 1}`}
+                      {meta.author
+                        ? meta.author
+                        : isPlaying
+                        ? "지금 재생 중"
+                        : `재생목록 #${index + 1}`}
                     </span>
                   </div>
                 </div>
@@ -129,7 +165,7 @@ const PlaylistPanel = ({
             />
             <button
               onClick={handleAdd}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1.5 px-3 rounded-md text-sm flex items-center gap-1"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1.5 px-3 rounded-md text-sm"
             >
               추가
             </button>
