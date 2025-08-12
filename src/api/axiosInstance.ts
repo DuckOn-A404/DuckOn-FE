@@ -1,7 +1,7 @@
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
 const RAW = import.meta.env.VITE_API_BASE_URL; // undefined | '' | '/api'
-const API_BASE = RAW || "/api";
+export const API_BASE = RAW || "/api";
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -9,6 +9,11 @@ export const api = axios.create({
   // withCredentials: true, // 헤더 기반이라도 true여도 무방(쿠키 안쓰면 영향 X)
   withCredentials: false,
 });
+
+export const buildApiUrl = (path: string) => {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE}${p}`;
+};
 
 // --- 유틸: 안전하게 토큰 꺼내기 ---
 export const getAccessToken = (): string | null => {
@@ -115,7 +120,7 @@ api.interceptors.response.use(
     }
 
     // refresh 요청 자체가 401이면 루프 방지: 바로 실패
-    const originalUrl = (original.url || "");
+    const originalUrl = original.url || "";
     if (originalUrl.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
@@ -141,7 +146,7 @@ api.interceptors.response.use(
 
       const resp = await api.post(
         "/auth/refresh",
-        { refreshToken: refresh},
+        { refreshToken: refresh },
         {
           headers: {
             "Content-Type": "application/json",
@@ -150,12 +155,13 @@ api.interceptors.response.use(
           },
           withCredentials: false,
         }
-      )
+      );
 
       const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
         (resp.data as any) ?? {};
 
-      if (!newAccessToken) throw new Error("No accessToken in refresh response");
+      if (!newAccessToken)
+        throw new Error("No accessToken in refresh response");
 
       localStorage.setItem("accessToken", newAccessToken);
       if (newRefreshToken) {
