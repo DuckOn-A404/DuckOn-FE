@@ -1098,6 +1098,10 @@ const LiveRoomPage = () => {
         const data = await enterRoom(roomId, ""); // 항상 JSON 바디 {entryAnswer:""} 전송
         if (!isMounted) return;
         setRoom(data); // 성공이면 비잠금. 방장/참가자 여부는 data.hostId === myUser?.userId 로 판단
+
+        if (data && data.hostNickname) {
+          setHostNickname(data.hostNickname);
+        }
       } catch (err: any) {
         const status = err?.response?.status;
         if (status === 401 && err?.response?.data?.entryQuestion) {
