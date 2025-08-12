@@ -12,7 +12,7 @@ const Footer = () => {
           <div>
             <h2 className="text-xl font-bold text-gray-800">DuckON</h2>
             <p className="text-xs text-gray-500 mt-1">
-              © 2025 DuckON. All rights reserved.
+              © 2025 DuckOn. All rights reserved.
             </p>
           </div>
 
