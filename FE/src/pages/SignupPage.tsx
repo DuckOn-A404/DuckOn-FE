@@ -1,23 +1,23 @@
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSignupForm } from "../hooks/useSignupForm";
 import LoginSignupCard from "../components/common/LoginSignupCard";
 import InputField from "../components/common/InputField";
-import SelectField from "../components/common/SelectField";
-import { fetchLanguages } from "../api/languageSelect";
+// import SelectField from "../components/common/SelectField";
+// import { fetchLanguages } from "../api/languageSelect";
 import {
   Mail,
   User,
   MessageSquareText,
   LockKeyhole,
   ArrowLeft,
-  Globe,
+  // Globe,
 } from "lucide-react";
 
-type SelectOption = {
-  value: string;
-  label: string;
-};
+// type SelectOption = {
+//   value: string;
+//   label: string;
+// };
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -38,21 +38,42 @@ const SignupPage = () => {
     passwordError,
   } = useSignupForm();
 
-  const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
+  // const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
   const iconStyle = "w-5 h-5 text-gray-400";
 
-  useEffect(() => {
-    const loadLanguages = async () => {
-      const languages = await fetchLanguages();
-      const options = languages.map((lang) => ({
-        value: lang.langCode,
-        label: lang.langName,
-      }));
-      setLanguageOptions(options);
-    };
+  // useEffect(() => {
+  //   const loadLanguages = async () => {
+  //     const languages = await fetchLanguages();
+  //     const options = languages.map((lang) => ({
+  //       value: lang.langCode,
+  //       label: lang.langName,
+  //     }));
+  //     setLanguageOptions(options);
+  //   };
 
-    loadLanguages();
-  }, []);
+  //   loadLanguages();
+  // }, []);
+
+  // 'Enter' 키 동작을 제어하는 이벤트 핸들러
+  const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    if (e.key !== "Enter") return;
+
+    const target = e.target as HTMLInputElement | HTMLSelectElement | null;
+    const targetId = target?.id;
+
+    // 이메일 입력창에서 Enter를 누르면 이메일 중복 확인 실행
+    if (targetId === "email") {
+      e.preventDefault();
+      handleCheckEmail();
+    }
+    // 아이디 입력창에서 Enter를 누르면 아이디 중복 확인 실행
+    else if (targetId === "userId") {
+      e.preventDefault();
+      handleCheckUserId();
+    } else {
+      e.preventDefault();
+    }
+  };
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-purple-600 to-pink-500">
@@ -66,12 +87,16 @@ const SignupPage = () => {
         </div>
 
         {/* 회원가입 폼 영역 */}
-        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={handleFormKeyDown}
+          className="w-full flex flex-col gap-4"
+        >
           <div className="flex gap-2 items-start">
             <div className="flex-grow">
               <InputField
                 id="email"
-                label="이메일"
+                label="이메일*"
                 type="email"
                 placeholder="이메일을 입력하세요"
                 icon={<Mail className={iconStyle} />}
@@ -93,7 +118,7 @@ const SignupPage = () => {
             <div className="flex-grow">
               <InputField
                 id="userId"
-                label="아이디"
+                label="아이디*"
                 type="text"
                 placeholder="아이디를 입력하세요"
                 icon={<User className={iconStyle} />}
@@ -126,7 +151,7 @@ const SignupPage = () => {
           </div>
           <InputField
             id="password"
-            label="비밀번호"
+            label="비밀번호*"
             type="password"
             placeholder="비밀번호를 입력하세요"
             icon={<LockKeyhole className={iconStyle} />}
@@ -136,7 +161,7 @@ const SignupPage = () => {
           />
           <InputField
             id="passwordConfirm"
-            label="비밀번호 확인"
+            label="비밀번호 확인*"
             type="password"
             placeholder="비밀번호를 다시 입력하세요"
             icon={<LockKeyhole className={iconStyle} />}
@@ -144,20 +169,20 @@ const SignupPage = () => {
             onChange={handleChange}
             error={passwordConfirmError}
           />
-          <SelectField
+          {/* <SelectField
             id="language"
             label="언어 선택"
             icon={<Globe className={iconStyle} />}
             value={formData.language}
             onChange={handleChange}
             options={languageOptions}
-          />
+          /> */}
           <div>
             <label
               htmlFor="profileImg"
               className="text-gray-700 text-sm font-medium mb-2 flex items-center gap-2"
             >
-              프로필 이미지 (선택)
+              프로필 이미지
             </label>
             <input
               id="profileImg"
@@ -169,9 +194,7 @@ const SignupPage = () => {
           </div>
 
           {/* 에러 메시지 표시 */}
-          {error && (
-            <p className="text-sm text-red-500 text-center mt-2">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
 
           {/* 회원가입 버튼 */}
           <button

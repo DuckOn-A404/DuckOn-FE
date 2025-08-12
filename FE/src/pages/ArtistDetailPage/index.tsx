@@ -12,15 +12,22 @@ import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import { type Artist } from "../../types/artist";
-import { Video } from "lucide-react";
+import { Video, Plus } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
+
+const PLACEHOLDER_URL =
+  "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
+
+type ArtistDetailInfo = Artist & {
+  followedAt: string | null;
+};
 
 const ArtistDetailPage = () => {
   const location = useLocation();
   const artistId = location.state?.artistId as number | undefined;
 
   // 아티스트 상세 정보와 로딩 상태를 위한 State
-  const [artist, setArtist] = useState<Artist | null>(null);
+  const [artist, setArtist] = useState<ArtistDetailInfo | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -44,7 +51,9 @@ const ArtistDetailPage = () => {
   } = useArtistRooms(artist?.artistId);
 
   // 최적화된 팔로우 상태 확인
-  const isFollowing = artist ? followingSet.has(artist.artistId) : false;
+  const isFollowing = artist
+    ? !!artist.followedAt || followingSet.has(artist.artistId)
+    : false;
 
   // 페이지 진입 시 아티스트 상세 정보 불러오기
   useEffect(() => {
@@ -57,8 +66,7 @@ const ArtistDetailPage = () => {
       try {
         const artistData = await getArtistDetail(artistId);
         setArtist(artistData);
-      } catch (error) {
-        console.error("페이지 데이터를 불러오는 데 실패했습니다.", error);
+      } catch {
         setArtist(null);
       } finally {
         setIsLoadingPage(false);
@@ -73,7 +81,7 @@ const ArtistDetailPage = () => {
     }
   }, [isLoggedIn, fetchFollowedArtists]);
 
-  if (isLoadingPage || !artist) {
+  if (isLoadingPage) {
     return (
       <div className="flex w-full bg-gray-50">
         {/* 왼쪽: 팔로우 리스트 자리 */}
@@ -94,21 +102,6 @@ const ArtistDetailPage = () => {
             </div>
             <div className="w-20 h-8 bg-gray-200 rounded-full" />
           </div>
-
-          {/* 라이브 방 영역 Skeleton */}
-          <div className="space-y-4">
-            <div className="h-6 w-40 bg-gray-200 rounded" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-              {Array(2)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-48 bg-gray-200 rounded-2xl shadow-sm"
-                  />
-                ))}
-            </div>
-          </div>
         </main>
 
         {/* 오른쪽 실시간 탭 */}
@@ -117,14 +110,22 @@ const ArtistDetailPage = () => {
     );
   }
 
-  const getDday = (dateString: string) => {
-    const today = new Date();
-    const target = new Date(dateString);
-    const diff = Math.floor(
-      (today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24)
-    );
-    return diff >= 0 ? `D+${diff}` : `D${diff}`;
-  };
+  // // 팔로우 d-day 계산
+  // const getFollowDday = (dateString: string) => {
+  //   const today = new Date();
+  //   const target = new Date(dateString);
+
+  //   const KST_OFFSET = 9 * 60 * 60 * 1000;
+
+  //   const todayKST = new Date(today.getTime() + KST_OFFSET);
+  //   const targetKST = new Date(target.getTime() + KST_OFFSET);
+
+  //   const diff = Math.floor(
+  //     (todayKST.getTime() - targetKST.getTime()) / (1000 * 60 * 60 * 24)
+  //   );
+
+  //   return `D+${Math.max(diff + 1, 1)}`;
+  // };
 
   if (!artist) {
     return (
@@ -137,34 +138,37 @@ const ArtistDetailPage = () => {
   // 팔로우 버튼 클릭 핸들러
   const handleFollowToggle = async () => {
     if (!myUser) return alert("로그인이 필요합니다.");
-    if (!myUser) return alert("로그인이 필요합니다.");
     if (!artist) return;
 
     try {
       if (isFollowing) {
         await unfollowArtist(artist.artistId);
         removeFollow(artist.artistId);
+        setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
       } else {
         await followArtist(artist.artistId);
         addFollow(artist);
+        setArtist((prev) =>
+          prev ? { ...prev, followedAt: new Date().toISOString() } : prev
+        );
       }
-    } catch (error) {
-      console.error("팔로우 처리 실패:", error);
+    } catch {
       alert("요청 처리에 실패했습니다.");
     }
   };
 
   return (
-    <div className="flex w-full bg-gray-50">
+    <div className="flex w-full">
       {/* 왼쪽: 팔로우 리스트 */}
-      <LeftSidebar />
-
+      <div className="hidden lg:block">
+        <LeftSidebar />
+      </div>
       {/* 가운데: 아티스트 카드 + 라이브/예정 */}
-      <main className="flex-1 p-6 space-y-10">
-        <div className="bg-white p-6 rounded-2xl shadow flex justify-between items-center">
-          <div className="flex items-center gap-6">
+      <main className="w-full lg:flex-1 p-4 sm:p-6 space-y-8">
+        <div className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
             <img
-              src={artist.imgUrl}
+              src={artist.imgUrl || PLACEHOLDER_URL}
               alt={artist.nameEn}
               className="w-24 h-24 rounded-2xl object-cover shadow"
             />
@@ -177,14 +181,16 @@ const ArtistDetailPage = () => {
             </div>
           </div>
           {isLoggedIn && (
-            <div className="text-right space-y-2">
+            <div className="w-full sm:w-auto flex-shrink-0">
               {isFollowing ? (
                 <>
-                  <p className="text-sm font-semibold">
-                    {getDday(artist.debutDate)}
-                  </p>
+                  {/* {artist.followedAt && (
+                    <p className="text-sm font-semibold">
+                      {getFollowDday(artist.followedAt)}
+                    </p>
+                  )} */}
                   <button
-                    className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
+                    className="w-full sm:w-auto bg-purple-100 text-purple-700 font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-purple-200"
                     onClick={handleFollowToggle}
                   >
                     팔로우 중
@@ -193,7 +199,7 @@ const ArtistDetailPage = () => {
               ) : (
                 // 팔로우 중이 아닐 때
                 <button
-                  className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full cursor-pointer"
+                  className="w-full sm:w-auto bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-purple-700"
                   onClick={handleFollowToggle}
                 >
                   + 팔로우
@@ -206,24 +212,28 @@ const ArtistDetailPage = () => {
         {/* 라이브 방 */}
         <section>
           {/* 섹션 헤더: 타이틀과 '새 방 만들기' 버튼 */}
-          <div className="flex justify-between items-center mb-6 rounded-2xl bg-gradient-to-r from-purple-50 via-white to-pink-50 p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-8 rounded-2xl bg-white p-5 shadow-md border border-gray-100">
+            {/* 왼쪽: 아이콘 및 텍스트 */}
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 p-2 text-white shadow">
-                <Video size={24} />
+              <div className="flex-shrink-0 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 p-3 text-white shadow-lg shadow-purple-200/50">
+                <Video size={28} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-800">라이브 방</h2>
+                <h2 className="text-xl font-bold text-gray-800">라이브 방</h2>
                 <p className="text-sm text-gray-500">
                   {liveRooms.length}개의 방이 진행 중
                 </p>
               </div>
             </div>
+
+            {/* 오른쪽: '새 방 만들기' 버튼 */}
             {isFollowing && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="flex-shrink-0 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow hover:scale-105 transition-transform"
+                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-md shadow-purple-300/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
               >
-                + 새 방 만들기
+                <Plus size={16} />
+                <span>새 방 만들기</span>
               </button>
             )}
           </div>
@@ -268,7 +278,9 @@ const ArtistDetailPage = () => {
       </main>
 
       {/* 오른쪽: 실시간 탭 */}
-      <RightSidebar artistId={artist!.artistId} />
+      <div className="hidden lg:block">
+        <RightSidebar artistId={artist!.artistId} />
+      </div>
 
       {/* 방 생성 모달 */}
       <CreateRoomModal
