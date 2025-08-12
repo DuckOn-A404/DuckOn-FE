@@ -35,7 +35,7 @@ export const useArtistFollowStore = create<FollowState>((set) => ({
   fetchFollowedArtists: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await getFollowedArtists(1, 100);
+      const response = await getFollowedArtists(1, 500);
       const artists: Artist[] = response.artistList || [];
       const artistIdSet = new Set(artists.map((artist) => artist.artistId));
 

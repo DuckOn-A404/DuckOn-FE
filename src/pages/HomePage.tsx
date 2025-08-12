@@ -1,14 +1,13 @@
-import {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import {Link} from "react-router-dom";
-import {getRandomArtists} from "../api/artistService";
-import {type Artist} from "../types/artist";
-import {useTrendingRooms} from "../hooks/useTrendingRooms";
+import { getRandomArtists } from "../api/artistService";
+import { type Artist } from "../types/artist";
+import { useTrendingRooms } from "../hooks/useTrendingRooms";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
-import {Tv} from "lucide-react";
+import { Tv } from "lucide-react";
 
 const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
@@ -23,7 +22,7 @@ const HomePage = () => {
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     navigate(`/artist/${nameEn}`, {
-      state: {artistId: artistId},
+      state: { artistId: artistId },
     });
   };
 
@@ -48,7 +47,7 @@ const HomePage = () => {
       {/* 랜딩(Hero) 섹션 */}
       <div
         className="relative w-full h-96 bg-cover bg-center"
-        style={{backgroundImage: "url('/hero-background.png')"}}
+        style={{ backgroundImage: "url('/hero-background.png')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
         <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
@@ -73,12 +72,18 @@ const HomePage = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* 핫한 방송 영역 */}
         <section>
-          <h2 className="text-3xl font-bold mb-8 text-center sm:text-left">
-            🔥 지금 핫한 방
-          </h2>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold">🔥 지금 핫한 방</h2>
+            {/* <Link
+              to="/room-list"
+              className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
+            >
+              더보기 →
+            </Link> */}
+          </div>
           <div className="flex flex-wrap justify-center gap-8 flex-grow">
             {isLoadingTrending ? (
-              Array.from({length: 3}).map((_, i) => (
+              Array.from({ length: 3 }).map((_, i) => (
                 <VideoCardSkeleton key={i} />
               ))
             ) : trendingError ? (
@@ -114,18 +119,18 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             {isLoadingArtists
-              ? Array.from({length: 5}).map((_, i) => (
-                <ArtistCardSkeleton key={i} />
-              ))
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <ArtistCardSkeleton key={i} />
+                ))
               : recommendedArtists.map((artist) => (
-                <ArtistCard
-                  key={artist.artistId}
-                  {...artist}
-                  onClick={() =>
-                    handleCardClick(artist.artistId, artist.nameEn)
-                  }
-                />
-              ))}
+                  <ArtistCard
+                    key={artist.artistId}
+                    {...artist}
+                    onClick={() =>
+                      handleCardClick(artist.artistId, artist.nameEn)
+                    }
+                  />
+                ))}
           </div>
         </section>
       </main>
