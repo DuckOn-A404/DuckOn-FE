@@ -4,49 +4,47 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import {useEffect, useState, useRef} from "react";
-import {
-  enterRoom,
-  exitRoom,
-  deleteRoom,
-} from "../../api/roomService";
-import {useUserStore} from "../../store/useUserStore";
-import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
-import {createStompClient} from "../../socket";
+import { useEffect, useState, useRef } from "react";
+import { enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
+import { useUserStore } from "../../store/useUserStore";
+import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
+import { createStompClient } from "../../socket";
 
 import EntryQuizModal from "./EntryQuizModal";
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
-import {useChatSubscription} from "../../hooks/useChatSubscription";
+import { useChatSubscription } from "../../hooks/useChatSubscription";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
-import {onTokenRefreshed} from "../../api/axiosInstance";
+import { onTokenRefreshed } from "../../api/axiosInstance";
 
 const LiveRoomPage = () => {
-  const {roomId} = useParams();
+  const { roomId } = useParams();
   const [searchParams] = useSearchParams();
-  const location = useLocation() as {state?: {artistId?: number}};
-  const {myUser} = useUserStore();
+  const location = useLocation() as { state?: { artistId?: number } };
+  const { myUser } = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
 
   const [room, setRoom] = useState<any>(null);
+  const [hostNickname, setHostNickname] = useState<string | null>(null);
+
   const [stompClient, setStompClient] = useState<Client | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "playlist">("chat");
 
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
-  const {messages, sendMessage} = useChatSubscription(stompClient, roomId);
+  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
 
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
-  const [roomDeletedOpen, setRoomDeletedOpen] = useState(false)
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [roomDeletedOpen, setRoomDeletedOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const presenceRef = useRef<Client | null>(null)
-  const syncRef = useRef<Client | null>(null)
+  const presenceRef = useRef<Client | null>(null);
+  const syncRef = useRef<Client | null>(null);
   const lastTokenRef = useRef<string | null>(null);
   // 비번 없는 방에서 참가자 자동입장 중복 방지
   // const autoEnterTriedRef = useRef(false);
@@ -81,9 +79,9 @@ const LiveRoomPage = () => {
     setRoom((prev: any) =>
       prev
         ? {
-          ...prev,
-          participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
-        }
+            ...prev,
+            participantCount: Math.max(0, (prev.participantCount ?? 0) - 1),
+          }
         : prev
     );
     setParticipantCount((prev) =>
@@ -96,33 +94,35 @@ const LiveRoomPage = () => {
     } catch {
       setRoom((prev: any) =>
         prev
-          ? {...prev, participantCount: (prev.participantCount ?? 0) + 1}
+          ? { ...prev, participantCount: (prev.participantCount ?? 0) + 1 }
           : prev
       );
     } finally {
       // 이전 페이지 이동
       try {
         await stompClient?.deactivate();
-      } catch { }
+      } catch {}
       navigate(-1);
     }
   };
 
   const handleDeleteRoom = async () => {
     if (!roomId || !resolvedArtistId) {
-      setIsDeleteOpen(false)
-      return
+      setIsDeleteOpen(false);
+      return;
     }
     try {
-      await deleteRoom(Number(roomId), resolvedArtistId)
+      await deleteRoom(Number(roomId), resolvedArtistId);
     } catch (e) {
-      console.warn("방 삭제 중 오류:", e)
+      console.warn("방 삭제 중 오류:", e);
     } finally {
-      setIsDeleteOpen(false)
-      try {await stompClient?.deactivate();} catch { }
+      setIsDeleteOpen(false);
+      try {
+        await stompClient?.deactivate();
+      } catch {}
       navigate("/");
     }
-  }
+  };
 
   // const handleSubmitAnswer = async (answer: string) => {
   //   try {
@@ -212,7 +212,7 @@ const LiveRoomPage = () => {
     // 방장이 아니거나, 플레이리스트가 없으면 아무것도 안 함
     if (!isHost || !room || !room.playlist || !myUser) return;
 
-    const {currentVideoIndex, playlist} = room;
+    const { currentVideoIndex, playlist } = room;
 
     if (currentVideoIndex >= playlist.length - 1) {
       return;
@@ -269,7 +269,12 @@ const LiveRoomPage = () => {
     };
 
     presenceClient.activate();
-    return () => {try {presenceClient.deactivate();} catch { }; presenceRef.current = null;};
+    return () => {
+      try {
+        presenceClient.deactivate();
+      } catch {}
+      presenceRef.current = null;
+    };
   }, [roomId]);
   //   presenceClient.onStompError = (frame) => {
   //     console.error("참가자 수 STOMP 에러:", frame.headers["message"]);
@@ -318,8 +323,8 @@ const LiveRoomPage = () => {
             }
 
             if (!t) {
-              const {participantCount: _omit, ...rest} = evt ?? {};
-              setRoom((prev: any) => ({...prev, ...rest}));
+              const { participantCount: _omit, ...rest } = evt ?? {};
+              setRoom((prev: any) => ({ ...prev, ...rest }));
               return;
             }
 
@@ -342,11 +347,17 @@ const LiveRoomPage = () => {
 
               case "HOST_CHANGED":
                 setRoom((prev: any) =>
-                  prev ? {...prev, hostId: evt.hostId ?? prev.hostId, lastUpdated: evt.lastUpdated ?? prev.lastUpdated} : prev
+                  prev
+                    ? {
+                        ...prev,
+                        hostId: evt.hostId ?? prev.hostId,
+                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                      }
+                    : prev
                 );
-                if (evt.hostId === myUserId) console.info("방장 권한이 위임되었습니다.");
+                if (evt.hostId === myUserId)
+                  console.info("방장 권한이 위임되었습니다.");
                 return;
-
 
               case "USER_LEFT":
               case "USER_JOINED":
@@ -356,15 +367,13 @@ const LiveRoomPage = () => {
                 setRoomDeletedOpen(true);
                 return;
 
-
               case "STATE_SYNC":
                 if (evt.room) setRoom(evt.room);
                 return;
 
-
               default: {
-                const {participantCount: _omit, ...rest} = evt ?? {};
-                setRoom((prev: any) => ({...prev, ...rest}));
+                const { participantCount: _omit, ...rest } = evt ?? {};
+                setRoom((prev: any) => ({ ...prev, ...rest }));
                 return;
               }
             }
@@ -387,10 +396,10 @@ const LiveRoomPage = () => {
     return () => {
       try {
         sub?.unsubscribe();
-      } catch { }
+      } catch {}
       try {
         syncClient.deactivate();
-      } catch { }
+      } catch {}
       syncRef.current = null;
     };
     // isHost 제거, 대신 myUserId/navigate 추가
@@ -462,6 +471,11 @@ const LiveRoomPage = () => {
         const data = await enterRoom(roomId, ""); // 항상 JSON 바디 {entryAnswer:""} 전송
         if (!isMounted) return;
         setRoom(data); // 성공이면 비잠금. 방장/참가자 여부는 data.hostId === myUser?.userId 로 판단
+
+        // 방장이 null이 아닌 경우에만 갱신
+        if (data && data.hostNickname) {
+          setHostNickname(data.hostNickname);
+        }
       } catch (err: any) {
         const status = err?.response?.status;
         if (status === 401 && err?.response?.data?.entryQuestion) {
@@ -473,9 +487,10 @@ const LiveRoomPage = () => {
       }
     };
     loadRoom();
-    return () => {isMounted = false;};
+    return () => {
+      isMounted = false;
+    };
   }, [roomId]);
-
 
   // ================================================================================
   // 4) 액세스 토큰 갱신 이벤트 → 모든 STOMP 재연결
@@ -491,10 +506,10 @@ const LiveRoomPage = () => {
       if (!newToken) {
         try {
           await presenceRef.current?.deactivate();
-        } catch { }
+        } catch {}
         try {
           await syncRef.current?.deactivate();
-        } catch { }
+        } catch {}
         presenceRef.current = null;
         syncRef.current = null;
         setStompClient(null);
@@ -505,7 +520,7 @@ const LiveRoomPage = () => {
       if (roomId) {
         try {
           await presenceRef.current?.deactivate();
-        } catch { }
+        } catch {}
         const p = createStompClient(newToken);
         presenceRef.current = p;
         p.onConnect = () => {
@@ -525,7 +540,7 @@ const LiveRoomPage = () => {
       if (myUser && !isQuizModalOpen && roomId) {
         try {
           await syncRef.current?.deactivate();
-        } catch { }
+        } catch {}
         const s = createStompClient(newToken);
         syncRef.current = s;
         setStompClient(s);
@@ -540,8 +555,8 @@ const LiveRoomPage = () => {
                 setParticipantCount(evt.participantCount);
 
               if (!t) {
-                const {participantCount: _omit, ...rest} = evt ?? {};
-                setRoom((prev: any) => ({...prev, ...rest}));
+                const { participantCount: _omit, ...rest } = evt ?? {};
+                setRoom((prev: any) => ({ ...prev, ...rest }));
                 return;
               }
 
@@ -550,10 +565,10 @@ const LiveRoomPage = () => {
                   setRoom((prev: any) =>
                     prev
                       ? {
-                        ...prev,
-                        hostId: evt.hostId ?? prev.hostId,
-                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                      }
+                          ...prev,
+                          hostId: evt.hostId ?? prev.hostId,
+                          lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                        }
                       : prev
                   );
                   if (evt.hostId === myUserId)
@@ -569,8 +584,8 @@ const LiveRoomPage = () => {
                   if (evt.room) setRoom(evt.room);
                   return;
                 default: {
-                  const {participantCount: _omit, ...rest} = evt ?? {};
-                  setRoom((prev: any) => ({...prev, ...rest}));
+                  const { participantCount: _omit, ...rest } = evt ?? {};
+                  setRoom((prev: any) => ({ ...prev, ...rest }));
                   return;
                 }
               }
@@ -584,7 +599,9 @@ const LiveRoomPage = () => {
       }
     });
 
-    return () => {off()};
+    return () => {
+      off();
+    };
   }, [roomId, myUser, isQuizModalOpen, myUserId]);
 
   // if (!room || !stompClient?.connected || !myUser) {
@@ -601,7 +618,9 @@ const LiveRoomPage = () => {
         <RoomDeletedModal
           isOpen={roomDeletedOpen}
           onConfirm={async () => {
-            try {await stompClient?.deactivate();} catch { }
+            try {
+              await stompClient?.deactivate();
+            } catch {}
             navigate(-1);
           }}
         />
@@ -625,7 +644,9 @@ const LiveRoomPage = () => {
       <RoomDeletedModal
         isOpen={roomDeletedOpen}
         onConfirm={async () => {
-          try {await stompClient?.deactivate();} catch { }
+          try {
+            await stompClient?.deactivate();
+          } catch {}
           navigate(-1);
         }}
       />
@@ -642,10 +663,12 @@ const LiveRoomPage = () => {
         isHost={room.hostId === myUserId}
         title={room.title}
         hostId={room.hostId}
-        hostNickname={room.hostNickname}
+        hostNickname={hostNickname ?? room.hostNickname}
         participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
-        onDelete={room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined}
+        onDelete={
+          room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
+        }
       />
 
       {/* 본문: 영상 + 사이드바 */}
@@ -679,19 +702,21 @@ const LiveRoomPage = () => {
           <div className="flex border-b border-gray-700">
             <button
               onClick={() => setActiveTab("chat")}
-              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "chat"
-                ? "text-white border-b-2 border-fuchsia-500"
-                : "text-gray-400 hover:text-white"
-                }`}
+              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
+                activeTab === "chat"
+                  ? "text-white border-b-2 border-fuchsia-500"
+                  : "text-gray-400 hover:text-white"
+              }`}
             >
               실시간 채팅
             </button>
             <button
               onClick={() => setActiveTab("playlist")}
-              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "playlist"
-                ? "text-white border-b-2 border-fuchsia-500"
-                : "text-gray-400 hover:text-white"
-                }`}
+              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
+                activeTab === "playlist"
+                  ? "text-white border-b-2 border-fuchsia-500"
+                  : "text-gray-400 hover:text-white"
+              }`}
             >
               플레이리스트
             </button>
