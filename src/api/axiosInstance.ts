@@ -204,7 +204,8 @@ const API_BASE = RAW || "/api";
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 5000,
-  withCredentials: true, // 헤더 기반이라도 true여도 무방(쿠키 안쓰면 영향 X)
+  // withCredentials: true, // 헤더 기반이라도 true여도 무방(쿠키 안쓰면 영향 X)
+  withCredentials: false,
 });
 
 // --- 유틸: 안전하게 토큰 꺼내기 ---
@@ -357,12 +358,24 @@ api.interceptors.response.use(
 
       const resp = await api.post(
         "/auth/refresh",
-        null,
+        { refreshToken: refresh},
         {
-          headers: buildRefreshHeaders(refresh),
-          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${refresh}`,
+            "X-Refresh-Token": refresh,
+          },
+          withCredentials: false,
         }
-      );
+      )
+      // const resp = await api.post(
+      //   "/auth/refresh",
+      //   null,
+      //   {
+      //     headers: buildRefreshHeaders(refresh),
+      //     withCredentials: true,
+      //   }
+      // );
 
       const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
         (resp.data as any) ?? {};
