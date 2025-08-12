@@ -257,18 +257,41 @@ declare module "axios" {
 // 규칙:
 // 1) 호출부가 이미 Authorization을 넣었으면(예: refresh/logout에 refresh 토큰) 절대 덮어쓰지 않음
 // 2) 그렇지 않고 skipAuth가 아니면 access 토큰을 자동 부착
+// api.interceptors.request.use((config) => {
+//   config.headers = config.headers ?? {};
+
+//   // 이미 Authorization이 있으면(= 호출부가 명시) 그대로 두기
+//   if ((config.headers as any).Authorization) {
+//     return config;
+//   }
+
+//   if (!config.skipAuth) {
+//     const access = getAccessToken();
+//     if (access) {
+//       (config.headers as any).Authorization = `Bearer ${access}`;
+//     } else {
+//       delete (config.headers as any).Authorization;
+//     }
+//   }
+
+//   return config;
+// });
+
 api.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
 
-  // 이미 Authorization이 있으면(= 호출부가 명시) 그대로 두기
-  if ((config.headers as any).Authorization) {
+  const url = config.url ?? "";
+  const isAuthEndpoint = /\/auth\/(refresh|logout)$/.test(url);
+
+  if (isAuthEndpoint) {
+    // refresh/logout 은 호출부가 넣은 Authorization(= refresh)을 그대로 보냄
     return config;
   }
 
   if (!config.skipAuth) {
     const access = getAccessToken();
     if (access) {
-      (config.headers as any).Authorization = `Bearer ${access}`;
+      (config.headers as any).Authorization = `Bearer ${access}`; // 항상 최신 access로 세팅
     } else {
       delete (config.headers as any).Authorization;
     }
