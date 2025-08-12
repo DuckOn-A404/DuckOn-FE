@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import YouTube from "react-youtube";
 import { Client } from "@stomp/stompjs";
 import type { User } from "../../types";
+import type { LiveRoomSyncDTO } from "../../types/Room";
+import { fetchYouTubeMeta } from "../../utils/youtubeMeta";
 
 type VideoPlayerProps = {
   videoId: string;
@@ -13,6 +15,8 @@ type VideoPlayerProps = {
   currentVideoIndex: number;
   isPlaylistUpdating: boolean;
   onVideoEnd: () => void;
+  roomTitle: string;
+  hostNickname?: string | null;
 };
 
 // 드리프트 보정 파라미터 (필요시 숫자만 미세 조정)
@@ -31,6 +35,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   currentVideoIndex,
   isPlaylistUpdating,
   onVideoEnd,
+  roomTitle,
+  hostNickname,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
 
@@ -41,6 +47,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // 오디오 상태 (초기 무조건 음소거)
   const [muted, setMuted] = useState(true);          // 참가자 음소거 상태
   const [showUnmuteHint, setShowUnmuteHint] = useState(false); // "사운드 켜기" 안내 버튼
+
+  const [videoTitle, setVideoTitle] = useState<string>("");
+  const [channelName, setChannelName] = useState<string>("");
 
   // 소프트 보정 타이머
   const rateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,9 +77,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // playerVars.mute=1이 초기 음소거를 보장하므로 여기서 mute()를 다시 호출하지 않는다.
     event.target.setVolume?.(100);
     setMuted(true); // 초기 화면 표시는 음소거로
+    // 메타 초기 세팅
+    readFromPlayer();
+    // 보조: oEmbed (플레이어가 아직 못 채운 경우 대비)
+    fetchYouTubeMeta(videoId).then((m) => {
+      if (!m) return;
+      if (!videoTitle && m.title) setVideoTitle(m.title);
+      if (!channelName && m.author) setChannelName(m.author);
+    });
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
+    // 상태 바뀔 때마다 최신 메타 갱신 시도
+    readFromPlayer();
     // 영상 종료
     if (event.data === YT.PlayerState.ENDED) {
       if (isHost) onVideoEnd();
@@ -96,9 +115,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
 
     // === 방장: 상태 변경 즉시 브로드캐스트 ===
-    const payload = {
+    const payload: LiveRoomSyncDTO = {
+      eventType: "SYNC_STATE",
       roomId,
       hostId: user.userId,
+      title: roomTitle,
+      hostNickname: hostNickname ?? user.nickname ?? "",
       playlist,
       currentVideoIndex,
       currentTime: player.getCurrentTime(),
@@ -123,11 +145,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         `/topic/room/${roomId}`,
         (message) => {
           try {
-            const parsed = JSON.parse(message.body) as {
-              currentTime: number;
-              playing: boolean;
-              lastUpdated?: number;
-            };
+            const parsed = JSON.parse(message.body) as LiveRoomSyncDTO;
+
+            // 재생 동기화는 SYNC_STATE일 때만 수행
+            if (parsed.eventType !== "SYNC_STATE") return;
 
             const player = playerRef.current;
             if (!player) return;
@@ -135,8 +156,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             const now = Date.now();
             const expectedTime =
               typeof parsed.lastUpdated === "number"
-                ? parsed.currentTime + (now - parsed.lastUpdated) / 1000
-                : parsed.currentTime;
+                ? (parsed.currentTime ?? 0) + (now - parsed.lastUpdated) / 1000
+                : (parsed.currentTime ?? 0);
 
             // 호스트가 재생 중일 때만 음소거 안내 버튼을 띄움
             if (parsed.playing && muted) {
@@ -208,9 +229,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const player = playerRef.current;
       if (!player) return;
 
-      const payload = {
+      const payload: LiveRoomSyncDTO = {
+        eventType: "SYNC_STATE",
         roomId,
         hostId: user.userId,
+        title: roomTitle,
+        hostNickname: hostNickname ?? user.nickname ?? "",
         playlist,
         currentVideoIndex,
         currentTime: player.getCurrentTime(),
@@ -227,6 +251,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return () => clearInterval(interval);
   }, [isHost, stompClient, isPlaylistUpdating, user, roomId, playlist, currentVideoIndex]);
 
+  useEffect(() => {
+    if (!videoId) { setVideoTitle(""); setChannelName(""); return; }
+    // 새 영상으로 바뀌면 초기화 후 oEmbed 먼저
+    setVideoTitle("");
+    setChannelName("");
+    fetchYouTubeMeta(videoId).then((m) => {
+      if (!m) return;
+      if (m.title) setVideoTitle(m.title);
+      if (m.author) setChannelName(m.author);
+    });
+    // 플레이어가 준비되면 IFrame API가 더 정확히 채워줌
+    setTimeout(readFromPlayer, 400);
+  }, [videoId]);
+
   // 참가자: "사운드 켜기" (사용자 제스처)
   const handleUnmute = () => {
     const p = playerRef.current;
@@ -241,11 +279,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
+  const readFromPlayer = () => {
+    const p = playerRef.current;
+    if (!p) return;
+    try {
+      const data = p.getVideoData?.();
+      if (data) {
+        if (data.title) setVideoTitle(data.title);
+        if (data.author) setChannelName(data.author);
+      }
+    } catch {}
+  };
+
+
   return (
     <div className="relative w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black flex items-center justify-center">
       {videoId ? (
         <>
-          <div className="h-full w-auto aspect-video max-w-full">
+          <div className="relative h-full w-auto aspect-video max-w-full">
             <YouTube
               videoId={videoId}
               onReady={onPlayerReady}
@@ -265,6 +316,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 },
               }}
             />
+            {videoId && (videoTitle || channelName) && (
+              <div className="absolute top-2 left-2 z-20 max-w-[80%] bg-black/50 backdrop-blur-sm px-3 py-2 rounded-md">
+                <div className="text-white text-sm font-semibold truncate">
+                  {videoTitle || "제목 불러오는 중..."}
+                </div>
+                <div className="text-gray-300 text-xs truncate">
+                  {channelName || "채널 불러오는 중..."}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 참가자: 호스트가 재생 중이고 아직 음소거 상태면 "사운드 켜기" 버튼 노출 */}
