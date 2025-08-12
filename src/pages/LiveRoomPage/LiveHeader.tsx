@@ -13,7 +13,6 @@ type LiveHeaderProps = {
 const LiveHeader = ({
   isHost,
   title,
-  hostId,
   hostNickname,
   participantCount,
   onExit,
