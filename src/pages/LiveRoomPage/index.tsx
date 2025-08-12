@@ -153,6 +153,8 @@ const LiveRoomPage = () => {
       eventType: "SYNC_STATE",
       roomId: Number(room.roomId),
       hostId: myUser.userId,
+      title: room.title,
+      hostNickname: room.hostNickname ?? myUser.nickname,
       playlist: updatedPlaylist,
       currentVideoIndex: room.currentVideoIndex ?? 0,
       currentTime: 0,
@@ -193,6 +195,8 @@ const LiveRoomPage = () => {
       eventType: "SYNC_STATE",
       roomId: Number(room.roomId),
       hostId: myUser.userId,
+      title: room.title,
+      hostNickname: room.hostNickname ?? myUser.nickname,
       playlist: room.playlist,
       currentVideoIndex: nextVideoIndex,
       currentTime: 0,
@@ -291,6 +295,8 @@ const LiveRoomPage = () => {
                   prev
                     ? {
                         ...prev,
+                        title: evt.title ?? prev.title,
+                        hostNickname: evt.hostNickname ?? prev.hostNickname,
                         roomId: evt.roomId ?? prev.roomId,
                         hostId: evt.hostId ?? prev.hostId,
                         playlist: evt.playlist ?? prev.playlist,
@@ -569,6 +575,8 @@ const LiveRoomPage = () => {
                 currentVideoIndex={room.currentVideoIndex ?? 0}
                 isPlaylistUpdating={isPlaylistUpdating}
                 onVideoEnd={handleVideoEnd}
+                roomTitle={room.title ?? ""}
+                hostNickname={room.hostNickname ?? myUser?.nickname}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">
