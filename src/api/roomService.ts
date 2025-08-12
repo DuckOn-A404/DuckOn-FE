@@ -1,4 +1,4 @@
-import { api } from "./axiosInstance";
+import { api, getAccessToken } from "./axiosInstance";
 import type { room } from "../types/Room";
 
 // 방 생성 API
@@ -46,106 +46,89 @@ export const getTrendingRooms = async (size = 3): Promise<room[]> => {
 };
 
 // 방 입장(entryAnswer)
-export const enterRoom = async (roomId: string, entryAnswer: string) => {
-  try {
-    const response = await api.post(`/rooms/${roomId}/enter`, {
-      entryAnswer: String(entryAnswer),
-    });
-    return response.data;
-  } catch (error: any) {
-    console.error("방 입장 실패:", error?.response?.data || error);
-    throw error;
-  }
+// export const enterRoom = async (roomId: string, answer: string) => {
+//   const res = await api.post(`/rooms/${roomId}/enter`,
+//     { entryAnswer: answer ?? ""},
+//     { headers: { "Content-Type": "application/json" } }
+//   );
+//   return res.data
+  // try {
+  //   const response = await api.post(`/rooms/${roomId}/enter`, {
+  //     entryAnswer: String(entryAnswer),
+  //   });
+  //   return response.data;
+  // } catch (error: any) {
+  //   console.error("방 입장 실패:", error?.response?.data || error);
+  //   throw error;
+  // }
+// };
+
+export const enterRoom = async (roomId: string, answer: string) => {
+  const hasAccess = !!getAccessToken();
+  const res = await api.post(
+    `/rooms/${roomId}/enter`,
+    { entryAnswer: answer ?? "" },
+    {
+      headers: { "Content-Type": "application/json" },
+      skipAuth: !hasAccess, // 토큰 없으면 Authorization 안보냄 → Spring 필터 401 방지
+    }
+  );
+  return res.data;
 };
 
 // 방 퇴장
-// //기존 코드
-// export const exitRoom = async (
-//   roomId: number,
-//   artistId: number
-// ): Promise<{ message: string }> => {
-//   const token = localStorage.getItem("accessToken");
-//   if (!roomId) throw new Error("roomId가 없습니다.");
-//   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
-//     throw new Error("artistId가 유효하지 않습니다.");
-//   }
-//   const res = await api.post(`/rooms/${roomId}/exit`, null, {
-//     params: { artistId },
-//     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-//   });
-//   return res.data;
-// };
-
-// // 1차 수정
-// export const exitRoom = async (roomId: number, artistId: number) => {
-//   const token = localStorage.getItem("accessToken");
-//   if (!roomId) throw new Error("roomId가 없습니다.");
-//   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
-//     throw new Error("artistId가 유효하지 않습니다.");
-//   }
-//   return api.post(`/rooms/${roomId}/exit`, null, {
-//     params: { artistId },
-//     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-//   });
-// };
-
-// 2차 수정
-export const exitRoom = async (roomId: number, artistId: number): Promise<string> => {
-  const token = localStorage.getItem("accessToken");
-  if (!roomId) throw new Error("roomId가 없습니다.");
-  if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
-    throw new Error("artistId가 유효하지 않습니다.");
-  }
-
-  try {
-    const res = await api.post(`/rooms/${roomId}/exit`, null, {
-      params: { artistId },
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-        Accept: "text/plain",
-      },
-    });
-    // 서버: "방에서 퇴장하였습니다."
-    return typeof res.data === "string" ? res.data : String(res.data?.message ?? "");
-  } catch (err: any) {
-    throw new Error(err?.response?.data || "방 퇴장에 실패했습니다.");
-  }
+export const exitRoom = async (roomId: number, artistId: number) => {
+  const res = await api.post(`/rooms/${roomId}/exit`, null, { params: { artistId } });
+  return res.data;
 };
+// 2차 수정
+// export const exitRoom = async (roomId: number, artistId: number): Promise<string> => {
+//   const token = localStorage.getItem("accessToken");
+//   if (!roomId) throw new Error("roomId가 없습니다.");
+//   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
+//     throw new Error("artistId가 유효하지 않습니다.");
+//   }
+
+//   try {
+//     const res = await api.post(`/rooms/${roomId}/exit`, null, {
+//       params: { artistId },
+//       headers: {
+//         ...(token && { Authorization: `Bearer ${token}` }),
+//         Accept: "text/plain",
+//       },
+//     });
+//     // 서버: "방에서 퇴장하였습니다."
+//     return typeof res.data === "string" ? res.data : String(res.data?.message ?? "");
+//   } catch (err: any) {
+//     throw new Error(err?.response?.data || "방 퇴장에 실패했습니다.");
+//   }
+// };
 
 
 // 방 삭제
-// // 기존 코드
-// export const deleteRoom = async (roomId: number, artistId: number) => {
+// 2차 수정
+export const deleteRoom = async (roomId: number, artistId: number) => {
+  const res = await api.delete(`/rooms/${roomId}`, { params: { artistId } });
+  return res.data;
+};
+// export const deleteRoom = async (roomId: number, artistId: number): Promise<string> => {
 //   const token = localStorage.getItem("accessToken");
 //   if (!roomId) throw new Error("roomId가 없습니다.");
 //   if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
 //     throw new Error("artistId가 유효하지 않습니다.");
 //   }
-//   return api.delete(`/rooms/${roomId}`, {
-//     params: { artistId },
-//     headers: { ...(token && { Authorization: `Bearer ${token}` }) },
-//   });
+
+//   try {
+//     const res = await api.delete(`/rooms/${roomId}`, {
+//       params: { artistId },
+//       headers: {
+//         ...(token && { Authorization: `Bearer ${token}` }),
+//         Accept: "text/plain",
+//       },
+//     });
+//     // 서버: "방이 삭제되었습니다."
+//     return typeof res.data === "string" ? res.data : String(res.data?.message ?? "");
+//   } catch (err: any) {
+//     throw new Error(err?.response?.data || "방 삭제에 실패했습니다.");
+//   }
 // };
-
-// 2차 수정
-export const deleteRoom = async (roomId: number, artistId: number): Promise<string> => {
-  const token = localStorage.getItem("accessToken");
-  if (!roomId) throw new Error("roomId가 없습니다.");
-  if (!artistId || Number.isNaN(artistId) || artistId <= 0) {
-    throw new Error("artistId가 유효하지 않습니다.");
-  }
-
-  try {
-    const res = await api.delete(`/rooms/${roomId}`, {
-      params: { artistId },
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-        Accept: "text/plain",
-      },
-    });
-    // 서버: "방이 삭제되었습니다."
-    return typeof res.data === "string" ? res.data : String(res.data?.message ?? "");
-  } catch (err: any) {
-    throw new Error(err?.response?.data || "방 삭제에 실패했습니다.");
-  }
-};
