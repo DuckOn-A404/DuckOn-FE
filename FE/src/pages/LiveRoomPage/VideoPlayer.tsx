@@ -14,6 +14,8 @@ type VideoPlayerProps = {
   currentVideoIndex: number;
   isPlaylistUpdating: boolean;
   onVideoEnd: () => void;
+  roomTitle: string;
+  hostNickname?: string | null;
 };
 
 // 드리프트 보정 파라미터 (필요시 숫자만 미세 조정)
@@ -32,6 +34,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   currentVideoIndex,
   isPlaylistUpdating,
   onVideoEnd,
+  roomTitle,
+  hostNickname,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
 
@@ -101,6 +105,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       eventType: "SYNC_STATE",
       roomId,
       hostId: user.userId,
+      title: roomTitle,
+      hostNickname: hostNickname ?? user.nickname ?? "",
       playlist,
       currentVideoIndex,
       currentTime: player.getCurrentTime(),
@@ -213,6 +219,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         eventType: "SYNC_STATE",
         roomId,
         hostId: user.userId,
+        title: roomTitle,
+        hostNickname: hostNickname ?? user.nickname ?? "",
         playlist,
         currentVideoIndex,
         currentTime: player.getCurrentTime(),
