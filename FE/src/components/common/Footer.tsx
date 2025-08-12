@@ -10,7 +10,7 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">DuckON</h2>
+            <h2 className="text-xl font-bold text-gray-800">DuckOn</h2>
             <p className="text-xs text-gray-500 mt-1">
               © 2025 DuckOn. All rights reserved.
             </p>
