@@ -234,6 +234,32 @@ const LiveRoomPage = () => {
     }, 3000);
   };
 
+  const handleJumpToIndex = (index: number) => {
+    if (!isHost || !stompClient?.connected || !room || !myUser) return
+
+    const size = room.playlist?.length ?? 0;
+    if (index < 0 || index >= size) return
+
+    const payload: LiveRoomSyncDTO = {
+      eventType: "SYNC_STATE",
+      roomId: Number(room.roomId),
+      hostId: myUser.userId,
+      title: room.title,
+      hostNickname: room.hostNickname ?? myUser.nickname,
+      playlist: room.playlist,
+      currentVideoIndex: index,
+      currentTime: 0,
+      playing: true,
+      lastUpdated: Date.now(),
+    }
+
+    setRoom((prev: any) => (prev ? { ...prev, ...payload } : prev));
+
+    stompClient.publish({
+      destination: "/app/room/update",
+      body: JSON.stringify(payload),
+    });
+  }
   // 현재 영상 끝났을 때 관리
   const handleVideoEnd = () => {
     if (!isHost || !room || !room.playlist || !myUser) return;
@@ -774,6 +800,7 @@ const LiveRoomPage = () => {
             playlist={room.playlist || []}
             currentVideoIndex={room.currentVideoIndex ?? 0}
             onAddToPlaylist={handleAddToPlaylist}
+            onSelectPlaylistIndex={handleJumpToIndex}
           />
         </aside>
       </div>
