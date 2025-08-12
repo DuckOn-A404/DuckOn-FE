@@ -1,10 +1,9 @@
 // src/pages/RoomListPage.tsx
 import {useState, useEffect, useRef} from "react";
-import {useNavigate} from "react-router-dom";
 import VideoCard from "../components/domain/video/VideoCard";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
-import type {room, trendingRoom} from "../types/Room";
+import type {trendingRoom} from "../types/Room";
 import {Tv} from "lucide-react";
 
 const PAGE_SIZE = 24;
@@ -16,7 +15,7 @@ const RoomListPage = () => {
     const [totalCount, setTotalCount] = useState(0);
 
     const sentinelRef = useRef<HTMLDivElement | null>(null);
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const {data, isLoading, error} = useTrendingRooms(page, PAGE_SIZE);
 
@@ -50,9 +49,9 @@ const RoomListPage = () => {
         };
     }, [hasMore, isLoading]);
 
-    const handleCardClick = (artistId: number, nameEn: string) => {
-        navigate(`/artist/${nameEn}`, {state: {artistId}});
-    };
+    // const handleCardClick = (artistId: number, nameEn: string) => {
+    //     navigate(`/artist/${nameEn}`, {state: {artistId}});
+    // };
 
     return (
         <div className="px-4 md:px-10 py-8">
