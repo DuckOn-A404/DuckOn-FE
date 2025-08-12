@@ -74,12 +74,14 @@ const HomePage = () => {
         <section>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold">🔥 지금 핫한 방 {trendingRooms && trendingRooms.roomInfoList.length > 0 ? `Top ${trendingRooms.roomInfoList.length}` : null}</h2>
-            <Link
-              to="/room-list"
-              className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
-            >
-              전체 보기 →
-            </Link>
+            {trendingRooms && trendingRooms.roomInfoList.length > 0 && (
+              <Link
+                to="/room-list"
+                className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
+              >
+                전체 보기 →
+              </Link>
+            )}
           </div>
           <div className="flex flex-wrap justify-center gap-8 flex-grow">
             {isLoadingTrending ? (
