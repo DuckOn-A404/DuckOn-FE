@@ -118,7 +118,7 @@ export const getRecommendedUsers = async (
         size,
         includeReasons,
       },
-      //   skipAuth: true, -> 백에서 수정되면 주석 풀기
+      skipAuth: true,
     }
   );
 
