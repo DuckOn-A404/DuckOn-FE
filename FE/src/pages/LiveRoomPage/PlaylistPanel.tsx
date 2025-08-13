@@ -75,9 +75,9 @@ const PlaylistPanel = ({
   }, [playlist, metaMap]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-800 text-white">
+    <div className="flex flex-col h-full min-h-0 bg-gray-800 text-white">
       {/* 리스트 */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
         {playlist.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Youtube size={48} />
@@ -154,7 +154,7 @@ const PlaylistPanel = ({
 
       {/* 방장 전용 추가 UI */}
       {isHost && (
-        <div className="mt-4 border-t border-gray-700">
+        <div className="mt-4 border-t border-gray-700 flex-shrink-0">
           <div className="flex items-center gap-x-2 p-3">
             <input
               value={inputId}

@@ -13,6 +13,7 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -25,13 +26,15 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
     if (newMessage.trim()) {
       sendMessage(newMessage);
       setNewMessage("");
+      inputRef.current?.blur();
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800 text-white">
+    <div className="flex flex-col h-full min-h-0 bg-gray-800 text-white">
       {/* 메시지 목록 영역 */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
+      {/* <div className="flex-1 space-y-4 overflow-y-auto p-4"> */}
+      <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">  
         {messages.map((msg, index) => {
           if (msg.chatType === "ENTER") {
             return (
@@ -103,18 +106,27 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
         })}
         <div ref={messagesEndRef} />
       </div>
-
       {/* 메시지 입력 영역 */}
-      <div className="p-3 border-t border-gray-700 bg-gray-800/80">
+      <div className="p-3 border-t border-gray-700 bg-gray-800/80 flex-shrink-0">
         {myUser ? (
           <div className="relative flex items-center">
             <input
+              ref={inputRef}
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              // onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyDown={(e) => {
+                // 한글 조합 중 엔터 예외
+                // @ts-ignore
+                if (e.key === "Enter" && !e.nativeEvent?.isComposing) handleSendMessage();
+              }}
               placeholder="메시지를 입력하세요..."
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+              // className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg
+              px-4 md:px-4 py-3 md:py-2.5
+              text-base md:text-sm
+              outline-none focus:border-purple-500 transition-colors pr-12"
             />
             <button
               onClick={handleSendMessage}

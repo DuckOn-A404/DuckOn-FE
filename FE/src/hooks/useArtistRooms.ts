@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { getRoomsByArtist } from "../api/roomService";
-import { type room } from "../types/Room";
+import { type room } from "../types/room";
 
 // 처음에 보여줄 방의 수
 const INITIAL_VISIBLE_COUNT = 8;
