@@ -51,7 +51,7 @@ const MyProfileCard = ({
   };
 
   return (
-    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
+    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 정보</h1>
         <div className="relative flex items-center gap-2">
