@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { useUserStore } from "../../store/useUserStore";
-import { useArtistFollowStore } from "../../store/useArtistFollowStore";
-import { useArtistRooms } from "../../hooks/useArtistRooms";
+import {useState, useEffect} from "react";
+import {useLocation} from "react-router-dom";
+import {useUserStore} from "../../store/useUserStore";
+import {useArtistFollowStore} from "../../store/useArtistFollowStore";
+import {useArtistRooms} from "../../hooks/useArtistRooms";
 import {
   followArtist,
   unfollowArtist,
@@ -11,8 +11,8 @@ import {
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
-import { type Artist } from "../../types/artist";
-import { Video, Plus } from "lucide-react";
+import {type Artist} from "../../types/artist";
+import {Video, Plus} from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 
 const PLACEHOLDER_URL =
@@ -31,7 +31,7 @@ const ArtistDetailPage = () => {
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const { myUser } = useUserStore();
+  const {myUser} = useUserStore();
   const {
     isFollowing: followingSet,
     addFollow,
@@ -144,12 +144,12 @@ const ArtistDetailPage = () => {
       if (isFollowing) {
         await unfollowArtist(artist.artistId);
         removeFollow(artist.artistId);
-        setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
+        setArtist((prev) => (prev ? {...prev, followedAt: null} : prev));
       } else {
         await followArtist(artist.artistId);
         addFollow(artist);
         setArtist((prev) =>
-          prev ? { ...prev, followedAt: new Date().toISOString() } : prev
+          prev ? {...prev, followedAt: new Date().toISOString()} : prev
         );
       }
     } catch {
@@ -226,16 +226,33 @@ const ArtistDetailPage = () => {
               </div>
             </div>
 
-            {/* 오른쪽: '새 방 만들기' 버튼 */}
-            {isFollowing && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-md shadow-purple-300/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-              >
-                <Plus size={16} />
-                <span>새 방 만들기</span>
-              </button>
-            )}
+            {/* 오른쪽: '새 방 만들기' 버튼 또는 안내 메시지 */}
+            <div className="w-full sm:w-auto flex-shrink-0">
+              {isLoggedIn ? (
+                isFollowing ? (
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="flex w-full sm:w-auto items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-md shadow-purple-300/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                  >
+                    <Plus size={16} />
+                    <span>새 방 만들기</span>
+                  </button>
+                ) : (
+                  <div className="w-full sm:w-auto text-sm text-gray-600 bg-purple-50 border border-purple-200 px-4 py-2 rounded-lg">
+                    이 아티스트를{" "}
+                    <span className="font-semibold text-purple-700">
+                      팔로우
+                    </span>
+                    해야 방을 생성할 수 있습니다.
+                  </div>
+                )
+              ) : (
+                <div className="w-full sm:w-auto text-sm text-gray-600 bg-gray-50 border border-gray-200 px-4 py-2 rounded-lg">
+                  <span className="font-semibold">로그인</span> 후 방을 생성할
+                  수 있습니다.
+                </div>
+              )}
+            </div>
           </div>
 
           {/* 방 목록 표시 영역 */}
@@ -288,6 +305,7 @@ const ArtistDetailPage = () => {
         onClose={() => setIsModalOpen(false)}
         artistId={artist.artistId}
         hostId={myUser?.userId ?? ""}
+        hostNickname={myUser?.nickname ?? ""}
       />
     </div>
   );
