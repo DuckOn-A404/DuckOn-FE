@@ -29,7 +29,7 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800 text-white">
+    <div className="flex flex-col h-full min-h-0 bg-gray-800 text-white">
       {/* 메시지 목록 영역 */}
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.map((msg, index) => {
@@ -103,9 +103,8 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
         })}
         <div ref={messagesEndRef} />
       </div>
-
       {/* 메시지 입력 영역 */}
-      <div className="p-3 border-t border-gray-700 bg-gray-800/80">
+      <div className="p-3 border-t border-gray-700 bg-gray-800/80 flex-shrink-0">
         {myUser ? (
           <div className="relative flex items-center">
             <input

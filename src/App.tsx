@@ -1,4 +1,4 @@
-import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -12,10 +12,10 @@ import LayoutWithoutFooter from "./layouts/LayoutWithoutFooter";
 import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ScrollToTop from "./components/common/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
-import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
+// import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
 // import RoomListPage from "./pages/RoomListPage";
-import {useEffect} from "react";
-import {sendPageView} from "./analytics";
+import { useEffect } from "react";
+import { sendPageView } from "./analytics";
 import RoomListPage from "./pages/RoomListPage";
 
 function RouteChangeTracker() {
@@ -58,7 +58,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
 
-        <SmallScreenBlocker />
+        {/* <SmallScreenBlocker /> */}
       </BrowserRouter>
     </>
   );
