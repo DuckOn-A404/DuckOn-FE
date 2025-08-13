@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { RoomHistory, trendingRoom } from "../../../types/room";
 import MyCreatedRooms from "./MyCreatedRooms";
+import { enterRoom } from "../../../api/roomService";
 
 type Props = {
   rooms: RoomHistory[];
@@ -101,10 +102,33 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
 
   const liveRoomId = activeRoom?.roomId ?? null;
 
-  const handleEnterLive = (roomId: number) => {
-    // 보안 질문/잠금 방 처리는 방 페이지에서 진행한다고 가정
-    navigate(`/rooms/${roomId}`);
+//   const handleEnterLive = (roomId: number) => {
+//     // 보안 질문/잠금 방 처리는 방 페이지에서 진행한다고 가정
+//     navigate(`/rooms/${roomId}`);
+//   };
+  const handleEnterLive = async (roomId: number) => {
+    try {
+      await enterRoom(String(roomId), "");
+      navigate(`/live/${roomId}`);
+    } catch (err: any) {
+      const q = err?.response?.data?.extra?.entryQuestion
+             || err?.response?.data?.entryQuestion
+             || err?.response?.data?.message;
+      if (q) {
+        const answer = window.prompt(q);
+        if (answer === null) return;
+        try {
+          await enterRoom(String(roomId), answer);
+          navigate(`/live/${roomId}`);
+        } catch {
+          alert("입장에 실패했습니다. 비밀번호/정답을 다시 확인해주세요.");
+        }
+      } else {
+        alert("입장에 실패했습니다.");
+      }
+    }
   };
+
 
   return (
     <div className="w-full max-w-[980px] mx-auto">
