@@ -7,10 +7,18 @@ type Props = {
   onEnterLive?: (roomId: number) => void;
 };
 
-const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnterLive }: Props) => {
+const MyCreatedRooms = ({
+  rooms,
+  title = "내가 만든 방",
+  liveRoomId,
+  onEnterLive,
+}: Props) => {
   const list = (rooms ?? [])
     .slice()
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
   if (!list.length) {
     return (
@@ -21,7 +29,13 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnte
     );
   }
 
-  const fmt = (iso: string) => { try { return new Date(iso).toLocaleString(); } catch { return iso; } };
+  const fmt = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl px-8 py-6 w-full max-w-[880px] mx-auto shadow-sm">
@@ -33,7 +47,9 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnte
           return (
             <div
               key={r.roomId}
-              className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition ${isLive ? "ring-2 ring-purple-500" : ""}`}
+              className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition ${
+                isLive ? "ring-2 ring-purple-500" : ""
+              }`}
             >
               <div className="relative aspect-video bg-gray-50">
                 <img
@@ -51,13 +67,19 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnte
 
               <div className="p-4">
                 <div className="font-semibold line-clamp-1">{r.title}</div>
-                <div className="mt-1 text-xs text-gray-500">생성: {fmt(r.createdAt)}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  생성: {fmt(r.createdAt)}
+                </div>
 
                 <div className="mt-2 text-[11px] text-gray-600 flex flex-wrap gap-2">
                   <span className="px-2 py-0.5 bg-gray-100 rounded-full">
-                    {r.artistNameKr ?? r.artistNameEn ?? `artistId: ${r.artistId}`}
+                    {r.artistNameKr ??
+                      r.artistNameEn ??
+                      `artistId: ${r.artistId}`}
                   </span>
-                  <span className="px-2 py-0.5 bg-gray-100 rounded-full">creator: {r.creatorId}</span>
+                  <span className="px-2 py-0.5 bg-gray-100 rounded-full">
+                    creator: {r.creatorId}
+                  </span>
                 </div>
 
                 {isLive && (
