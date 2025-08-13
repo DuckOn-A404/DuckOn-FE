@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { RoomHistory } from "../../../types/Room";
+import type { RoomHistory } from "../../../types/room";
 import MyCreatedRooms from "./MyCreatedRooms";
 
 type QuickRange = "all" | "7d" | "30d" | "thisYear";
