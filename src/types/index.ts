@@ -9,6 +9,7 @@ export type User = {
   artistList: number[];
   bannedTill?: string;
   imgUrl?: string;
+  language: string;
 };
 
 /**
