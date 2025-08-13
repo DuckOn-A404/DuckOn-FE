@@ -11,10 +11,10 @@ import {
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
-import {type Artist} from "../../types/artist";
+import type { ArtistDetailInfo } from "../../api/artistService";
+import type { Artist } from "../../types/artist";
 import {Video, Plus} from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
-import type { ArtistDetailInfo } from "../../api/artistService";
 
 const PLACEHOLDER_URL =
   "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
@@ -145,7 +145,15 @@ const ArtistDetailPage = () => {
         setArtist((prev) => (prev ? {...prev, followedAt: null} : prev));
       } else {
         await followArtist(artist.artistId);
-        addFollow(artist);
+        // addFollow(artist);
+        addFollow({
+          artistId: artist.artistId,
+          nameEn: artist.nameEn,
+          nameKr: artist.nameKr,
+          imgUrl: artist.imgUrl ?? "",          // null → 빈 문자열로 보정 (Artist는 string)
+          debutDate: artist.debutDate,          // Artist 타입이 string|Date라면 string 유지 OK
+          followerCount: artist.followerCount ?? 0,
+        } as Artist);
         setArtist((prev) =>
           prev ? {...prev, followedAt: new Date().toISOString()} : prev
         );
