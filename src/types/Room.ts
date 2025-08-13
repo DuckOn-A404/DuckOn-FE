@@ -32,3 +32,25 @@ export type LiveRoomSyncDTO = {
   // 옵션: 서버가 같이 보낼 수도 있는 값
   participantCount?: number;
 };
+
+export type trendingRoom = {
+  roomId: number;
+  artistId: number;
+  artistNameEn: string;
+  artistNameKr: string;
+  title: string;
+  hostId: string;
+  hostNickname: string;
+  hostProfileImgUrl: string | null;
+  imgUrl: string | null;
+  participantCount: number;
+}
+
+export type TrendingRoomsResponse = {
+  roomInfoList: trendingRoom[];
+  totalPages: number;
+  size: number;
+  hasNext: boolean;
+  totalElements: number;
+  page: number;
+};
