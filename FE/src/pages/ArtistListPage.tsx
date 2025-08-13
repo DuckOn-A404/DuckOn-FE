@@ -1,11 +1,13 @@
-import InputField from "../components/common/InputField";
+import SortSelect, {
+  type SortKey,
+  type SortOrder,
+} from "../components/common/SortSelect";
 import ArtistCard from "../components/domain/artist/ArtistCard";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
+import { Search, ArrowUpDown, ChevronDown } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
 import { useDebounce } from "../hooks/useDebounce";
-import type { SortKey, SortOrder } from "../api/artistService";
 
 const sortOptions: { label: string; key: SortKey; order: SortOrder }[] = [
   { label: "팔로워 많은순", key: "followers", order: "desc" },
@@ -31,7 +33,7 @@ const ArtistListPage = () => {
   useEffect(() => {
     const compute = () => {
       const cardW = 220 + 14; // 카드 폭 + 가로 gap(대략치)
-      const cardH = 280;      // 카드 높이(대략치)
+      const cardH = 280; // 카드 높이(대략치)
       const cols = Math.max(2, Math.floor(window.innerWidth / cardW));
       const rows = Math.max(2, Math.ceil(window.innerHeight / cardH) + 2);
       setPageSize(cols * rows);
@@ -79,44 +81,52 @@ const ArtistListPage = () => {
       {/* 제목 영역 */}
       <div className="text-center py-8 mb-5">
         <h1 className="text-4xl font-extrabold text-gray-800 mb-2">아티스트</h1>
-        <p className="text-lg text-gray-500">다양한 K-pop 아티스트를 만나보세요.</p>
+        <p className="text-lg text-gray-500">
+          다양한 K-pop 아티스트를 만나보세요.
+        </p>
       </div>
 
       {/* 검색 + 정렬 + 총 개수 */}
-      <div className="w-full max-w-3xl mx-auto mb-4 flex gap-3 items-center">
-        <div className="flex-1">
-          <InputField
-            id="search"
-            label=""
+      <div className="w-full max-w-3xl mx-auto mb-10 flex gap-3 items-center">
+        {/* 검색 인풋: InputField 디자인만 복제 */}
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+            <Search className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          </div>
+          <input
+            aria-label="아티스트 검색"
             type="text"
-            placeholder="아티스트를 검색하세요"
-            icon={<Search />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
+            placeholder="아티스트를 검색하세요"
+            className="
+        w-full h-12 pl-12 pr-4 py-3
+        bg-white
+        rounded-xl border border-gray-300
+        text-gray-800 text-base leading-normal
+        shadow-sm
+        hover:border-gray-300
+        focus:outline-none focus:ring-2 focus:ring-purple-500
+        transition
+      "
           />
         </div>
 
-        {/* 정렬 */}
-        <select
-          aria-label="정렬"
-          className="h-12 rounded-xl border px-3"
-          value={`${sort}:${order}`}
-          onChange={(e) => {
-            const [k, o] = e.target.value.split(":");
-            setSort(k as SortKey);
-            setOrder(o as SortOrder);
+        {/* 정렬 셀렉트: 높이/무드 매칭 */}
+        <SortSelect
+          className="w-48 md:w-56"
+          value={{ key: sort, order }}
+          options={sortOptions}
+          onChange={(v) => {
+            setSort(v.key as SortKey);
+            setOrder(v.order as SortOrder);
           }}
-        >
-          {sortOptions.map((o) => (
-            <option key={`${o.key}:${o.order}`} value={`${o.key}:${o.order}`}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
-      <p className="text-sm text-center mt-2 text-gray-600">총 {totalCount}명의 아티스트</p>
-
+      <p className="text-sm text-center mt-2 text-gray-600">
+        총 {totalCount}명의 아티스트
+      </p>
       {/* 카드 리스트 */}
       <div className="flex flex-wrap justify-center gap-x-[14px] gap-y-[23px] mt-4">
         {artists.map((artist) => (
@@ -127,10 +137,8 @@ const ArtistListPage = () => {
           />
         ))}
       </div>
-
       {/* sentinel: 단 하나만 */}
       <div ref={sentinelRef} className="h-10 mt-10" />
-
       {/* 로딩 스피너 */}
       {loading && (
         <div className="flex justify-center items-center h-24">
