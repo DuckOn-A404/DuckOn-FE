@@ -6,8 +6,7 @@ type QuickRange = "all" | "7d" | "30d" | "thisYear";
 
 type Props = {
   rooms: RoomHistory[];
-  artistMap?: Record<number, string>; // 선택: artistId → 이름 매핑(있으면 셀렉트에 이름 표시)
-  pageSize?: number;                  // 기본 12개씩 보기
+  pageSize?: number;
 };
 
 function startOfThisYear() {
@@ -20,32 +19,31 @@ function addDays(base: Date, days: number) {
   return d;
 }
 
-const MyCreatedRoomsPanel = ({ rooms, artistMap, pageSize = 12 }: Props) => {
-  // --- 필터 상태 ---
+const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
   const [quick, setQuick] = useState<QuickRange>("all");
-  const [from, setFrom] = useState<string>(""); // yyyy-MM-dd
+  const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [artistId, setArtistId] = useState<number | "all">("all");
-
-  // --- 페이지네이션 ---
   const [visible, setVisible] = useState<number>(pageSize);
 
-  // 유니크 아티스트 목록
-  const artists = useMemo(() => {
-    const ids = new Set<number>();
-    rooms?.forEach((r) => ids.add(r.artistId));
-    return Array.from(ids).sort((a, b) => a - b);
+  // 아티스트 옵션: 응답의 이름(kr > en > #id) 사용, 이름 기준 정렬
+  const artistOptions = useMemo(() => {
+    const map = new Map<number, string>();
+    (rooms ?? []).forEach((r) => {
+      const label = r.artistNameKr ?? r.artistNameEn ?? `#${r.artistId}`;
+      if (!map.has(r.artistId)) map.set(r.artistId, label);
+    });
+    return Array.from(map.entries()).sort((a, b) =>
+      a[1].localeCompare(b[1], "ko")
+    ); // [["98","뉴진스"], ...]
   }, [rooms]);
 
-  // 빠른 범위 버튼 → 날짜 입력에 반영
   const applyQuick = (q: QuickRange) => {
     setQuick(q);
     setVisible(pageSize);
     const now = new Date();
     if (q === "all") {
-      setFrom("");
-      setTo("");
-      return;
+      setFrom(""); setTo(""); return;
     }
     if (q === "7d") {
       setFrom(addDays(now, -7).toISOString().slice(0, 10));
@@ -60,11 +58,9 @@ const MyCreatedRoomsPanel = ({ rooms, artistMap, pageSize = 12 }: Props) => {
     }
   };
 
-  // 필터링
   const filtered = useMemo(() => {
     const fromDate = from ? new Date(from + "T00:00:00") : null;
     const toDate = to ? new Date(to + "T23:59:59.999") : null;
-
     return (rooms ?? [])
       .filter((r) => {
         if (!r?.createdAt) return false;
@@ -114,43 +110,29 @@ const MyCreatedRoomsPanel = ({ rooms, artistMap, pageSize = 12 }: Props) => {
             <input
               type="date"
               value={from}
-              onChange={(e) => {
-                setFrom(e.target.value);
-                setQuick("all");
-                setVisible(pageSize);
-              }}
+              onChange={(e) => { setFrom(e.target.value); setQuick("all"); setVisible(pageSize); }}
               className="border rounded-md px-2 py-1 text-sm"
             />
             <span className="text-gray-400">~</span>
             <input
               type="date"
               value={to}
-              onChange={(e) => {
-                setTo(e.target.value);
-                setQuick("all");
-                setVisible(pageSize);
-              }}
+              onChange={(e) => { setTo(e.target.value); setQuick("all"); setVisible(pageSize); }}
               className="border rounded-md px-2 py-1 text-sm"
             />
           </div>
 
-          {/* 아티스트 셀렉트 */}
+          {/* 아티스트 셀렉트 (이름 표시) */}
           <div className="flex items-center gap-2">
             <div className="text-xs text-gray-500">아티스트</div>
             <select
               value={artistId}
-              onChange={(e) => {
-                const v = e.target.value;
-                setArtistId(v === "all" ? "all" : Number(v));
-                setVisible(pageSize);
-              }}
+              onChange={(e) => { const v = e.target.value; setArtistId(v === "all" ? "all" : Number(v)); setVisible(pageSize); }}
               className="border rounded-md px-2 py-1 text-sm"
             >
               <option value="all">전체</option>
-              {artists.map((id) => (
-                <option key={id} value={id}>
-                  {artistMap?.[id] ?? `artistId: ${id}`}
-                </option>
+              {artistOptions.map(([id, label]) => (
+                <option key={id} value={id}>{label}</option>
               ))}
             </select>
           </div>
