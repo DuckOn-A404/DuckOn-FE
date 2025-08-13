@@ -6,7 +6,7 @@ import { enterRoom } from "../../../api/roomService";
 
 type Props = {
   rooms: RoomHistory[];
-  activeRoom?: trendingRoom | null;   // 레디스 현재방 (없으면 null)
+  activeRoom?: trendingRoom | null; // 레디스 현재방 (없으면 null)
   pageSize?: number;
   title?: string;
 };
@@ -23,7 +23,12 @@ function addDays(base: Date, days: number) {
   return d;
 }
 
-const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든 방" }: Props) => {
+const OtherUserRoomsPanel = ({
+  rooms,
+  activeRoom,
+  pageSize = 12,
+  title = "만든 방",
+}: Props) => {
   const navigate = useNavigate();
 
   // 필터 상태들
@@ -40,19 +45,34 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
       const label = r.artistNameKr ?? r.artistNameEn ?? `#${r.artistId}`;
       if (!map.has(r.artistId)) map.set(r.artistId, label);
     });
-    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1], "ko"));
+    return Array.from(map.entries()).sort((a, b) =>
+      a[1].localeCompare(b[1], "ko")
+    );
   }, [rooms]);
 
   const applyQuick = (q: QuickRange) => {
     setQuick(q);
     setVisible(pageSize);
     const now = new Date();
-    if (q === "all") { setFrom(""); setTo(""); return; }
-    if (q === "7d")  { setFrom(addDays(now, -7).toISOString().slice(0,10));  setTo(now.toISOString().slice(0,10)); return; }
-    if (q === "30d") { setFrom(addDays(now, -30).toISOString().slice(0,10)); setTo(now.toISOString().slice(0,10)); return; }
+    if (q === "all") {
+      setFrom("");
+      setTo("");
+      return;
+    }
+    if (q === "7d") {
+      setFrom(addDays(now, -7).toISOString().slice(0, 10));
+      setTo(now.toISOString().slice(0, 10));
+      return;
+    }
+    if (q === "30d") {
+      setFrom(addDays(now, -30).toISOString().slice(0, 10));
+      setTo(now.toISOString().slice(0, 10));
+      return;
+    }
     if (q === "thisYear") {
       const s = startOfThisYear();
-      setFrom(s.toISOString().slice(0,10)); setTo(now.toISOString().slice(0,10));
+      setFrom(s.toISOString().slice(0, 10));
+      setTo(now.toISOString().slice(0, 10));
     }
   };
 
@@ -63,7 +83,7 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
     const hasLive = !!activeRoom;
     if (!hasLive) return base;
 
-    const exists = base.some(r => r.roomId === activeRoom!.roomId);
+    const exists = base.some((r) => r.roomId === activeRoom!.roomId);
     if (exists) return base;
 
     // 임시 카드 주입 (createdAt은 현재시각로 표시)
@@ -83,7 +103,7 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
   // 필터 적용
   const filtered = useMemo(() => {
     const fromDate = from ? new Date(from + "T00:00:00") : null;
-    const toDate   = to   ? new Date(to   + "T23:59:59.999") : null;
+    const toDate = to ? new Date(to + "T23:59:59.999") : null;
     return merged
       .filter((r) => {
         if (!r?.createdAt) return true; // 주입카드 보호
@@ -94,7 +114,10 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
         if (artistId !== "all" && r.artistId !== artistId) return false;
         return true;
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
   }, [merged, from, to, artistId]);
 
   const shown = filtered.slice(0, visible);
@@ -102,18 +125,19 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
 
   const liveRoomId = activeRoom?.roomId ?? null;
 
-//   const handleEnterLive = (roomId: number) => {
-//     // 보안 질문/잠금 방 처리는 방 페이지에서 진행한다고 가정
-//     navigate(`/rooms/${roomId}`);
-//   };
+  //   const handleEnterLive = (roomId: number) => {
+  //     // 보안 질문/잠금 방 처리는 방 페이지에서 진행한다고 가정
+  //     navigate(`/rooms/${roomId}`);
+  //   };
   const handleEnterLive = async (roomId: number) => {
     try {
       await enterRoom(String(roomId), "");
       navigate(`/live/${roomId}`);
     } catch (err: any) {
-      const q = err?.response?.data?.extra?.entryQuestion
-             || err?.response?.data?.entryQuestion
-             || err?.response?.data?.message;
+      const q =
+        err?.response?.data?.extra?.entryQuestion ||
+        err?.response?.data?.entryQuestion ||
+        err?.response?.data?.message;
       if (q) {
         const answer = window.prompt(q);
         if (answer === null) return;
@@ -129,9 +153,8 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
     }
   };
 
-
   return (
-    <div className="w-full max-w-[980px] mx-auto">
+    <div className="w-full max-w-[880px] mx-auto">
       {/* 필터 바 */}
       <div className="bg-white rounded-xl px-6 py-4 mb-4 shadow-sm border border-gray-100">
         <div className="flex flex-wrap items-end gap-3">
@@ -146,7 +169,9 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
                 key={k}
                 onClick={() => applyQuick(k as QuickRange)}
                 className={`px-3 py-1 rounded-full text-sm border transition ${
-                  quick === k ? "bg-purple-600 text-white border-purple-600" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  quick === k
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
                 }`}
               >
                 {label}
@@ -157,9 +182,27 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
           {/* 날짜 범위 */}
           <div className="flex items-center gap-2 ml-auto">
             <div className="text-xs text-gray-500">기간</div>
-            <input type="date" value={from} onChange={(e)=>{ setFrom(e.target.value); setQuick("all"); setVisible(pageSize); }} className="border rounded-md px-2 py-1 text-sm" />
+            <input
+              type="date"
+              value={from}
+              onChange={(e) => {
+                setFrom(e.target.value);
+                setQuick("all");
+                setVisible(pageSize);
+              }}
+              className="border rounded-md px-2 py-1 text-sm"
+            />
             <span className="text-gray-400">~</span>
-            <input type="date" value={to} onChange={(e)=>{ setTo(e.target.value); setQuick("all"); setVisible(pageSize); }} className="border rounded-md px-2 py-1 text-sm" />
+            <input
+              type="date"
+              value={to}
+              onChange={(e) => {
+                setTo(e.target.value);
+                setQuick("all");
+                setVisible(pageSize);
+              }}
+              className="border rounded-md px-2 py-1 text-sm"
+            />
           </div>
 
           {/* 아티스트 셀렉트 */}
@@ -167,12 +210,18 @@ const OtherUserRoomsPanel = ({ rooms, activeRoom, pageSize = 12, title = "만든
             <div className="text-xs text-gray-500">아티스트</div>
             <select
               value={artistId}
-              onChange={(e)=>{ const v = e.target.value; setArtistId(v==="all" ? "all" : Number(v)); setVisible(pageSize); }}
+              onChange={(e) => {
+                const v = e.target.value;
+                setArtistId(v === "all" ? "all" : Number(v));
+                setVisible(pageSize);
+              }}
               className="border rounded-md px-2 py-1 text-sm"
             >
               <option value="all">전체</option>
               {artistOptions.map(([id, label]) => (
-                <option key={id} value={id}>{label}</option>
+                <option key={id} value={id}>
+                  {label}
+                </option>
               ))}
             </select>
           </div>
