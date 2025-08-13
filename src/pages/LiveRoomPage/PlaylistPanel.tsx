@@ -1,6 +1,6 @@
-import {useState, useEffect} from "react";
-import {Youtube} from "lucide-react";
-import {fetchYouTubeMeta} from "../../utils/youtubeMeta";
+import { useState, useEffect } from "react";
+import { Youtube } from "lucide-react";
+import { fetchYouTubeMeta } from "../../utils/youtubeMeta";
 
 type PlaylistPanelProps = {
   isHost: boolean;
@@ -10,7 +10,7 @@ type PlaylistPanelProps = {
   onSelect?: (index: number) => void;
 };
 
-type Meta = {title?: string; author?: string; thumbnail?: string};
+type Meta = { title?: string; author?: string; thumbnail?: string };
 
 const PlaylistPanel = ({
   isHost,
@@ -64,7 +64,7 @@ const PlaylistPanel = ({
         .map(async (id) => {
           const m = await fetchYouTubeMeta(id);
           if (!mounted || !m) return;
-          setMetaMap((prev) => ({...prev, [id]: m}));
+          setMetaMap((prev) => ({ ...prev, [id]: m }));
         });
       await Promise.allSettled(tasks);
     };
@@ -111,12 +111,14 @@ const PlaylistPanel = ({
                   }
                 }}
                 className={`p-2 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out
-                  ${isPlaying
-                    ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
-                    : `bg-gray-800 ${isHost
-                      ? "hover:bg-gray-700 cursor-pointer"
-                      : "cursor-default"
-                    }`
+                  ${
+                    isPlaying
+                      ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
+                      : `bg-gray-800 ${
+                          isHost
+                            ? "hover:bg-gray-700 cursor-pointer"
+                            : "cursor-default"
+                        }`
                   }`}
               >
                 <div className="flex items-center gap-3 min-w-0 w-full">
@@ -132,14 +134,15 @@ const PlaylistPanel = ({
                       {meta.title || `Video ID: ${videoId}`}
                     </span>
                     <span
-                      className={`text-xs truncate ${isPlaying ? "text-white" : "text-gray-300"
-                        }`}
+                      className={`text-xs truncate ${
+                        isPlaying ? "text-white" : "text-gray-300"
+                      }`}
                     >
                       {meta.author
                         ? meta.author
                         : isPlaying
-                          ? "지금 재생 중"
-                          : `재생목록 #${index + 1}`}
+                        ? "지금 재생 중"
+                        : `재생목록 #${index + 1}`}
                     </span>
                   </div>
                 </div>
@@ -151,18 +154,18 @@ const PlaylistPanel = ({
 
       {/* 방장 전용 추가 UI */}
       {isHost && (
-        <div className="mt-4 pt-4 border-t border-gray-700">
-          <div className="relative flex items-center">
+        <div className="mt-4 border-t border-gray-700">
+          <div className="flex items-center gap-x-2 p-3">
             <input
               value={inputId}
               onChange={(e) => setInputId(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
               placeholder="영상 추가"
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-20"
+              className="flex-1 w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
             />
             <button
               onClick={handleAdd}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1.5 px-3 rounded-md text-sm"
+              className="flex-shrink-0 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm"
             >
               추가
             </button>
