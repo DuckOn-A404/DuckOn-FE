@@ -11,6 +11,7 @@ type RightSidebarProps = {
   playlist: string[];
   currentVideoIndex: number;
   onAddToPlaylist: (videoId: string) => void;
+  onSelectPlaylistIndex?: (index: number) => void;
 };
 
 const RightSidebar = ({
@@ -21,9 +22,10 @@ const RightSidebar = ({
   playlist,
   currentVideoIndex,
   onAddToPlaylist,
+  onSelectPlaylistIndex,
 }: RightSidebarProps) => {
   return (
-    <div className="flex-grow flex flex-col overflow-hidden p-4 bg-gray-800">
+    <div className="flex-grow flex flex-col bg-gray-800">
       {selectedTab === "chat" ? (
         <ChatPanel messages={messages} sendMessage={sendMessage} />
       ) : (
@@ -32,6 +34,7 @@ const RightSidebar = ({
           playlist={playlist}
           currentVideoIndex={currentVideoIndex}
           onAddToPlaylist={onAddToPlaylist}
+          onSelect={onSelectPlaylistIndex}
         />
       )}
     </div>
