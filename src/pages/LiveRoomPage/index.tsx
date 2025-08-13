@@ -597,7 +597,8 @@ const LiveRoomPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    // <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-[100svh] bg-gray-900 text-white">
       <RoomDeletedModal
         isOpen={roomDeletedOpen}
         onConfirm={async () => {
@@ -651,7 +652,12 @@ const LiveRoomPage = () => {
         </main>
 
         {/* 오른쪽: 사이드바 */}
-        <aside className="w-full md:w-80 bg-gray-800 flex flex-col md:border-l border-gray-700 min-h-0 overflow-hidden min-h-0 overflow-hidden">
+        
+        {/* <aside className="w-full md:w-80 bg-gray-800 flex flex-col md:border-l border-gray-700 min-h-0 overflow-hidden min-h-0 overflow-hidden"> */}
+        <aside className="w-full md:w-80 bg-gray-800 flex flex-col
+                    border-t md:border-t-0 md:border-l border-gray-700
+                    max-h-[44svh] md:max-h-none
+                    overflow-hidden flex-shrink-0">  
           {/* 탭 버튼 */}
           <div className="flex flex-shrink-0 border-b border-t md:border-t-0 border-gray-700">
             <button
