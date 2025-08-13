@@ -10,6 +10,8 @@ import EditProfileCard from "../components/domain/user/EditProfileCard";
 import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
+import MyCreatedRooms from "../components/domain/room/MyCreatedRooms";
+import type { RoomHistory } from "../types/Room";
 
 const isEmptyImg = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
@@ -179,6 +181,11 @@ const MyPage = () => {
           }}
         />
       )}
+
+      {/* 내가 만든 과거 방(입장 불가, 보기 전용) */}
+      <div className="mt-8">
+        <MyCreatedRooms rooms={myUser.roomList ?? []} />
+      </div>
 
       {/* 일반 로그인일 때만 모달 렌더링 */}
       {!isSocial && (
