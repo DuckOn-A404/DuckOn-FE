@@ -11,7 +11,7 @@ import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
 import MyCreatedRooms from "../components/domain/room/MyCreatedRooms";
-import type { RoomHistory } from "../types/Room";
+import type { RoomHistory } from "../types/room";
 
 const isEmptyImg = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
 import { formatCompactNumber } from "../../../utils/formatters";
-import { type room } from "../../../types/Room";
+import { type room } from "../../../types/room";
 
 const PLACEHOLDER_URL =
   "https://placehold.co/1280x720?text=No+Image&font=roboto";
