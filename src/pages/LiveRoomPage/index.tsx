@@ -235,10 +235,10 @@ const LiveRoomPage = () => {
   };
 
   const handleJumpToIndex = (index: number) => {
-    if (!isHost || !stompClient?.connected || !room || !myUser) return
+    if (!isHost || !stompClient?.connected || !room || !myUser) return;
 
     const size = room.playlist?.length ?? 0;
-    if (index < 0 || index >= size) return
+    if (index < 0 || index >= size) return;
 
     const payload: LiveRoomSyncDTO = {
       eventType: "SYNC_STATE",
@@ -251,7 +251,7 @@ const LiveRoomPage = () => {
       currentTime: 0,
       playing: true,
       lastUpdated: Date.now(),
-    }
+    };
 
     setRoom((prev: any) => (prev ? { ...prev, ...payload } : prev));
 
@@ -259,7 +259,7 @@ const LiveRoomPage = () => {
       destination: "/app/room/update",
       body: JSON.stringify(payload),
     });
-  }
+  };
   // 현재 영상 끝났을 때 관리
   const handleVideoEnd = () => {
     if (!isHost || !room || !room.playlist || !myUser) return;
@@ -739,10 +739,10 @@ const LiveRoomPage = () => {
       />
 
       {/* 본문: 영상 + 사이드바 */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
         {/* 왼쪽: 영상 */}
-        <main className="flex-1 bg-black p-4">
-          <div className="w-full h-full rounded-lg border border-gray-800 overflow-hidden">
+        <main className="flex-1 bg-black p-4 flex justify-center items-center">
+          <div className="w-full max-w-full max-h-full aspect-video rounded-lg border border-gray-800 overflow-hidden">
             {stompClient ? (
               <VideoPlayer
                 videoId={room.playlist?.[room.currentVideoIndex] ?? ""}
@@ -766,9 +766,9 @@ const LiveRoomPage = () => {
         </main>
 
         {/* 오른쪽: 사이드바 */}
-        <aside className="w-80 bg-gray-800 flex flex-col border-l border-gray-700">
+        <aside className="w-full md:w-80 bg-gray-800 flex flex-col md:border-l border-gray-700">
           {/* 탭 버튼 */}
-          <div className="flex border-b border-gray-700">
+          <div className="flex border-b border-t md:border-t-0 border-gray-700">
             <button
               onClick={() => setActiveTab("chat")}
               className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
