@@ -119,46 +119,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* === Guide Section === */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold">빠르게 시작하기</h2>
-          <button
-            onClick={() => openGuide(0)}
-            className="text-purple-600 hover:text-purple-800 font-semibold"
-          >
-            전체 가이드 보기 →
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          {guideSteps.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => openGuide(i)}
-              className="group relative rounded-2xl overflow-hidden bg-white shadow hover:shadow-lg transition-all text-left"
-            >
-              <img
-                src={s.img}
-                alt={s.alt}
-                className="w-full h-48 object-cover"
-                loading="lazy"
-              />
-              <div className="p-4">
-                <p className="text-sm font-semibold text-purple-600">
-                  STEP {i + 1}
-                </p>
-                <h3 className="text-lg font-bold mt-1">{s.title}</h3>
-                <p className="text-gray-600 mt-1 line-clamp-2">{s.desc}</p>
-                <span className="inline-block mt-3 text-purple-600 group-hover:translate-x-0.5 transition">
-                  자세히 보기 →
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
       {/* 메인 콘텐츠 영역 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* 핫한 방송 영역 */}
@@ -218,6 +178,47 @@ const HomePage = () => {
                 ))}
           </div>
         </section>
+
+        {/* === Guide Section === */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold">빠르게 시작하기</h2>
+          {/* <button
+            onClick={() => openGuide(0)}
+            className="text-purple-600 hover:text-purple-800 font-semibold"
+          >
+            전체 가이드 보기 →
+          </button> */}
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {guideSteps.map((s, i) => (
+            <button
+              key={i}
+              onClick={() => openGuide(i)}
+              className="group relative rounded-2xl overflow-hidden bg-white shadow hover:shadow-lg transition-all text-left"
+            >
+              <img
+                src={s.img}
+                alt={s.alt}
+                className="w-full h-48 object-cover"
+                loading="lazy"
+              />
+              <div className="p-4">
+                <p className="text-sm font-semibold text-purple-600">
+                  STEP {i + 1}
+                </p>
+                <h3 className="text-lg font-bold mt-1">{s.title}</h3>
+                <p className="text-gray-600 mt-1 line-clamp-2">{s.desc}</p>
+                <span className="inline-block mt-3 text-purple-600 group-hover:translate-x-0.5 transition">
+                  자세히 보기 →
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+
       </main>
 
       {/* 가이드 모달 */}
