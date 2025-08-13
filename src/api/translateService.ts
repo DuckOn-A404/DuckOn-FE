@@ -13,10 +13,14 @@ export async function translateMessage(
   message: string,
   language: string = "ko"
 ): Promise<string> {
-  const { data } = await api.post<TranslateResponse>("/translate", {
-    message,
-    language,
-  } satisfies TranslateRequest);
+  const { data } = await api.post<TranslateResponse>(
+    "/translate",
+    {
+      message,
+      language,
+    } satisfies TranslateRequest,
+    { timeout: 15000 }
+  );
 
   if (!data?.translatedMessage) {
     throw new Error("번역 결과가 없습니다.");
