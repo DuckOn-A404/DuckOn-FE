@@ -1,99 +1,186 @@
 import { api, getAccessToken } from "./axiosInstance";
+import type { Artist } from "../types/artist";
 
-/**
- * 아티스트 목록 조회 API 요청
- * @param page - 조회할 페이지 번호 (기본값: 1)
- * @param size - 페이지당 아티스트 수 (기본값: 6)
- * @returns - 성공 시 서버로부터 받은 아티스트 목록 데이터
- */
-export const getArtistList = async (page = 1, size = 12) => {
-  const response = await api.get("/artists", {
-    params: { page, size },
-    skipAuth: true, // 공개 API → 토큰 절대 안 보냄
-  });
+export type SortKey = "followers" | "name" | "debut";
+export type SortOrder = "asc" | "desc";
 
-  const artistList = response.data?.artistList ?? [];
-  const total = response.data?.totalElements ?? 0;
-
-  return {
-    data: artistList,
-    total,
-    page: response.data.page,
-    size: response.data.size,
-  };
+type GetArtistListOpts = {
+  page?: number;
+  size?: number;
+  sort?: SortKey;
+  order?: SortOrder;
+  keyword?: string; // 검색어
 };
 
 /**
- * 아티스트 검색 API 요청
- * @param keyword - 검색어
- * @returns - 성공 시 서버로부터 받은 아티스트 검색 결과 데이터
+ * 아티스트 목록 조회 (페이지네이션 + 정렬 + 검색)
+ *
+ * - 백엔드 `/api/artists` 하나로 처리합니다.
+ * - `keyword`가 있으면 백엔드가 검색 핸들러(`/artists?keyword=`)로 라우팅되어
+ *   `{ artistList }`만 내려올 수 있습니다. 이 경우 `totalPages=1`로 보정합니다.
+ *
+ * @overload
+ * @param page 조회할 페이지(1-base)
+ * @param size 페이지 당 개수
+ * @returns 페이징/검색 결과
+ *
+ * @overload
+ * @param opts 옵션 객체({ page, size, sort, order, keyword })
+ * @returns 페이징/검색 결과
+ *
+ * @example
+ * // 1) 기존 방식(숫자 인자)
+ * const res = await getArtistList(1, 30);
+ * console.log(res.artistList, res.totalElements);
+ *
+ * @example
+ * // 2) 확장 방식(옵션 객체)
+ * const res = await getArtistList({ page: 1, size: 40, sort: "followers", order: "desc", keyword: "NewJeans" });
+ * console.log(res.artistList, res.totalPages);
+ */
+export function getArtistList(page?: number, size?: number): Promise<{
+  artistList: Artist[];
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+  // legacy alias
+  data: Artist[];
+  total: number;
+}>;
+export function getArtistList(opts: GetArtistListOpts): Promise<{
+  artistList: Artist[];
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+  // legacy alias
+  data: Artist[];
+  total: number;
+}>;
+
+// 실제 구현 (오버로드 통합)
+export async function getArtistList(
+  arg1?: number | GetArtistListOpts,
+  arg2?: number
+) {
+  // 기존 시그니처(page, size) 또는 옵션 객체 지원
+  let page = 1;
+  let size = 12;
+  let sort: SortKey | undefined;
+  let order: SortOrder | undefined;
+  let keyword: string | undefined;
+
+  if (typeof arg1 === "object") {
+    page = arg1.page ?? 1;
+    size = arg1.size ?? 30; // 기본을 조금 크게 해서 스크롤 끊김 완화
+    sort = arg1.sort;       // 백엔드가 미지원이면 서버가 무시
+    order = arg1.order;
+    keyword = arg1.keyword?.trim() || undefined;
+  } else {
+    page = arg1 ?? 1;
+    size = arg2 ?? 12;
+  }
+
+  const params: Record<string, string | number> = { page, size };
+  if (sort) params.sort = sort;
+  if (order) params.order = order;
+  if (keyword) params.keyword = keyword; // /artists?keyword= 검색 핸들러로 매칭
+
+  const response = await api.get("/artists", {
+    params,
+    skipAuth: true, // 공개 API: 토큰 미전송
+  });
+
+  const data = response.data || {};
+  const artistList: Artist[] = data.artistList ?? [];
+  const pageResp = data.page ?? page;
+  const sizeResp = data.size ?? size;
+  const totalPages = data.totalPages ?? 1;
+  const totalElements = data.totalElements ?? artistList.length;
+
+  // 새/레거시 반환을 동시에 제공(기존 코드 보호)
+  return {
+    artistList,
+    page: pageResp,
+    size: sizeResp,
+    totalPages,
+    totalElements,
+    data: artistList,     // legacy alias
+    total: totalElements, // legacy alias
+  };
+}
+
+/**
+ * 아티스트 검색 (직접 사용 비권장)
+ *
+ * NOTE: 현재 페이지에서는 `getArtistList({ keyword })`로 대체합니다.
+ * 다른 페이지에서 기존 로직을 유지할 필요가 있을 때만 사용하세요.
+ *
+ * @param keyword 검색어
+ * @returns 검색 결과 리스트(페이지네이션 없음)
  */
 export const searchArtists = async (keyword: string) => {
   const response = await api.get("/artists", {
     params: { keyword },
-    skipAuth: true, // 공개 API
+    skipAuth: true,
   });
-  return response.data.artistList ?? [];
+  return (response.data.artistList ?? []) as Artist[];
 };
 
 /**
- * 단일 아티스트 상세 정보 API 요청
- * @param artistId - 조회할 아티스트 ID
- * @returns 아티스트 정보 + 로그인 유저의 팔로우 여부
+ * 단일 아티스트 상세 정보 조회
+ * @param artistId 조회할 아티스트 ID
+ * @returns 아티스트 상세 + 로그인 유저의 팔로우 여부
  */
 export const getArtistDetail = async (artistId: number) => {
   const res = await api.get(`/artists/${artistId}`, { skipAuth: true });
-  return res.data;
+  return res.data as unknown;
 };
 
 /**
- * 아티스트 팔로우 요청
- * @param artistId - 팔로우할 아티스트 ID
+ * 아티스트 팔로우
+ * @throws Error 로그인 필요 시
+ * @param artistId 팔로우할 아티스트 ID
  */
 export const followArtist = async (artistId: number) => {
-  if (!getAccessToken()) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  if (!getAccessToken()) throw new Error("로그인이 필요합니다.");
   const res = await api.post(`/artists/${artistId}/follow`);
-  return res.data;
+  return res.data as unknown;
 };
 
 /**
- * 아티스트 언팔로우 요청
- * @param artistId - 언팔로우할 아티스트 ID
- * 아 근데 이거는 delete 최대한 없애기로 했으니까 나중에 수정해야할듯
+ * 아티스트 언팔로우
+ * @throws Error 로그인 필요 시
+ * @param artistId 언팔로우할 아티스트 ID
  */
 export const unfollowArtist = async (artistId: number) => {
-  if (!getAccessToken()) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  if (!getAccessToken()) throw new Error("로그인이 필요합니다.");
   const res = await api.delete(`/artists/${artistId}/follow`);
-  return res.data;
+  return res.data as unknown;
 };
 
 /**
- * 로그인한 사용자가 팔로우한 아티스트 목록 조회
- * @param page - 조회할 페이지 번호 (기본값: 1)
- * @param size - 페이지당 항목 수 (기본값: 10)
- * @returns 아티스트 목록과 페이징 정보
+ * 내가 팔로우한 아티스트 목록(마이 페이지 등)
+ * @param page 1-base 페이지
+ * @param size 페이지 크기
+ * @returns 페이징 결과
  */
 export const getFollowedArtists = async (page = 1, size = 10) => {
-  if (!getAccessToken()) {
-    throw new Error("로그인이 필요합니다.");
-  }
+  if (!getAccessToken()) throw new Error("로그인이 필요합니다.");
   const res = await api.get("/artists/me", { params: { page, size } });
-  return res.data;
+  return res.data as unknown;
 };
 
 /**
- * 랜덤 아티스트 목록 조회 API 요청
- * @param size - 조회할 아티스트 수
- * @returns - 성공 시 서버로부터 받은 아티스트 목록 배열
+ * 랜덤 아티스트 조회(홈 추천 등)
+ * @param size 개수
+ * @returns 아티스트 배열
  */
 export const getRandomArtists = async (size = 5) => {
   const res = await api.get("/artists/random", {
     params: { size },
     skipAuth: true,
   });
-  return res.data.artistList;
+  return res.data.artistList as Artist[];
 };
