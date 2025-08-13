@@ -5,7 +5,7 @@ import SortSelect, {
 import ArtistCard from "../components/domain/artist/ArtistCard";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
-import { Search, ArrowUpDown, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
 import { useDebounce } from "../hooks/useDebounce";
 
