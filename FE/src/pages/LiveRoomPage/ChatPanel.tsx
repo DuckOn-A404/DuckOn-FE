@@ -99,11 +99,16 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      sendMessage(newMessage);
-      setNewMessage("");
-      inputRef.current?.blur();
-    }
+    const v = newMessage.trim();
+    if (!v) return;
+
+    sendMessage(v);
+    setNewMessage("");
+
+    // 전송 직후 다시 포커스 (렌더 한 프레임 뒤에)
+    requestAnimationFrame(() => {
+      inputRef.current?.focus({ preventScroll: true });
+    });
   };
 
   // 번역 API 호출 함수 (수정됨)
@@ -324,8 +329,10 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
                 onKeyDown={(e) => {
                   // 한글 조합 중 엔터 예외
                   // @ts-ignore
-                  if (e.key === "Enter" && !e.nativeEvent?.isComposing)
+                  if (e.key === "Enter" && !e.nativeEvent?.isComposing) {
+                    e.preventDefault();
                     handleSendMessage();
+                  }
                 }}
                 placeholder="메시지를 입력하세요..."
                 // className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
