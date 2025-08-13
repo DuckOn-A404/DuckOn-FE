@@ -64,9 +64,9 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
                 }`}
               >
                 <div
-                  className={`px-4 py-2 rounded-lg break-words text-sm ${
+                  className={`px-4 py-2 rounded-lg text-sm ${
                     isMyMessage ? "bg-purple-600" : "bg-gray-700"
-                  }`}
+                  } break-all`}
                 >
                   <span>{msg.content}</span>
 
@@ -105,7 +105,7 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
       </div>
 
       {/* 메시지 입력 영역 */}
-      <div className="py-3 border-t border-gray-700 bg-gray-800/80">
+      <div className="p-3 border-t border-gray-700 bg-gray-800/80">
         {myUser ? (
           <div className="relative flex items-center">
             <input
