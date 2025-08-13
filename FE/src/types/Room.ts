@@ -16,6 +16,8 @@ export type RoomHistory = {
   createdAt: string;   // LocalDateTime → ISO 문자열로 전달됨
   creatorId: string;
   artistId: number;
+  artistNameEn?: string | null;
+  artistNameKr?: string | null;
 };
 
 
