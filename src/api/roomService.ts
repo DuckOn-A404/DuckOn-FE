@@ -70,7 +70,7 @@
 // };
 
 import { api, getAccessToken } from "./axiosInstance";
-import type { room, TrendingRoomsResponse } from "../types/Room";
+import type { room, TrendingRoomsResponse } from "../types/room";
 
 // 방 생성 API
 export const CreateRoom = async (formData: FormData) => {
