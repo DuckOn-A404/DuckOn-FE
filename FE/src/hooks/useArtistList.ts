@@ -1,81 +1,67 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { type Artist } from "../types/artist";
-import { getArtistList, searchArtists } from "../api/artistService";
+import { getArtistList, type SortKey, type SortOrder } from "../api/artistService";
 
-/* useArtistList : 아티스트 목록 조회 및 검색을 관리하는 커스텀 훅
-  1. 아티스트 목록 상태 관리 (데이터, 총 개수, 로딩 상태, 다음 페이지 여부)
-  2. 검색어(searchText) 유무에 따라 전체 목록 조회 또는 검색 기능 수행
-  3. 무한 스크롤을 위한 '더 불러오기'(fetchMore) 기능 제공
-  4. 검색어 변경 시 자동으로 새로운 검색 실행
-*/
-export const useArtistList = (searchText: string) => {
+type ListParams = {
+  q?: string;       // 검색어(옵션) - 제공되면 /artists?keyword= 로 전송됨
+  sort: SortKey;    // "followers" | "name" | "debut"
+  order: SortOrder; // "asc" | "desc"
+  size: number;     // 페이지 당 아이템 수
+};
+
+export const useArtistList = (params: ListParams) => {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
 
-  // 아티스트 목록 전체 불러오는 훅
-  const fetchMore = async () => {
-    if (loading || !hasMore || searchText.trim() !== "") return;
+  // IntersectionObserver의 연속 트리거/중복요청을 막기 위한 플래그
+  const inflightRef = useRef(false);
+
+  const reset = () => {
+    setArtists([]);
+    setPage(1);
+    setHasMore(true);
+    setTotalCount(0);
+  };
+
+  const fetchPage = async (p: number) => {
+    if (inflightRef.current) return;
+    inflightRef.current = true;
     setLoading(true);
-
     try {
-      const res = await getArtistList(page);
-      const newData = res.data;
+      const res = await getArtistList({
+        page: p,
+        size: params.size,
+        sort: params.sort,
+        order: params.order,
+        keyword: params.q?.trim() || undefined,
+      });
 
-      if (newData.length === 0) {
-        setHasMore(false);
-      } else {
-        setArtists((prev) => {
-          const existingIds = new Set(prev.map((a: Artist) => a.artistId));
-          const newArtists = res.data.filter(
-            (a: Artist) => !existingIds.has(a.artistId)
-          );
-          return [...prev, ...newArtists];
-        });
-        setPage((prev) => prev + 1);
-        setTotalCount(res.total);
-      }
-    } catch (err) {
-      console.error("아티스트 로딩 실패", err);
+      const newData = res.artistList as Artist[];
+      setArtists(prev => (p === 1 ? newData : [...prev, ...newData]));
+      setTotalCount(res.totalElements);
+      setHasMore(p < res.totalPages); // 검색(keyword) 시 백엔드가 totalPages=1 → hasMore=false
+      setPage(p + 1);
     } finally {
       setLoading(false);
+      inflightRef.current = false;
     }
   };
 
-  // 검색 또는 전체 초기 로딩
-  useEffect(() => {
-    const fetchInitial = async () => {
-      setLoading(true);
-      try {
-        if (searchText.trim() !== "") {
-          const result = await searchArtists(searchText);
-          setArtists(result);
-          setTotalCount(result.length);
-          setHasMore(false);
-        } else {
-          const res = await getArtistList(1);
-          setArtists(res.data);
-          setPage(2);
-          setTotalCount(res.total);
-          setHasMore(res.data.length > 0);
-        }
-      } catch (err) {
-        console.error("검색 실패", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInitial();
-  }, [searchText]);
-
-  return {
-    artists,
-    totalCount,
-    fetchMore,
-    loading,
-    hasMore,
+  const fetchMore = () => {
+    if (!loading && hasMore && !inflightRef.current) {
+      fetchPage(page);
+    }
   };
+
+  // q/sort/order/size 변경 시 목록 초기화 후 1페이지 로드
+  useEffect(() => {
+    reset();
+    fetchPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.q, params.sort, params.order, params.size]);
+
+  return { artists, totalCount, fetchMore, loading, hasMore, reset };
 };
