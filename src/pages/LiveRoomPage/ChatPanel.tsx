@@ -13,6 +13,7 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -25,6 +26,7 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
     if (newMessage.trim()) {
       sendMessage(newMessage);
       setNewMessage("");
+      inputRef.current?.blur();
     }
   };
 
@@ -109,12 +111,22 @@ const ChatPanel = ({ messages, sendMessage }: ChatPanelProps) => {
         {myUser ? (
           <div className="relative flex items-center">
             <input
+              ref={inputRef}
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              // onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              onKeyDown={(e) => {
+                // 한글 조합 중 엔터 예외
+                // @ts-ignore
+                if (e.key === "Enter" && !e.nativeEvent?.isComposing) handleSendMessage();
+              }}
               placeholder="메시지를 입력하세요..."
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+              // className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg
+              px-4 md:px-4 py-3 md:py-2.5
+              text-base md:text-sm
+              outline-none focus:border-purple-500 transition-colors pr-12"
             />
             <button
               onClick={handleSendMessage}
