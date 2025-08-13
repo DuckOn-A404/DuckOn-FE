@@ -46,15 +46,14 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방" }: Props) => {
               <div className="font-semibold line-clamp-1">{r.title}</div>
               <div className="mt-1 text-xs text-gray-500">생성: {fmt(r.createdAt)}</div>
 
-              <div className="mt-2 text-[11px] text-gray-600 flex flex-wrap gap-2">
-                <span className="px-2 py-0.5 bg-gray-100 rounded-full">
-                  artistId: {r.artistId}
-                </span>
-                <span className="px-2 py-0.5 bg-gray-100 rounded-full">
+            <div className="mt-2 text-[11px] text-gray-600 flex flex-wrap gap-2">
+              <span className="px-2 py-0.5 bg-gray-100 rounded-full">
+                  {r.artistNameKr ?? r.artistNameEn ?? `artistId: ${r.artistId}`}
+              </span>
+              <span className="px-2 py-0.5 bg-gray-100 rounded-full">
                   creator: {r.creatorId}
-                </span>
-              </div>
-
+              </span>
+            </div>
               {/* 입장/링크 없음: 히스토리 전용 */}
             </div>
           </div>
