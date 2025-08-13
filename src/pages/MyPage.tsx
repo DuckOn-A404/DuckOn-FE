@@ -12,8 +12,6 @@ import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
 import type { RoomHistory } from "../types/room";
 import MyCreatedRoomsPanel from "../components/domain/room/MyCreatedRoomsPanel";
-// (선택) 아티스트 이름 매핑이 있으면 넘겨주기
-// const artistMap = { 1: "방탄소년단", 2: "뉴진스", ... };
 
 const isEmptyImg = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
@@ -186,11 +184,7 @@ const MyPage = () => {
 
       {/* 내가 만든 과거 방(입장 불가, 보기 전용) */}
       <div className="mt-8">
-        <MyCreatedRoomsPanel
-          rooms={myUser.roomList ?? []}
-          // artistMap={artistMap} // 이름 표시 원하면 주석 해제
-          pageSize={12}
-        />
+        <MyCreatedRoomsPanel rooms={myUser.roomList ?? []} pageSize={12} />
       </div>
 
       {/* 일반 로그인일 때만 모달 렌더링 */}
