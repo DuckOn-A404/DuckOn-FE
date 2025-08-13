@@ -1,5 +1,5 @@
 import { api, getAccessToken } from "./axiosInstance";
-import type { room } from "../types/Room";
+import type { room, TrendingRoomsResponse } from "../types/Room";
 
 // 방 생성 API
 export const CreateRoom = async (formData: FormData) => {
@@ -31,18 +31,16 @@ export const getRoomsByArtist = async (artistId: number): Promise<room[]> => {
 
 /**
  * 트렌딩 방 목록을 가져오는 API 함수
- * @param size - 조회할 방의 개수 (기본값: 3)
+ * @param page - 조회할 페이지 번호 (기본값: 1)
+ * @param size - 페이지당 방 수 (기본값: 10)
  * @returns 트렌딩 방 목록 배열
  */
-export const getTrendingRooms = async (size = 3): Promise<room[]> => {
-  try {
-    const response = await api.get("/rooms/trending", {
-      params: { size },
-    });
-    return response.data.roomInfoList || [];
-  } catch {
-    return [];
-  }
+export const getTrendingRooms = async (page: number, size = 10): Promise<TrendingRoomsResponse> => {
+	const response = await api.get("/rooms/trending", {
+		params: { page,size },
+		skipAuth: true,
+	});
+	return response.data;
 };
 
 // 방 입장(entryAnswer)
