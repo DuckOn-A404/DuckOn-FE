@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import YouTube from "react-youtube";
 import { Client } from "@stomp/stompjs";
 import type { User } from "../../types";
-import type { LiveRoomSyncDTO } from "../../types/Room";
+import type { LiveRoomSyncDTO } from "../../types/room";
 
 type VideoPlayerProps = {
   videoId: string;

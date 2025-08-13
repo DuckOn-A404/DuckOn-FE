@@ -1,4 +1,4 @@
-import type { RoomHistory } from "../../../types/Room";
+import type { RoomHistory } from "../../../types/room";
 
 type Props = {
   rooms: RoomHistory[];

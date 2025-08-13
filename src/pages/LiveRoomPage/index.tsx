@@ -20,7 +20,7 @@ import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
 import { onTokenRefreshed } from "../../api/axiosInstance";
 import { fireAndForget } from "../../utils/fireAndForget";
-import type { LiveRoomSyncDTO } from "../../types/Room";
+import type { LiveRoomSyncDTO } from "../../types/room";
 
 const DEFAULT_QUIZ_PROMPT = "비밀번호(정답)를 입력하세요.";
 
