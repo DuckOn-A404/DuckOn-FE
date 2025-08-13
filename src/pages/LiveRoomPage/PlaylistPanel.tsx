@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { Youtube } from "lucide-react";
-import { fetchYouTubeMeta } from "../../utils/youtubeMeta";
+import {useState, useEffect} from "react";
+import {Youtube} from "lucide-react";
+import {fetchYouTubeMeta} from "../../utils/youtubeMeta";
 
 type PlaylistPanelProps = {
   isHost: boolean;
@@ -10,7 +10,7 @@ type PlaylistPanelProps = {
   onSelect?: (index: number) => void;
 };
 
-type Meta = { title?: string; author?: string; thumbnail?: string };
+type Meta = {title?: string; author?: string; thumbnail?: string};
 
 const PlaylistPanel = ({
   isHost,
@@ -64,7 +64,7 @@ const PlaylistPanel = ({
         .map(async (id) => {
           const m = await fetchYouTubeMeta(id);
           if (!mounted || !m) return;
-          setMetaMap((prev) => ({ ...prev, [id]: m }));
+          setMetaMap((prev) => ({...prev, [id]: m}));
         });
       await Promise.allSettled(tasks);
     };
@@ -77,7 +77,7 @@ const PlaylistPanel = ({
   return (
     <div className="flex flex-col h-full bg-gray-800 text-white">
       {/* 리스트 */}
-      <div className="flex-1 space-y-2 overflow-y-auto pr-2">
+      <div className="flex-1 space-y-4 overflow-y-auto p-4">
         {playlist.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Youtube size={48} />
@@ -111,14 +111,12 @@ const PlaylistPanel = ({
                   }
                 }}
                 className={`p-2 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out
-                  ${
-                    isPlaying
-                      ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
-                      : `bg-gray-800 ${
-                          isHost
-                            ? "hover:bg-gray-700 cursor-pointer"
-                            : "cursor-default"
-                        }`
+                  ${isPlaying
+                    ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 shadow-lg"
+                    : `bg-gray-800 ${isHost
+                      ? "hover:bg-gray-700 cursor-pointer"
+                      : "cursor-default"
+                    }`
                   }`}
               >
                 <div className="flex items-center gap-3 min-w-0 w-full">
@@ -134,15 +132,14 @@ const PlaylistPanel = ({
                       {meta.title || `Video ID: ${videoId}`}
                     </span>
                     <span
-                      className={`text-xs truncate ${
-                        isPlaying ? "text-white" : "text-gray-300"
-                      }`}
+                      className={`text-xs truncate ${isPlaying ? "text-white" : "text-gray-300"
+                        }`}
                     >
                       {meta.author
                         ? meta.author
                         : isPlaying
-                        ? "지금 재생 중"
-                        : `재생목록 #${index + 1}`}
+                          ? "지금 재생 중"
+                          : `재생목록 #${index + 1}`}
                     </span>
                   </div>
                 </div>
