@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -13,11 +13,24 @@ import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
 import ScrollToTop from "./components/common/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
 import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
+// import RoomListPage from "./pages/RoomListPage";
+import {useEffect} from "react";
+import {sendPageView} from "./analytics";
+import RoomListPage from "./pages/RoomListPage";
+
+function RouteChangeTracker() {
+  const loc = useLocation();
+  useEffect(() => {
+    sendPageView(loc.pathname + loc.search);
+  }, [loc.pathname, loc.search]);
+  return null; // UI 없음
+}
 
 function App() {
   return (
     <>
       <BrowserRouter>
+        <RouteChangeTracker />
         <ScrollToTop />
         <Routes>
           {/* 공통 레이아웃이 적용되는 페이지들 */}
@@ -30,7 +43,9 @@ function App() {
 
           {/* 푸터가 없는 페이지들 */}
           <Route element={<LayoutWithoutFooter />}>
+            {/* <Route path="/room-list" element={<RoomListPage />}></Route> */}
             <Route path="/artist-list" element={<ArtistListPage />} />
+            <Route path="/room-list" element={<RoomListPage />} />
           </Route>
 
           {/* 레이아웃이 필요 없는 페이지들 */}

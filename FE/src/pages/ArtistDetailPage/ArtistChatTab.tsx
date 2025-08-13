@@ -62,11 +62,10 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
               msg.userId === myUser?.userId ? "items-end" : "items-start"
             }`}
           >
-            {msg.userId !== myUser?.userId && (
-              <span className="text-sm font-semibold text-gray-700 mb-1">
-                {msg.userNickname}
-              </span>
-            )}
+            <span className="text-sm font-semibold text-gray-700 mb-1">
+              {msg.userNickname}
+            </span>
+
             <div className="flex items-end gap-2">
               {msg.userId === myUser?.userId ? (
                 // 내가 보낸 메시지: 시간이 왼쪽
