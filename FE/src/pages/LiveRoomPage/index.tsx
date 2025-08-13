@@ -5,7 +5,12 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { enterRoom, exitRoom, deleteRoom, fetchRoomById } from "../../api/roomService";
+import {
+  enterRoom,
+  exitRoom,
+  deleteRoom,
+  fetchRoomById,
+} from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
@@ -20,6 +25,7 @@ import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
 import { onTokenRefreshed } from "../../api/axiosInstance";
 import { fireAndForget } from "../../utils/fireAndForget";
+import { getBlockedUsers } from "../../api/userService";
 import type { LiveRoomSyncDTO } from "../../types/room";
 
 const DEFAULT_QUIZ_PROMPT = "비밀번호(정답)를 입력하세요.";
@@ -53,6 +59,46 @@ const LiveRoomPage = () => {
   const leavingRef = useRef(false);
   const isHostRef = useRef(false);
   const joinedRef = useRef(false);
+
+  // 1) 차단 목록 state
+  const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(() => {
+    const raw = localStorage.getItem("blockedUserIds");
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  });
+
+  // 2) 서버 차단목록 로드해서 병합 (입장/로그인 시)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const list = await getBlockedUsers();
+        if (!mounted) return;
+        setBlockedUserIds((prev) => {
+          const merged = new Set(prev);
+          for (const u of list) merged.add(u.userId);
+          return merged;
+        });
+      } catch (e) {
+        console.error("차단 목록 불러오기 실패:", e);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [myUserId]);
+
+  // 3) (권장) 변경 시 로컬 저장 → 재입장/새로고침 초기 렌더에서 바로 적용
+  useEffect(() => {
+    localStorage.setItem("blockedUserIds", JSON.stringify([...blockedUserIds]));
+  }, [blockedUserIds]);
+
+  const handleBlockUser = (userId: string) => {
+    setBlockedUserIds((prev) => new Set(prev).add(userId));
+  };
+
+  const visibleMessages = messages.filter(
+    (m) => !blockedUserIds.has(m.senderId)
+  );
 
   const parseId = (raw: string | null) => {
     if (!raw) return undefined;
@@ -104,7 +150,9 @@ const LiveRoomPage = () => {
     try {
       await performExit();
     } catch {
-      setParticipantCount((prev) => (typeof prev === "number" ? prev + 1 : prev));
+      setParticipantCount((prev) =>
+        typeof prev === "number" ? prev + 1 : prev
+      );
     } finally {
       navigate(-1);
     }
@@ -139,10 +187,9 @@ const LiveRoomPage = () => {
 
         // 질문 키 유연 처리 + 기본 문구
         const raw =
-          (data.entryQuestion ??
-            data.question ??
-            data.quizQuestion ??
-            "")?.toString()?.trim() || "";
+          (data.entryQuestion ?? data.question ?? data.quizQuestion ?? "")
+            ?.toString()
+            ?.trim() || "";
         setEntryQuestion(raw || DEFAULT_QUIZ_PROMPT);
         setIsQuizModalOpen(true);
         return;
@@ -418,10 +465,9 @@ const LiveRoomPage = () => {
         if (status === 401 || status === 403) {
           const data = err?.response?.data || {};
           const raw =
-            (data.entryQuestion ??
-              data.question ??
-              data.quizQuestion ??
-              "")?.toString()?.trim() || "";
+            (data.entryQuestion ?? data.question ?? data.quizQuestion ?? "")
+              ?.toString()
+              ?.trim() || "";
           setEntryQuestion(raw || DEFAULT_QUIZ_PROMPT);
           setIsQuizModalOpen(true);
           return;
@@ -442,8 +488,12 @@ const LiveRoomPage = () => {
       lastTokenRef.current = newToken;
 
       if (!newToken) {
-        try { await presenceRef.current?.deactivate(); } catch {}
-        try { await syncRef.current?.deactivate(); } catch {}
+        try {
+          await presenceRef.current?.deactivate();
+        } catch {}
+        try {
+          await syncRef.current?.deactivate();
+        } catch {}
         presenceRef.current = null;
         syncRef.current = null;
         setStompClient(null);
@@ -451,7 +501,9 @@ const LiveRoomPage = () => {
       }
 
       if (roomId) {
-        try { await presenceRef.current?.deactivate(); } catch {}
+        try {
+          await presenceRef.current?.deactivate();
+        } catch {}
         const p = createStompClient(newToken);
         presenceRef.current = p;
         p.onConnect = () => {
@@ -470,7 +522,9 @@ const LiveRoomPage = () => {
       }
 
       if (myUser && !isQuizModalOpen && roomId) {
-        try { await syncRef.current?.deactivate(); } catch {}
+        try {
+          await syncRef.current?.deactivate();
+        } catch {}
         const s = createStompClient(newToken);
         syncRef.current = s;
         setStompClient(s);
@@ -540,7 +594,9 @@ const LiveRoomPage = () => {
       }
     });
 
-    return () => { unsubscribe(); };
+    return () => {
+      unsubscribe();
+    };
   }, [roomId, myUser, isQuizModalOpen]);
 
   // 이탈/언마운트 정리
@@ -555,10 +611,16 @@ const LiveRoomPage = () => {
 
       if (isHostRef.current) {
         // 방장: 방 삭제
-        fireAndForget(`/rooms/${roomId}?artistId=${resolvedArtistId}`, "DELETE");
+        fireAndForget(
+          `/rooms/${roomId}?artistId=${resolvedArtistId}`,
+          "DELETE"
+        );
       } else {
         // 참가자: 방 나가기
-        fireAndForget(`/rooms/${roomId}/exit?artistId=${resolvedArtistId}`, "POST");
+        fireAndForget(
+          `/rooms/${roomId}/exit?artistId=${resolvedArtistId}`,
+          "POST"
+        );
       }
     };
 
@@ -571,7 +633,6 @@ const LiveRoomPage = () => {
       onPageHide(); // 언마운트 시에도 한 번 시도
     };
   }, [roomId, resolvedArtistId]);
-
 
   if (!myUser) {
     return (
@@ -602,7 +663,9 @@ const LiveRoomPage = () => {
       <RoomDeletedModal
         isOpen={roomDeletedOpen}
         onConfirm={async () => {
-          try { await stompClient?.deactivate(); } catch {}
+          try {
+            await stompClient?.deactivate();
+          } catch {}
           navigate(-1);
         }}
       />
@@ -621,7 +684,9 @@ const LiveRoomPage = () => {
         hostNickname={hostNickname ?? room.hostNickname}
         participantCount={participantCount ?? room.participantCount ?? 0}
         onExit={handleExit}
-        onDelete={room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined}
+        onDelete={
+          room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
+        }
       />
 
       {/* 본문: 영상 + 사이드바 */}
@@ -652,12 +717,14 @@ const LiveRoomPage = () => {
         </main>
 
         {/* 오른쪽: 사이드바 */}
-        
+
         {/* <aside className="w-full md:w-80 bg-gray-800 flex flex-col md:border-l border-gray-700 min-h-0 overflow-hidden min-h-0 overflow-hidden"> */}
-        <aside className="w-full md:w-80 bg-gray-800 flex flex-col
+        <aside
+          className="w-full md:w-80 bg-gray-800 flex flex-col
                     border-t md:border-t-0 md:border-l border-gray-700
                     max-h-[44svh] md:max-h-none
-                    overflow-hidden flex-shrink-0">  
+                    overflow-hidden flex-shrink-0"
+        >
           {/* 탭 버튼 */}
           <div className="flex flex-shrink-0 border-b border-t md:border-t-0 border-gray-700">
             <button
@@ -686,12 +753,13 @@ const LiveRoomPage = () => {
             selectedTab={activeTab}
             isHost={room.hostId === myUserId}
             roomId={roomId}
-            messages={messages}
+            messages={visibleMessages}
             sendMessage={sendMessage}
             playlist={room.playlist || []}
             currentVideoIndex={room.currentVideoIndex ?? 0}
             onAddToPlaylist={handleAddToPlaylist}
             onSelectPlaylistIndex={handleJumpToIndex}
+            onBlockUser={handleBlockUser}
           />
         </aside>
       </div>
