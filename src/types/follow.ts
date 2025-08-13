@@ -1,6 +1,6 @@
 export type FollowUser = {
-    userId: string;
-    nickname: string;
-    profileImg: string;
-    following?: boolean;    // 선택적으로 팔로워 목록만 해당
-}
+  userId: string;
+  nickname: string;
+  profileImg: string | null;  // ← null 허용
+  following?: boolean;        // 팔로워 목록일 때만 내려올 수 있음
+};
