@@ -1,3 +1,5 @@
+import type { RoomHistory } from "./room";
+
 export type MyUser = {
   userId: string;
   email: string;
