@@ -40,11 +40,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const playerRef = useRef<YT.Player | null>(null);
 
   // 시청 관련 상태
-  const [canWatch, setCanWatch] = useState(false);   // 참가자 재생 허용(재생 중) 여부
-  const justSynced = useRef(false);                  // sync 직후 onStateChange 가드
+  const [canWatch, setCanWatch] = useState(false); // 참가자 재생 허용(재생 중) 여부
+  const justSynced = useRef(false); // sync 직후 onStateChange 가드
 
   // 오디오 상태 (초기 무조건 음소거)
-  const [muted, setMuted] = useState(true);          // 참가자 음소거 상태
+  const [muted, setMuted] = useState(true); // 참가자 음소거 상태
   const [showUnmuteHint, setShowUnmuteHint] = useState(false); // "사운드 켜기" 안내 버튼
 
   // 소프트 보정 타이머
@@ -59,7 +59,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const p = playerRef.current;
     if (!p) return;
     try {
-      if (typeof p.getPlaybackRate === "function" && p.getPlaybackRate() !== 1) {
+      if (
+        typeof p.getPlaybackRate === "function" &&
+        p.getPlaybackRate() !== 1
+      ) {
         p.setPlaybackRate(1);
       }
     } catch {}
@@ -76,7 +79,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
-
     if (event.data === YT.PlayerState.ENDED) {
       if (!isHost) return;
       if (endFiredRef.current) return;
@@ -95,11 +97,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     // 참가자: 임의 조작 차단(호스트만 컨트롤)
     if (!isHost) {
       if (event.data === YT.PlayerState.PAUSED && canWatch) {
-        try { player.playVideo(); } catch {}
+        try {
+          player.playVideo();
+        } catch {}
         return;
       }
       if (event.data === YT.PlayerState.PLAYING) {
-        if (justSynced.current) { justSynced.current = false; return; }
+        if (justSynced.current) {
+          justSynced.current = false;
+          return;
+        }
         if (!canWatch) player.pauseVideo();
       }
       return;
@@ -130,7 +137,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!stompClient || !stompClient.connected || isHost) return;
 
     const waitAndSubscribe = () => {
-      if (!playerRef.current) { setTimeout(waitAndSubscribe, 100); return; }
+      if (!playerRef.current) {
+        setTimeout(waitAndSubscribe, 100);
+        return;
+      }
 
       const subscription = stompClient.subscribe(
         `/topic/room/${roomId}`,
@@ -146,7 +156,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             const expectedTime =
               typeof parsed.lastUpdated === "number"
                 ? (parsed.currentTime ?? 0) + (now - parsed.lastUpdated) / 1000
-                : (parsed.currentTime ?? 0);
+                : parsed.currentTime ?? 0;
 
             // 재생 안내 버튼
             if (parsed.playing && muted) setShowUnmuteHint(true);
@@ -157,16 +167,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             if (parsed.playing) {
               if (!canWatch) {
-                clearRateTimer(); restoreNormalRate();
+                clearRateTimer();
+                restoreNormalRate();
                 player.seekTo(expectedTime, true);
                 justSynced.current = true;
-                player.playVideo();  // mute 상태면 자동재생 허용
+                player.playVideo(); // mute 상태면 자동재생 허용
                 setCanWatch(true);
                 return;
               }
 
               if (absDrift >= DRIFT_TOLERANCE_HARD) {
-                clearRateTimer(); restoreNormalRate();
+                clearRateTimer();
+                restoreNormalRate();
                 player.seekTo(expectedTime, true);
                 justSynced.current = true;
               } else if (absDrift >= DRIFT_TOLERANCE_SOFT) {
@@ -181,10 +193,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   restoreNormalRate();
                 }, SOFT_CORRECT_MS);
               } else {
-                clearRateTimer(); restoreNormalRate();
+                clearRateTimer();
+                restoreNormalRate();
               }
             } else {
-              clearRateTimer(); restoreNormalRate();
+              clearRateTimer();
+              restoreNormalRate();
               player.pauseVideo();
               setCanWatch(false);
             }
@@ -233,9 +247,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, HEARTBEAT_MS);
 
     return () => clearInterval(interval);
-  }, [isHost, stompClient, isPlaylistUpdating, user, roomId, playlist, currentVideoIndex]);
-
-
+  }, [
+    isHost,
+    stompClient,
+    isPlaylistUpdating,
+    user,
+    roomId,
+    playlist,
+    currentVideoIndex,
+  ]);
 
   // 참가자: "사운드 켜기"
   const handleUnmute = () => {
@@ -251,32 +271,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-
   return (
-    <div className="relative w-full h-full rounded-lg border border-gray-800 overflow-hidden bg-black flex items-center justify-center">
+    <div className="relative w-full h-full bg-black">
       {videoId ? (
         <>
-          <div className="relative h-full w-auto aspect-video max-w-full">
-            <YouTube
-              videoId={videoId}
-              onReady={onPlayerReady}
-              onStateChange={onPlayerStateChange}
-              className="w-full h-full"
-              opts={{
-                width: "100%",
-                height: "100%",
-                playerVars: {
-                  autoplay: 0,               // 초기 자동재생 X
-                  mute: 1,                   // 초기 무조건 음소거
-                  controls: isHost ? 1 : 0,  // 참가자 조작 불가
-                  disablekb: 1,              // 키보드 조작 차단
-                  rel: 0,
-                  enablejsapi: 1,
-                  playsinline: 1,
-                },
-              }}
-            />
-          </div>
+          <YouTube
+            videoId={videoId}
+            onReady={onPlayerReady}
+            onStateChange={onPlayerStateChange}
+            className="w-full h-full"
+            opts={{
+              width: "100%",
+              height: "100%",
+              playerVars: {
+                autoplay: 0, // 초기 자동재생 X
+                mute: 1, // 초기 무조건 음소거
+                controls: isHost ? 1 : 0, // 참가자 조작 불가
+                disablekb: 1, // 키보드 조작 차단
+                rel: 0,
+                enablejsapi: 1,
+                playsinline: 1,
+              },
+            }}
+          />
 
           {/* 참가자: 호스트 재생 중 + 음소거 상태면 "사운드 켜기" 버튼 */}
           {!isHost && canWatch && showUnmuteHint && muted && (
