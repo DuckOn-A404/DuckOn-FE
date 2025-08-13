@@ -164,7 +164,6 @@ export const useSignupForm = () => {
           form.append(key, String(value));
         }
       });
-
       await postSignup(form);
       navigate("/login");
     } catch (err: any) {
