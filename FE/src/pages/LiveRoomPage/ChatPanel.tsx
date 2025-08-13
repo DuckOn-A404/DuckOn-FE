@@ -80,6 +80,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   // 번역된 메시지들을 관리하는 상태
   // { 메시지키: { loading: false, text: "번역된 내용" } }
@@ -101,6 +102,79 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
     if (newMessage.trim()) {
       sendMessage(newMessage);
       setNewMessage("");
+      inputRef.current?.blur();
+    }
+  };
+
+  // 번역 API 호출 함수 (수정됨)
+  const handleTranslate = async (messageKey: string, text: string) => {
+    const current = translations[messageKey];
+
+    // 번역문이 이미 있다면 API 재호출 없이 토글만
+    if (current?.text && !current.loading) {
+      setTranslations((prev) => ({
+        ...prev,
+        [messageKey]: {
+          ...current,
+          showingTranslated: !current.showingTranslated,
+        },
+      }));
+      return;
+    }
+
+    // 이미 로딩 중이면 무시
+    if (current?.loading) return;
+
+    // 최초 번역 호출
+    setTranslations((prev) => ({
+      ...prev,
+      [messageKey]: { loading: true, showingTranslated: false },
+    }));
+
+    try {
+      const targetLang = (myUser?.language || "ko").toLowerCase();
+      console.log("[translate] target:", targetLang, "msg:", text);
+      const translated = await translateMessage(text, targetLang);
+
+      setTranslations((prev) => ({
+        ...prev,
+        [messageKey]: {
+          loading: false,
+          text: translated,
+          showingTranslated: true, // 첫 클릭 후 번역문 보여주기
+        },
+      }));
+    } catch (err) {
+      console.error("Translation error:", err);
+      setTranslations((prev) => ({
+        ...prev,
+        [messageKey]: {
+          loading: false,
+          error: "번역 실패",
+          showingTranslated: false,
+        },
+      }));
+    }
+  };
+
+  // 차단 확인 모달 열기
+  const openBlockConfirm = (user: { id: string; nickname: string }) => {
+    setBlockConfirm({ isOpen: true, user });
+  };
+
+  // 차단 확정
+  const confirmBlock = async () => {
+    if (!blockConfirm.user) return;
+    const id = blockConfirm.user.id;
+
+    onBlockUser(id);
+    try {
+      const res = await blockUser(id);
+      console.log(res.message);
+    } catch (err) {
+      console.error("차단 실패:", err);
+    } finally {
+      setBlockConfirm({ isOpen: false, user: null });
     }
   };
 
@@ -186,7 +260,8 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
       />
       <div className="flex flex-col h-full bg-gray-800 text-white">
         {/* 메시지 목록 영역 */}
-        <div className="flex-1 space-y-4 overflow-y-auto p-4 min-h-0">
+        {/* <div className="flex-1 space-y-4 overflow-y-auto p-4"> */}
+        <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 min-h-0">
           {messages.map((msg, index) => {
             if (msg.chatType === "ENTER") {
               return (
@@ -313,12 +388,23 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
           {myUser ? (
             <div className="relative flex items-center">
               <input
+                ref={inputRef}
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                // onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                onKeyDown={(e) => {
+                  // 한글 조합 중 엔터 예외
+                  // @ts-ignore
+                  if (e.key === "Enter" && !e.nativeEvent?.isComposing)
+                    handleSendMessage();
+                }}
                 placeholder="메시지를 입력하세요..."
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+                // className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors pr-12"
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg
+              px-4 md:px-4 py-3 md:py-2.5
+              text-base md:text-sm
+              outline-none focus:border-purple-500 transition-colors pr-12"
               />
               <button
                 onClick={handleSendMessage}
