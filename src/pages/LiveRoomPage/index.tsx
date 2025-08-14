@@ -5,7 +5,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
-import { enterRoom, exitRoom, deleteRoom, fetchRoomById } from "../../api/roomService";
+import { enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
 import { useUserStore } from "../../store/useUserStore";
 import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 import { createStompClient } from "../../socket";
