@@ -43,7 +43,9 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
     setVisible(pageSize);
     const now = new Date();
     if (q === "all") {
-      setFrom(""); setTo(""); return;
+      setFrom("");
+      setTo("");
+      return;
     }
     if (q === "7d") {
       setFrom(addDays(now, -7).toISOString().slice(0, 10));
@@ -71,19 +73,23 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
         if (artistId !== "all" && r.artistId !== artistId) return false;
         return true;
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
   }, [rooms, from, to, artistId]);
 
   const shown = filtered.slice(0, visible);
   const hasMore = filtered.length > visible;
 
   return (
-    <div className="w-full max-w-[980px] mx-auto">
+    <div className="w-full max-w-[880px] mx-auto">
       {/* 필터 바 */}
       <div className="bg-white rounded-xl px-6 py-4 mb-4 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap items-end gap-3">
-          {/* 빠른 범위 */}
-          <div className="flex items-center gap-2">
+        {/* 메인 컨테이너: flex-col로 두 줄 레이아웃을 만듭니다. */}
+        <div className="flex flex-col gap-4">
+          {/* 첫 번째 줄: 빠른 범위 버튼들 */}
+          <div className="flex items-center gap-2 flex-wrap">
             {[
               { k: "all", label: "전체" },
               { k: "7d", label: "최근 7일" },
@@ -104,37 +110,54 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
             ))}
           </div>
 
-          {/* 날짜 범위 */}
-          <div className="flex items-center gap-2 ml-auto">
-            <div className="text-xs text-gray-500">기간</div>
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => { setFrom(e.target.value); setQuick("all"); setVisible(pageSize); }}
-              className="border rounded-md px-2 py-1 text-sm"
-            />
-            <span className="text-gray-400">~</span>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => { setTo(e.target.value); setQuick("all"); setVisible(pageSize); }}
-              className="border rounded-md px-2 py-1 text-sm"
-            />
-          </div>
+          {/* 두 번째 줄: 상세 필터들 (기간, 아티스트) */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            {/* 날짜 범위 */}
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-gray-500 shrink-0">기간</div>
+              <input
+                type="date"
+                value={from}
+                onChange={(e) => {
+                  setFrom(e.target.value);
+                  setQuick("all");
+                  setVisible(pageSize);
+                }}
+                className="border rounded-md px-2 py-1 text-sm w-full sm:w-auto"
+              />
+              <span className="text-gray-400">~</span>
+              <input
+                type="date"
+                value={to}
+                onChange={(e) => {
+                  setTo(e.target.value);
+                  setQuick("all");
+                  setVisible(pageSize);
+                }}
+                className="border rounded-md px-2 py-1 text-sm w-full sm:w-auto"
+              />
+            </div>
 
-          {/* 아티스트 셀렉트 (이름 표시) */}
-          <div className="flex items-center gap-2">
-            <div className="text-xs text-gray-500">아티스트</div>
-            <select
-              value={artistId}
-              onChange={(e) => { const v = e.target.value; setArtistId(v === "all" ? "all" : Number(v)); setVisible(pageSize); }}
-              className="border rounded-md px-2 py-1 text-sm"
-            >
-              <option value="all">전체</option>
-              {artistOptions.map(([id, label]) => (
-                <option key={id} value={id}>{label}</option>
-              ))}
-            </select>
+            {/* 아티스트 셀렉트 */}
+            <div className="flex items-center gap-2">
+              <div className="text-xs text-gray-500 shrink-0">아티스트</div>
+              <select
+                value={artistId}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setArtistId(v === "all" ? "all" : Number(v));
+                  setVisible(pageSize);
+                }}
+                className="border rounded-md px-2 py-1 text-sm w-full sm:w-auto"
+              >
+                <option value="all">전체</option>
+                {artistOptions.map(([id, label]) => (
+                  <option key={id} value={id}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>
