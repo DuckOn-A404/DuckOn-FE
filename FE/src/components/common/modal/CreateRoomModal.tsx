@@ -2,7 +2,7 @@ import {useState, useEffect} from "react";
 import {CreateRoom, enterRoom} from "../../../api/roomService";
 import {useNavigate} from "react-router-dom";
 import {X} from "lucide-react";
-import { fetchYouTubeMeta } from "../../../utils/youtubeMeta";
+import {fetchYouTubeMeta} from "../../../utils/youtubeMeta";
 
 
 
@@ -37,16 +37,16 @@ const CreateRoomModal = ({
   const [videoId, setVideoId] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<string>("");
-  const [videoMeta, setVideoMeta] = useState<{ title?: string; author?: string } | null>(null);
-  
+  const [videoMeta, setVideoMeta] = useState<{title?: string; author?: string} | null>(null);
+
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const id = extractVideoId(videoUrl);
     setVideoId(id);
     if (id) {
       setThumbnailPreview(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
-      fetchYouTubeMeta(id).then((m) => m && setVideoMeta({ title: m.title, author: m.author }));
+      fetchYouTubeMeta(id).then((m) => m && setVideoMeta({title: m.title, author: m.author}));
     } else {
       setThumbnailPreview(null);
       setVideoMeta(null);
@@ -100,7 +100,13 @@ const CreateRoomModal = ({
       }
 
       onClose();
-      navigate(`/live/${createdRoom.roomId}`);
+      navigate(`/live/${createdRoom.roomId}`, {
+        state: {
+          artistId,
+          isHost: true,
+          entryAnswer: locked ? entryAnswer : undefined, // ← 잠금 방 대비
+        },
+      });
     } catch {
       alert("방 생성에 실패했습니다.");
     }
@@ -162,7 +168,7 @@ const CreateRoomModal = ({
               />
             </div>
           )}
-          
+
           {videoMeta && (videoMeta.title || videoMeta.author) && (
             <div className="mt-2 text-sm text-gray-800">
               <div className="font-semibold truncate">{videoMeta.title || "제목 로딩 중..."}</div>
