@@ -1,4 +1,4 @@
-import { Users } from "lucide-react";
+import {Users} from "lucide-react";
 
 type ArtistCardProps = {
   artistId: number;
@@ -27,7 +27,7 @@ const ArtistCard = ({
 
   return (
     <div
-      className="w-full max-w-[220px] bg-gray-100 rounded-2xl border border-gray-200 p-5 flex flex-col items-center cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-1"
+      className="w-full max-w-[180px] bg-gray-100 rounded-2xl border border-gray-200 p-5 flex flex-col items-center cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-purple-200/50 hover:-translate-y-1"
       onClick={onClick}
     >
       <div className="relative w-40 h-40 rounded-full overflow-hidden shadow-md mb-4 bg-white">
