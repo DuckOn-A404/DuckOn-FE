@@ -81,6 +81,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const sentByPointerRef = useRef(false);
 
   // 번역된 메시지들을 관리하는 상태
   // { 메시지키: { loading: false, text: "번역된 내용" } }
@@ -356,13 +357,24 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
               <button
                 type="button"
                 tabIndex={-1}
-                onMouseDown={(e) => e.preventDefault()}   
-                onTouchStart={(e) => e.preventDefault()}  
-                onTouchEnd={handleSendMessage}            
-                onClick={handleSendMessage}               
+                onPointerDown={(e) => { e.preventDefault(); }}
+                onPointerUp={(e) => {
+                  e.preventDefault();
+                  sentByPointerRef.current = true;
+                  handleSendMessage();
+                }}
+                onClick={(e) => {
+                  if (sentByPointerRef.current) {
+                    sentByPointerRef.current = false;
+                    return;
+                  }
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
                 disabled={!newMessage.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed touch-manipulation"
               >
+
               
                 <Send size={18} className="text-white" />
               </button>
