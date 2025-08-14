@@ -9,7 +9,6 @@ import {
   enterRoom,
   exitRoom,
   deleteRoom,
-  fetchRoomById,
 } from "../../api/roomService";
 import {useUserStore} from "../../store/useUserStore";
 import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
