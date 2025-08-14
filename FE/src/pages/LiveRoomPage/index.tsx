@@ -4,15 +4,12 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import {useEffect, useState, useRef, useCallback} from "react";
-import {
-  enterRoom,
-  exitRoom,
-  deleteRoom,
-} from "../../api/roomService";
-import {useUserStore} from "../../store/useUserStore";
-import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
-import {createStompClient} from "../../socket";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { enterRoom, exitRoom, deleteRoom } from "../../api/roomService";
+import { useUserStore } from "../../store/useUserStore";
+import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
+import { createStompClient } from "../../socket";
+import { updateRoomTitle } from "../../api/roomService";
 
 import EntryQuizModal from "./EntryQuizModal";
 import LiveHeader from "./LiveHeader";
@@ -22,12 +19,19 @@ import {useChatSubscription} from "../../hooks/useChatSubscription";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
-import {onTokenRefreshed} from "../../api/axiosInstance";
+import {onTokenRefreshed, onRefreshState} from "../../api/axiosInstance";
 import {fireAndForget} from "../../utils/fireAndForget";
 import {getBlockedUsers} from "../../api/userService";
 import type {LiveRoomSyncDTO} from "../../types/room";
 
 const DEFAULT_QUIZ_PROMPT = "비밀번호(정답)를 입력하세요.";
+
+/** 오래된 이벤트 무시용 타임스탬프 가드 */
+const isNewerOrEqual = (evtLU?: number, prevLU?: number) => {
+  if (typeof evtLU !== "number") return true;
+  if (typeof prevLU !== "number") return true;
+  return evtLU >= prevLU;
+};
 
 type LiveRoomLocationState = {
   artistId?: number;
@@ -68,6 +72,12 @@ const LiveRoomPage = () => {
   const leavingRef = useRef(false);
   const isHostRef = useRef(false);
   const joinedRef = useRef(false);
+
+  // 리프레시/WS 핸드오버 상태
+  const wsHandoverRef = useRef(false);
+  const isRefreshingRef = useRef(false);
+
+  const isHostView = !!(room && myUser && room.hostId === myUser.userId);
 
   // 1) 차단 목록 state
   const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(() => {
@@ -176,7 +186,7 @@ const LiveRoomPage = () => {
       await performDelete();
     } finally {
       setIsDeleteOpen(false);
-      navigate(-1); // 메인 대신 바로 이전 페이지로
+      navigate(-1);
     }
   };
 
@@ -194,7 +204,6 @@ const LiveRoomPage = () => {
         const msg = (data?.message ?? "").toString();
         if (msg.includes("정답")) throw new Error("wrong_answer");
 
-        // 질문 키 유연 처리 + 기본 문구
         const raw =
           (data.entryQuestion ?? data.question ?? data.quizQuestion ?? "")
             ?.toString()
@@ -204,6 +213,21 @@ const LiveRoomPage = () => {
         return;
       }
       throw error;
+    }
+  };
+
+  // 제목 저장
+  const handleSaveTitle = async (nextTitle: string) => {
+    if (!roomId || !room || !isHostView) return;
+    const prev = room.title;
+    const now = Date.now();
+
+    setRoom({ ...room, title: nextTitle, lastUpdated: now });
+
+    try {
+      await updateRoomTitle(roomId, nextTitle);
+    } catch (err) {
+      setRoom((r: any) => (r ? { ...r, title: prev } : r));
     }
   };
 
@@ -225,8 +249,7 @@ const LiveRoomPage = () => {
       eventType: "SYNC_STATE",
       roomId: Number(room.roomId),
       hostId: myUser.userId,
-      title: room.title,
-      hostNickname: room.hostNickname ?? myUser.nickname,
+      // title/hostNickname 전송 금지 (롤백 방지)
       playlist: updatedPlaylist,
       currentVideoIndex: room.currentVideoIndex ?? 0,
       currentTime: 0,
@@ -260,8 +283,7 @@ const LiveRoomPage = () => {
       eventType: "SYNC_STATE",
       roomId: Number(room.roomId),
       hostId: myUser.userId,
-      title: room.title,
-      hostNickname: room.hostNickname ?? myUser.nickname,
+      // title/hostNickname 전송 금지
       playlist: room.playlist,
       currentVideoIndex: index,
       currentTime: 0,
@@ -290,8 +312,7 @@ const LiveRoomPage = () => {
       eventType: "SYNC_STATE",
       roomId: Number(room.roomId),
       hostId: myUser.userId,
-      title: room.title,
-      hostNickname: room.hostNickname ?? myUser.nickname,
+      // title/hostNickname 전송 금지
       playlist: room.playlist,
       currentVideoIndex: nextVideoIndex,
       currentTime: 0,
@@ -368,46 +389,50 @@ const LiveRoomPage = () => {
 
             switch (t) {
               case "ROOM_DELETED":
+                // 기본 케이스: 그대로 표출
                 setRoomDeletedOpen(true);
                 return;
+
               case "ROOM_UPDATE":
-                setRoom((prev: any) =>
-                  prev
-                    ? {
-                      ...prev,
-                      title: evt.title ?? prev.title,
-                      hostNickname: evt.hostNickname ?? prev.hostNickname,
-                    }
-                    : prev
-                );
+                setRoom((prev: any) => {
+                  if (!prev) return prev;
+                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
+                  return {
+                    ...prev,
+                    title: evt.title ?? prev.title,
+                    hostNickname: evt.hostNickname ?? prev.hostNickname,
+                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                  };
+                });
                 return;
+
               case "SYNC_STATE":
-                setRoom((prev: any) =>
-                  prev
-                    ? {
-                      ...prev,
-                      title: evt.title ?? prev.title,
-                      hostNickname: evt.hostNickname ?? prev.hostNickname,
-                      roomId: evt.roomId ?? prev.roomId,
-                      hostId: evt.hostId ?? prev.hostId,
-                      playlist: evt.playlist ?? prev.playlist,
-                      currentVideoIndex:
-                        typeof evt.currentVideoIndex === "number"
-                          ? evt.currentVideoIndex
-                          : prev.currentVideoIndex,
-                      currentTime:
-                        typeof evt.currentTime === "number"
-                          ? evt.currentTime
-                          : prev.currentTime,
-                      playing:
-                        typeof evt.playing === "boolean"
-                          ? evt.playing
-                          : prev.playing,
-                      lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                    }
-                    : prev
-                );
+                setRoom((prev: any) => {
+                  if (!prev) return prev;
+                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
+                  return {
+                    ...prev,
+                    // 제목/호스트명은 절대 덮지 않음
+                    roomId: evt.roomId ?? prev.roomId,
+                    hostId: evt.hostId ?? prev.hostId,
+                    playlist: evt.playlist ?? prev.playlist,
+                    currentVideoIndex:
+                      typeof evt.currentVideoIndex === "number"
+                        ? evt.currentVideoIndex
+                        : prev.currentVideoIndex,
+                    currentTime:
+                      typeof evt.currentTime === "number"
+                        ? evt.currentTime
+                        : prev.currentTime,
+                    playing:
+                      typeof evt.playing === "boolean"
+                        ? evt.playing
+                        : prev.playing,
+                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                  };
+                });
                 return;
+
               default:
                 return;
             }
@@ -430,6 +455,161 @@ const LiveRoomPage = () => {
       syncRef.current = null;
     };
   }, [myUser, myUserId, isQuizModalOpen, roomId, navigate]);
+
+  // 리프레시 상태 구독 (삭제/퇴장 가드에 활용)
+  useEffect(() => {
+    const off = onRefreshState((st) => {
+      isRefreshingRef.current = st === "start";
+    });
+    return () => { off() };
+  }, []);
+
+  // 무중단 재연결 유틸 (새 연결 성공 후에 기존 연결 해제)
+  const seamlessReconnect = useCallback(
+    async (
+      oldClient: Client | null,
+      token: string,
+      topic: string,
+      onMsg: (m: IMessage) => void
+    ) => {
+      return new Promise<Client>((resolve) => {
+        const next = createStompClient(token);
+        wsHandoverRef.current = true;
+
+        next.onConnect = () => {
+          next.subscribe(topic, onMsg);
+          (async () => {
+            try {
+              await oldClient?.deactivate();
+            } catch {}
+            wsHandoverRef.current = false;
+          })();
+          resolve(next);
+        };
+        next.activate();
+      });
+    },
+    []
+  );
+
+  // 액세스 토큰 갱신 → STOMP 무중단 재연결
+  useEffect(() => {
+    const unsubscribe = onTokenRefreshed(async (newToken) => {
+      if (lastTokenRef.current === newToken) return;
+      lastTokenRef.current = newToken;
+
+      // 토큰 소실 시: 연결만 끊고 반환
+      if (!newToken) {
+        try { await presenceRef.current?.deactivate(); } catch {}
+        try { await syncRef.current?.deactivate(); } catch {}
+        presenceRef.current = null;
+        syncRef.current = null;
+        setStompClient(null);
+        return;
+      }
+
+      // presence 교체
+      if (roomId) {
+        const topic = `/topic/room/${roomId}/presence`;
+        const onPresence = (message: IMessage) => {
+          try {
+            const data = JSON.parse(message.body);
+            if (typeof data?.participantCount === "number") {
+              setParticipantCount(data.participantCount);
+            }
+          } catch (e) {
+            console.error("참가자 수 메시지 파싱 실패:", e);
+          }
+        };
+        presenceRef.current = await seamlessReconnect(
+          presenceRef.current,
+          newToken,
+          topic,
+          onPresence
+        );
+      }
+
+      // sync 교체
+      if (myUser && !isQuizModalOpen && roomId) {
+        const topic = `/topic/room/${roomId}`;
+        const onSync = (message: IMessage) => {
+          try {
+            const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
+            const t = evt?.eventType;
+
+            if (typeof (evt as any)?.participantCount === "number") {
+              setParticipantCount((evt as any).participantCount);
+            }
+
+            switch (t) {
+              case "ROOM_DELETED":
+                // 리프레시/핸드오버 중 유령 삭제 신호는 무시
+                if (isRefreshingRef.current || wsHandoverRef.current) return;
+                setRoomDeletedOpen(true);
+                return;
+
+              case "ROOM_UPDATE":
+                setRoom((prev: any) => {
+                  if (!prev) return prev;
+                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
+                  return {
+                    ...prev,
+                    title: evt.title ?? prev.title,
+                    hostNickname: evt.hostNickname ?? prev.hostNickname,
+                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                  };
+                });
+                return;
+
+              case "SYNC_STATE":
+                setRoom((prev: any) => {
+                  if (!prev) return prev;
+                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
+                  return {
+                    ...prev,
+                    roomId: evt.roomId ?? prev.roomId,
+                    hostId: evt.hostId ?? prev.hostId,
+                    playlist: evt.playlist ?? prev.playlist,
+                    currentVideoIndex:
+                      typeof evt.currentVideoIndex === "number"
+                        ? evt.currentVideoIndex
+                        : prev.currentVideoIndex,
+                    currentTime:
+                      typeof evt.currentTime === "number"
+                        ? evt.currentTime
+                        : prev.currentTime,
+                    playing:
+                      typeof evt.playing === "boolean"
+                        ? evt.playing
+                        : prev.playing,
+                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                  };
+                });
+                return;
+
+              default:
+                return;
+            }
+          } catch (error) {
+            console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+          }
+        };
+
+        const newSync = await seamlessReconnect(
+          syncRef.current,
+          newToken,
+          topic,
+          onSync
+        );
+        syncRef.current = newSync;
+        setStompClient(newSync);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [roomId, myUser, isQuizModalOpen, seamlessReconnect]);
 
   // 최초 입장 시도
   // 방장은 본인이 만든 방이면 비밀번호 확인 없이 바로 입장
@@ -606,9 +786,11 @@ const LiveRoomPage = () => {
   // 이탈/언마운트 정리
   useEffect(() => {
     const onPageHide = () => {
-      // 아직 필수 파라미터가 없거나, 아직 입장하지 않았다면 아무것도 하지 않음
       if (!roomId || !resolvedArtistId) return;
       if (!joinedRef.current) return;
+
+      // 리프레시/WS 핸드오버 중이면 절대 삭제/퇴장 트리거하지 않음
+      if (isRefreshingRef.current || wsHandoverRef.current) return;
 
       if (leavingRef.current) return;
       leavingRef.current = true;
@@ -662,7 +844,6 @@ const LiveRoomPage = () => {
   }
 
   return (
-    // <div className="flex flex-col h-screen bg-gray-900 text-white">
     <div className="flex flex-col h-[100svh] bg-gray-900 text-white">
       <RoomDeletedModal
         isOpen={roomDeletedOpen}
@@ -681,17 +862,18 @@ const LiveRoomPage = () => {
         />
       )}
 
-      <LiveHeader
-        isHost={room.hostId === myUserId}
-        title={room.title}
-        hostId={room.hostId}
-        hostNickname={hostNickname ?? room.hostNickname}
-        participantCount={participantCount ?? room.participantCount ?? 0}
-        onExit={handleExit}
-        onDelete={
-          room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
-        }
-      />
+      {room && (
+        <LiveHeader
+          isHost={room.hostId === myUserId}
+          title={room.title}
+          hostId={room.hostId}
+          hostNickname={hostNickname ?? room.hostNickname}
+          participantCount={participantCount ?? room.participantCount ?? 0}
+          onExit={handleExit}
+          onDelete={room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined}
+          onSaveTitle={handleSaveTitle}
+        />
+      )}
 
       {/* 본문: 영상 + 사이드바 */}
       <div className="flex flex-col md:flex-row flex-1 min-h-0">
@@ -721,14 +903,11 @@ const LiveRoomPage = () => {
         </main>
 
         {/* 오른쪽: 사이드바 */}
-
-        {/* <aside className="w-full md:w-80 bg-gray-800 flex flex-col md:border-l border-gray-700 min-h-0 overflow-hidden min-h-0 overflow-hidden"> */}
         <aside
           className="w-full md:w-80 bg-gray-800 flex flex-col
                     border-t md:border-t-0 md:border-l border-gray-700
                     max-h-[44svh] md:max-h-none
-                    overflow-hidden flex-shrink-0"
-        >
+                    overflow-hidden flex-shrink-0">
           {/* 탭 버튼 */}
           <div className="flex flex-shrink-0 border-b border-t md:border-t-0 border-gray-700">
             <button
