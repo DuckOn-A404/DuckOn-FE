@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
@@ -14,9 +14,10 @@ import ScrollToTop from "./components/common/ScrollToTop";
 import NotFoundPage from "./pages/NotFoundPage";
 // import SmallScreenBlocker from "./components/common/SmallScreenBlocker";
 // import RoomListPage from "./pages/RoomListPage";
-import { useEffect } from "react";
-import { sendPageView } from "./analytics";
+import {useEffect} from "react";
+import {sendPageView} from "./analytics";
 import RoomListPage from "./pages/RoomListPage";
+import TitleManager from "./TitleManager";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -31,6 +32,7 @@ function App() {
     <>
       <BrowserRouter>
         <RouteChangeTracker />
+        <TitleManager />
         <ScrollToTop />
         <Routes>
           {/* 공통 레이아웃이 적용되는 페이지들 */}
