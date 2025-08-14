@@ -4,6 +4,7 @@ import type { OtherUser } from "../types/otherUser";
 import { fetchOtherUserProfile } from "../api/userService";
 import { followUser, unfollowUser } from "../api/follow/followService";
 import OtherProfileCard from "../components/domain/user/OtherProfileCard";
+import OtherUserRoomsPanel from "../components/domain/room/OtherUserRoomsPanel";
 import { LoaderCircle, AlertTriangle } from "lucide-react";
 
 const OtherUserPage = () => {
@@ -124,6 +125,15 @@ const OtherUserPage = () => {
         onToggleFollow={handleToggleFollow}
         isFollowLoading={isFollowLoading}
       />
+
+      {/* 타인 히스토리 + 현재 라이브(중복 제거, 라이브만 입장 가능) */}
+      <div className="mt-8">
+        <OtherUserRoomsPanel
+          rooms={otherUser.roomList ?? []}
+          activeRoom={otherUser.activeRoom ?? null}
+          title={`${otherUser.nickname}님이 만든 방`}
+        />
+      </div>
     </div>
   );
 };
