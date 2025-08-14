@@ -8,6 +8,19 @@ export type room = {
   participantCount: number;
 };
 
+// 내가 만든 과거 방(입장 불가 히스토리). BE RoomDTO와 1:1 매칭
+export type RoomHistory = {
+  roomId: number;
+  title: string;
+  imgUrl: string | null;
+  createdAt: string;   // LocalDateTime → ISO 문자열로 전달됨
+  creatorId: string;
+  artistId: number;
+  artistNameEn?: string | null;
+  artistNameKr?: string | null;
+};
+
+
 // 서버 enum과 매칭되는 프론트 타입(문자열 리터럴 유니온)
 export type RoomSyncEventType = "SYNC_STATE" | "ROOM_DELETED" | "ROOM_UPDATE";
 

@@ -51,7 +51,7 @@ const MyProfileCard = ({
   };
 
   return (
-    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
+    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 정보</h1>
         <div className="relative flex items-center gap-2">
@@ -93,7 +93,7 @@ const MyProfileCard = ({
       </div>
 
       <div className="flex gap-8 items-start">
-        {/* 왼쪽: 프로필 이미지 + 팔로워 수 */}
+        {/* 왼쪽: 프로필 이미지 + 팔로워/팔로잉 */}
         <div className="flex flex-col items-center w-32 shrink-0">
           <img
             src={user.imgUrl || "/default_image.png"}
@@ -102,28 +102,35 @@ const MyProfileCard = ({
           />
 
           <div className="mt-4 flex gap-6 text-center">
-            <div>
-              <div className="text-lg font-bold">
+            {/* 팔로워: 숫자+라벨 통째로 클릭 */}
+            <button
+              onClick={onFollowerClick}
+              disabled={!onFollowerClick}
+              className="group text-center disabled:cursor-default"
+              aria-label="팔로워 목록 열기"
+            >
+              <div className="text-lg font-bold group-hover:text-purple-600">
                 {user.followerCount?.toLocaleString() ?? "0"}
               </div>
-              <button
-                onClick={onFollowerClick}
-                className="text-xs text-gray-500 hover:underline cursor-pointer focus:outline-none"
-              >
+              <div className="text-xs text-gray-500 group-hover:underline">
                 팔로워
-              </button>
-            </div>
-            <div>
-              <div className="text-lg font-bold">
+              </div>
+            </button>
+
+            {/* 팔로잉: 숫자+라벨 통째로 클릭 */}
+            <button
+              onClick={onFollowingClick}
+              disabled={!onFollowingClick}
+              className="group text-center disabled:cursor-default"
+              aria-label="팔로잉 목록 열기"
+            >
+              <div className="text-lg font-bold group-hover:text-purple-600">
                 {user.followingCount?.toLocaleString() ?? "0"}
               </div>
-              <button
-                onClick={onFollowingClick}
-                className="text-xs text-gray-500 hover:underline cursor-pointer focus:outline-none"
-              >
+              <div className="text-xs text-gray-500 group-hover:underline">
                 팔로잉
-              </button>
-            </div>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -141,10 +148,6 @@ const MyProfileCard = ({
             <div className="w-32 text-gray-500 font-medium">닉네임</div>
             <div>{user.nickname}</div>
           </div>
-          {/* <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">주언어</div>
-            <div>{user.language}</div>
-          </div> */}
         </div>
       </div>
     </div>
