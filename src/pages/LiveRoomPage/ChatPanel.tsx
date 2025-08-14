@@ -257,9 +257,9 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
                       </span>
                     )}
 
-                    <span className={!isMyMessage ? "pr-5" : ""}>
+                    {/* <span className={!isMyMessage ? "pr-5" : ""}>
                       {contentToShow}
-                    </span>
+                    </span> */}
 
                     {/* 다른 사람 메시지에만 점 3개 아이콘 표시 (위치 변경됨) */}
                     {!isMyMessage && (
@@ -348,11 +348,6 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
               text-base md:text-sm
               outline-none focus:border-purple-500 transition-colors pr-12"
               />
-              <button
-                onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
-              ></button>
               <button
                 type="button"
                 tabIndex={-1}
