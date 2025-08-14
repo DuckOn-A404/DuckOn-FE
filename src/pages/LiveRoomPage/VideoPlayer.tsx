@@ -71,11 +71,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // ENDED 중복 호출 방지
   const endFiredRef = useRef(false);
 
-  const onPlayerReady = (event: YT.PlayerEvent) => {
-    playerRef.current = event.target;
-    event.target.pauseVideo();
-    event.target.setVolume?.(100);
-    setMuted(true);
+  // const onPlayerReady = (event: YT.PlayerEvent) => {
+  //   playerRef.current = event.target;
+  //   event.target.pauseVideo();
+  //   event.target.setVolume?.(100);
+  //   setMuted(true);
+  // };
+  const onPlayerReady = async (event: YT.PlayerEvent) => {
+    const p = event.target;
+    playerRef.current = p;
+
+    try {
+      if (isHost) {
+        p.unMute?.();
+        p.setVolume?.(100);
+        setMuted(false);
+        await p.playVideo();      // 자동재생 시도(소리 켠 채)
+        setCanWatch(true);
+      } else {
+        p.mute?.();
+        p.setVolume?.(100);
+        setMuted(true);
+        p.pauseVideo();
+      }
+    } catch {
+      // 브라우저 정책으로 소리 ON 자동재생이 거부되면 mute로 폴백
+      try {
+        p.mute?.();
+        setMuted(true);
+        await p.playVideo();
+        setCanWatch(true);
+      } catch {
+        p.pauseVideo();
+        setCanWatch(false);
+      }
+    }
   };
 
   const onPlayerStateChange = (event: YT.OnStateChangeEvent) => {
@@ -284,13 +314,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               width: "100%",
               height: "100%",
               playerVars: {
-                autoplay: 0, // 초기 자동재생 X
-                mute: 1, // 초기 무조건 음소거
+                autoplay: isHost ? 1 : 0, // 방장은 즉시 재생 시도
+                // autoplay: 0, // 초기 자동재생 X
+                mute: isHost ? 0 : 1,     // 방장은 소리 켜고 시도(거부되면 위에서 폴백)
+                // mute: 1, // 초기 무조건 음소거
                 controls: isHost ? 1 : 0, // 참가자 조작 불가
                 disablekb: 1, // 키보드 조작 차단
                 rel: 0,
                 enablejsapi: 1,
                 playsinline: 1,
+                modestbranding: 1,
+                iv_load_policy: 3,
               },
             }}
           />
