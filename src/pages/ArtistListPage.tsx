@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
 import { useDebounce } from "../hooks/useDebounce";
+import { createSlug } from "../utils/slugUtils";
 
 const sortOptions: { label: string; key: SortKey; order: SortOrder }[] = [
   { label: "팔로워 많은순", key: "followers", order: "desc" },
@@ -63,7 +64,6 @@ const ArtistListPage = () => {
           fetchMore();
         }
       },
-      // ✅ bottom 방향 여백 확장: 아래에서 600px 남았을 때 미리 로드
       { rootMargin: "0px 0px 600px 0px", threshold: 0 }
     );
 
@@ -72,8 +72,9 @@ const ArtistListPage = () => {
   }, [fetchMore, hasMore, loading]);
 
   const handleCardClick = (artistId: number, nameEn: string) => {
-    // NOTE: nameEn에 공백/특수문자가 있다면 slug/encode 고려
-    navigate(`/artist/${nameEn}`, { state: { artistId } });
+    const slug = createSlug(nameEn);
+
+    navigate(`/artist/${slug}`, { state: { artistId } });
   };
 
   return (
