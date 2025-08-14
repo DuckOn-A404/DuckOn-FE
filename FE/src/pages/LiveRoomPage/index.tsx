@@ -481,8 +481,8 @@ const LiveRoomPage = () => {
   }, [
     roomId,
     myUserId,
-    isHostFromNav,        // ← 의존성에 반드시 포함!
-    entryAnswerFromNav,   // ← 의존성에 포함(값 바뀌면 재시도)
+    isHostFromNav,
+    entryAnswerFromNav,
   ]);
 
   // 액세스 토큰 갱신 → STOMP 재연결
