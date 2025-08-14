@@ -7,6 +7,8 @@ type Props = {
   onEnterLive?: (roomId: number) => void;
 };
 
+const NO_IMAGE = "https://placehold.co/1280x720?text=No+Image";
+
 const MyCreatedRooms = ({
   rooms,
   title = "내가 만든 방",
@@ -53,7 +55,7 @@ const MyCreatedRooms = ({
             >
               <div className="relative aspect-video bg-gray-50">
                 <img
-                  src={r.imgUrl || "/default_room.png"}
+                  src={r.imgUrl || NO_IMAGE}
                   alt={r.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -76,9 +78,6 @@ const MyCreatedRooms = ({
                     {r.artistNameKr ??
                       r.artistNameEn ??
                       `artistId: ${r.artistId}`}
-                  </span>
-                  <span className="px-2 py-0.5 bg-gray-100 rounded-full">
-                    creator: {r.creatorId}
                   </span>
                 </div>
 
