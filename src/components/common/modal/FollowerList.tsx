@@ -10,7 +10,7 @@ type FollowerListProps = {
 
 const FollowerList = ({ onClose }: FollowerListProps) => {
   const [followers, setFollowers] = useState<FollowUser[]>([]);
-  const navigate = useNavigate(); // ★
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadFollowers = async () => {
@@ -41,12 +41,18 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
 
   const goToUser = (userId: string) => {
     navigate(`/user/${userId}`); // ★ 상세 페이지 이동
-    onClose();                    // ★ 모달 닫기
+    onClose(); // ★ 모달 닫기
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 bg-opacity-30 flex justify-center items-center">
-      <div className="bg-white rounded-xl p-6 w-[350px] max-h-[80vh] overflow-y-auto relative shadow-xl">
+    <div
+      className="fixed inset-0 z-50 bg-black/50 bg-opacity-30 flex justify-center items-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl p-6 w-[350px] max-h-[80vh] overflow-y-auto relative shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <h2 className="text-lg font-bold mb-4">팔로워</h2>
         <button
           onClick={onClose}
