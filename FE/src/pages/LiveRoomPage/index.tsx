@@ -77,6 +77,8 @@ const LiveRoomPage = () => {
   const wsHandoverRef = useRef(false);
   const isRefreshingRef = useRef(false);
 
+  const initialSyncSentRef = useRef(false)
+
   const isHostView = !!(room && myUser && room.hostId === myUser.userId);
 
   // 1) 차단 목록 state
@@ -783,6 +785,27 @@ const LiveRoomPage = () => {
     };
   }, [roomId, myUser, isQuizModalOpen]);
 
+  // 방장 최초 1회 SYNC 강제 송출 (여기에 배치)
+  useEffect(() => {
+    if (!stompClient?.connected) return;
+    if (!room || !myUser) return;
+    if (!isHostView) return;
+    if (initialSyncSentRef.current) return;
+
+    const payload: LiveRoomSyncDTO = {
+      eventType: "SYNC_STATE",
+      roomId: Number(room.roomId),
+      hostId: myUser.userId,
+      playlist: room.playlist || [],
+      currentVideoIndex: room.currentVideoIndex ?? 0,
+      currentTime: 0,
+      playing: true,
+      lastUpdated: Date.now(),
+    };
+    stompClient.publish({ destination: "/app/room/update", body: JSON.stringify(payload) });
+    initialSyncSentRef.current = true;
+  }, [stompClient, room, myUser, isHostView]);
+  
   // 이탈/언마운트 정리
   useEffect(() => {
     const onPageHide = () => {
