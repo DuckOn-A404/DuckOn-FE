@@ -3,7 +3,7 @@ import {useState, useEffect, useRef} from "react";
 import VideoCard from "../components/domain/video/VideoCard";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
-import type {trendingRoom} from "../types/Room";
+import type {trendingRoom} from "../types/room";
 import {Tv} from "lucide-react";
 
 const PAGE_SIZE = 24;

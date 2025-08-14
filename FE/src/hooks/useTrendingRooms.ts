@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getTrendingRooms } from "../api/roomService";
-import type { TrendingRoomsResponse } from "../types/Room";
+import type { TrendingRoomsResponse } from "../types/room";
 
 /**
  * 트렌딩 방 목록 데이터를 관리하는 커스텀 훅
