@@ -347,11 +347,23 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
               text-base md:text-sm
               outline-none focus:border-purple-500 transition-colors pr-12"
               />
-              <button
+              {/* <button
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
               >
+              </button> */}
+              <button
+                type="button"
+                tabIndex={-1}
+                onMouseDown={(e) => e.preventDefault()}   
+                onTouchStart={(e) => e.preventDefault()}  
+                onTouchEnd={handleSendMessage}            
+                onClick={handleSendMessage}               
+                disabled={!newMessage.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed"
+              >
+              
                 <Send size={18} className="text-white" />
               </button>
             </div>
