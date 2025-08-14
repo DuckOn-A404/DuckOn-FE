@@ -2,10 +2,6 @@
 // import type { MyUser } from "../../../types/mypage";
 // import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 // import { Camera } from "lucide-react";
-// // import {
-// //   fetchLanguages,
-// //   type LanguageOption,
-// // } from "../../../api/languageSelect";
 // import { useUserStore } from "../../../store/useUserStore";
 
 // export type EditProfileCardProps = {
@@ -16,36 +12,23 @@
 
 // const DEFAULT_IMG = "/default_image.png";
 
-// const EditProfileCard = ({
-//   user,
-//   onCancel,
-//   onUpdate,
-// }: EditProfileCardProps) => {
+// const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => {
 //   const [nickname, setNickname] = useState(user.nickname);
-//   // const [language, setLanguage] = useState(user.language);
-//   // const [languageOptions, setLanguageOptions] = useState<LanguageOption[]>([]);
 //   const [profileImage, setProfileImage] = useState<File | null>(null);
-//   const [previewUrl, setPreviewUrl] = useState<string>(
-//     user.imgUrl ?? DEFAULT_IMG
-//   );
+//   const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl ?? DEFAULT_IMG);
 //   const [showImageOptions, setShowImageOptions] = useState(false);
+//   const [didPickNewImage, setDidPickNewImage] = useState(false);
 
-//   const [didPickNewImage, setDidPickNewImage] = useState(false)
+//   // 소셜 로그인 여부 (true면 소셜)
+//   const isSocial = !!(user as any).socialLogin;
 
+//   // 비밀번호 관련 상태 (일반 로그인 사용자에게만 의미 있음)
 //   const [newPassword, setNewPassword] = useState("");
 //   const [confirmPassword, setConfirmPassword] = useState("");
 //   const [newPasswordError, setNewPasswordError] = useState("");
 //   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
 //   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-//   // useEffect(() => {
-//   //   const loadLanguages = async () => {
-//   //     const langs = await fetchLanguages();
-//   //     setLanguageOptions(langs);
-//   //   };
-//   //   loadLanguages();
-//   // }, []);
 
 //   const handleImageClick = () => {
 //     fileInputRef.current?.click();
@@ -57,7 +40,7 @@
 //       setProfileImage(file);
 //       setPreviewUrl(URL.createObjectURL(file));
 //       setShowImageOptions(false);
-//       setDidPickNewImage(true); // 새 파일 선택
+//       setDidPickNewImage(true);
 //     }
 //   };
 
@@ -77,16 +60,19 @@
 //   };
 
 //   const handleSubmit = async () => {
-//     if (newPassword && newPassword !== confirmPassword) {
-//       setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
-//       return;
-//     } else {
-//       setConfirmPasswordError("");
-//     }
+//     // 소셜 로그인 계정은 비밀번호 검증 자체를 생략 (입력칸도 안보임)
+//     if (!isSocial) {
+//       if (newPassword && newPassword !== confirmPassword) {
+//         setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
+//         return;
+//       } else {
+//         setConfirmPasswordError("");
+//       }
 
-//     if (newPassword && newPassword.length < 8) {
-//       setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
-//       return;
+//       if (newPassword && newPassword.length < 8) {
+//         setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
+//         return;
+//       }
 //     }
 
 //     const isReset = !profileImage && !!user.imgUrl && previewUrl === DEFAULT_IMG;
@@ -95,7 +81,8 @@
 //     formData.append("nickname", nickname);
 //     formData.append("language", "ko");
 
-//     if (newPassword) {
+//     // 소셜 로그인일 경우엔 newPassword를 절대 보내지 않음
+//     if (!isSocial && newPassword) {
 //       formData.append("newPassword", newPassword);
 //     }
 //     if (profileImage) {
@@ -106,61 +93,24 @@
 //       await updateUserProfile(formData);
 //       const refreshed = didPickNewImage ? await fetchMyProfile() : null;
 
-//       // next를 만들어 전역+상위에 즉시 반영
 //       const next: MyUser = {
 //         ...(refreshed ?? user),
 //         nickname,
 //         imgUrl: didPickNewImage
-//           ? (refreshed?.imgUrl ?? user.imgUrl) // 업로드했으면 서버가 준 URL 사용
-//           : (isReset
-//               ? DEFAULT_IMG                   // 리셋이면 즉시 기본 이미지로
-//               : (user.imgUrl ?? undefined)),  // 닉네임만 변경이면 기존 유지
+//           ? (refreshed?.imgUrl ?? user.imgUrl)
+//           : (isReset ? DEFAULT_IMG : (user.imgUrl ?? undefined)),
 //       };
 
-//       // 전역(헤더 포함) 즉시 갱신
 //       useUserStore.getState().setMyUser({
 //         ...next,
 //         artistList: next.artistList ?? [],
 //       });
 
-//       // 상위(MyPage)에도 전달
 //       onUpdate(next);
 //     } catch (err) {
 //       alert("프로필 수정 중 오류가 발생했습니다.");
 //     }
 //   };
-//       // if (didPickNewImage) {
-//       //   const refreshed = await fetchMyProfile()
-//       //   const next = { ...refreshed }
-//       //   useUserStore.getState().setMyUser({ ...next, artistList: next. artistList ?? [] })
-//       //   onUpdate(next)
-//       // } else {
-//       //   const next = {
-//       //     ...user,
-//       //     nickname,
-//       //   }
-//       //   useUserStore.getState().setMyUser({ ...next, artistList: next.artistList ?? [] })
-//       //   onUpdate(next)
-//       // }
-
-//       // const updated = await fetchMyProfile(); // 다시 내 정보 불러오기
-//       // const merged: MyUser = {
-//       //   ...updated,
-//       //   imgUrl:
-//       //     (didPickNewImage || didResetImage)
-//       //       ? updated.imgUrl ?? (didResetImage ? DEFAULT_IMG: user.imgUrl)
-//       //       : (updated.imgUrl ?? user.imgUrl),
-//       // };
-
-//       // useUserStore.getState().setMyUser({
-//       //   ...merged,
-//       //   artistList: merged.artistList ?? [],
-//       // });
-//       // onUpdate(merged);
-//   //   } catch (err) {
-//   //     alert("프로필 수정 중 오류가 발생했습니다.");
-//   //   }
-//   // };
 
 //   const handleNewPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 //     const val = e.target.value;
@@ -172,7 +122,6 @@
 //       setNewPasswordError("");
 //     }
 
-//     // 비밀번호 확인값이 존재하고 일치하지 않으면 에러
 //     if (confirmPassword && val !== confirmPassword) {
 //       setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
 //     } else {
@@ -180,9 +129,7 @@
 //     }
 //   };
 
-//   const handleConfirmPasswordChange = (
-//     e: React.ChangeEvent<HTMLInputElement>
-//   ) => {
+//   const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 //     const val = e.target.value;
 //     setConfirmPassword(val);
 
@@ -229,7 +176,6 @@
 //             </button>
 //           </div>
 
-//           {/* 이미지 수정 옵션 */}
 //           {showImageOptions && (
 //             <div className="mt-2 space-y-1 text-sm">
 //               <button
@@ -238,7 +184,6 @@
 //               >
 //                 변경하기
 //               </button>
-//               {/* 기본 이미지가 아닌 경우에만 뜨기 */}
 //               {user.imgUrl && user.imgUrl !== DEFAULT_IMG && (
 //                 <button
 //                   onClick={handleResetToDefaultImage}
@@ -289,60 +234,52 @@
 //               onChange={(e) => setNickname(e.target.value)}
 //             />
 //           </div>
-//           {/* <div className="flex items-center">
-//             <div className="w-32 text-gray-500 font-medium">주언어</div>
-//             <select
-//               className="border px-1 py-1 rounded w-full"
-//               value={language}
-//               onChange={(e) => setLanguage(e.target.value)}
-//             >
-//               {languageOptions.map((lang) => (
-//                 <option key={lang.langCode} value={lang.langCode}>
-//                   {lang.langName}
-//                 </option>
-//               ))}
-//             </select>
-//           </div> */}
 
-//           <div className="flex items-start">
-//             <div className="w-32 text-gray-500 font-medium pt-2">
-//               새 비밀번호
-//             </div>
+//           {/* 일반 로그인만 비밀번호 변경 표시 */}
+//           {!isSocial ? (
+//             <>
+//               <div className="flex items-start">
+//                 <div className="w-32 text-gray-500 font-medium pt-2">
+//                   새 비밀번호
+//                 </div>
+//                 <div className="flex flex-col w-full">
+//                   <input
+//                     type="password"
+//                     className="border px-2 py-1 rounded"
+//                     value={newPassword}
+//                     onChange={handleNewPasswordChange}
+//                   />
+//                   {newPasswordError && (
+//                     <p className="text-red-500 text-xs mt-1">{newPasswordError}</p>
+//                   )}
+//                 </div>
+//               </div>
 
-//             {/* 입력 필드와 에러 메시지를 세로로 쌓음 */}
-//             <div className="flex flex-col w-full">
-//               <input
-//                 type="password"
-//                 className="border px-2 py-1 rounded"
-//                 value={newPassword}
-//                 onChange={handleNewPasswordChange}
-//               />
-//               {newPasswordError && (
-//                 <p className="text-red-500 text-xs mt-1">{newPasswordError}</p>
-//               )}
+//               <div className="flex items-start">
+//                 <div className="w-32 text-gray-500 font-medium pt-2">
+//                   비밀번호 확인
+//                 </div>
+//                 <div className="flex flex-col w-full">
+//                   <input
+//                     type="password"
+//                     className="border px-2 py-1 rounded"
+//                     value={confirmPassword}
+//                     onChange={handleConfirmPasswordChange}
+//                   />
+//                   {confirmPasswordError && (
+//                     <p className="text-red-500 text-xs mt-1">
+//                       {confirmPasswordError}
+//                     </p>
+//                   )}
+//                 </div>
+//               </div>
+//             </>
+//           ) : (
+//             // 소셜 로그인 사용자에게는 안내만 표시 (선택)
+//             <div className="text-xs text-gray-500">
+//               소셜 로그인 계정은 여기서 비밀번호를 변경할 수 없습니다.
 //             </div>
-//           </div>
-
-//           <div className="flex items-start">
-//             <div className="w-32 text-gray-500 font-medium pt-2">
-//               비밀번호 확인
-//             </div>
-
-//             {/* 입력 필드와 에러 메시지를 세로로 쌓음 */}
-//             <div className="flex flex-col w-full">
-//               <input
-//                 type="password"
-//                 className="border px-2 py-1 rounded"
-//                 value={confirmPassword}
-//                 onChange={handleConfirmPasswordChange}
-//               />
-//               {confirmPasswordError && (
-//                 <p className="text-red-500 text-xs mt-1">
-//                   {confirmPasswordError}
-//                 </p>
-//               )}
-//             </div>
-//           </div>
+//           )}
 //         </div>
 //       </div>
 //     </div>
@@ -350,8 +287,6 @@
 // };
 
 // export default EditProfileCard;
-
-
 import { useState, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
@@ -365,6 +300,9 @@ export type EditProfileCardProps = {
 };
 
 const DEFAULT_IMG = "/default_image.png";
+
+// 영문/숫자/특수문자 각 1개 이상 + 공백 불가 + 8자 이상
+const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
 
 const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
@@ -414,18 +352,23 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   };
 
   const handleSubmit = async () => {
-    // 소셜 로그인 계정은 비밀번호 검증 자체를 생략 (입력칸도 안보임)
+    // 소셜 로그인 계정은 비밀번호 검증 자체를 생략
     if (!isSocial) {
-      if (newPassword && newPassword !== confirmPassword) {
-        setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
-        return;
-      } else {
-        setConfirmPasswordError("");
-      }
-
-      if (newPassword && newPassword.length < 8) {
-        setNewPasswordError("비밀번호는 최소 8자 이상이어야 합니다.");
-        return;
+      if (newPassword) {
+        if (!PASSWORD_REGEX.test(newPassword)) {
+          setNewPasswordError(
+            "영문, 숫자, 특수문자를 각각 1자 이상 포함하고 최소 8자여야 합니다."
+          );
+          return;
+        } else {
+          setNewPasswordError("");
+        }
+        if (newPassword !== confirmPassword) {
+          setConfirmPasswordError("새 비밀번호와 확인이 일치하지 않습니다.");
+          return;
+        } else {
+          setConfirmPasswordError("");
+        }
       }
     }
 
@@ -470,8 +413,10 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
     const val = e.target.value;
     setNewPassword(val);
 
-    if (val && val.length < 8) {
-      setNewPasswordError("8자리 이상 입력해 주세요.");
+    if (val && !PASSWORD_REGEX.test(val)) {
+      setNewPasswordError(
+        "영문, 숫자, 특수문자를 각각 1자 이상 포함하고 최소 8자여야 합니다."
+      );
     } else {
       setNewPasswordError("");
     }
@@ -495,7 +440,8 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   };
 
   return (
-    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
+    <div className="bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
+      {/* 헤더 */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 수정</h1>
         <div className="space-x-2">
@@ -514,8 +460,10 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
         </div>
       </div>
 
-      <div className="flex gap-8 items-start">
-        <div className="flex flex-col items-center w-32 shrink-0">
+      {/* 본문 */}
+      <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
+        {/* 왼쪽: 이미지/팔로워 */}
+        <div className="flex flex-col items-center w-full sm:w-32 shrink-0">
           <div className="relative">
             <img
               src={previewUrl}
@@ -555,7 +503,8 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
             onChange={handleImageChange}
             className="hidden"
           />
-          <div className="mt-4 flex gap-6 text-center">
+
+          <div className="mt-4 flex gap-10 sm:gap-6 text-center">
             <div>
               <div className="text-lg font-bold">
                 {user.followerCount?.toLocaleString() ?? "0"}
@@ -571,37 +520,62 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
           </div>
         </div>
 
-        <div className="flex-1 text-sm grid gap-4">
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">이메일</div>
-            <div>{user.email}</div>
+        {/* 오른쪽: 폼 (반응형 레이블-값) */}
+        <div className="min-w-0 flex-1 text-sm grid gap-4">
+          {/* 이메일(읽기전용) */}
+          <div className="grid grid-cols-1 sm:grid-cols-[8rem,1fr] items-center gap-2 sm:gap-3">
+            <label className="text-gray-500 font-medium">이메일</label>
+            <div className="min-w-0">
+              <input
+                value={user.email}
+                readOnly
+                className="w-full rounded-lg border border-gray-200 text-gray-500 bg-gray-50 px-2 py-1"
+              />
+            </div>
           </div>
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">아이디</div>
-            <div>{user.userId}</div>
+
+          {/* 아이디(읽기전용) */}
+          <div className="grid grid-cols-1 sm:grid-cols-[8rem,1fr] items-center gap-2 sm:gap-3">
+            <label className="text-gray-500 font-medium">아이디</label>
+            <div className="min-w-0">
+              <input
+                value={user.userId}
+                readOnly
+                className="w-full rounded-lg border border-gray-200 text-gray-500 bg-gray-50 px-2 py-1"
+              />
+            </div>
           </div>
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">닉네임</div>
-            <input
-              className="border px-2 py-1 rounded w-full"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-            />
+
+          {/* 닉네임 */}
+          <div className="grid grid-cols-1 sm:grid-cols-[8rem,1fr] items-center gap-2 sm:gap-3">
+            <label htmlFor="nickname" className="text-gray-500 font-medium">
+              닉네임
+            </label>
+            <div className="min-w-0">
+              <input
+                id="nickname"
+                className="w-full rounded-lg border border-gray-200 px-2 py-1"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* 일반 로그인만 비밀번호 변경 표시 */}
           {!isSocial ? (
             <>
-              <div className="flex items-start">
-                <div className="w-32 text-gray-500 font-medium pt-2">
+              {/* 새 비밀번호 */}
+              <div className="grid grid-cols-1 sm:grid-cols-[8rem,1fr] items-start gap-2 sm:gap-3">
+                <label className="text-gray-500 font-medium pt-2">
                   새 비밀번호
-                </div>
-                <div className="flex flex-col w-full">
+                </label>
+                <div className="min-w-0 flex-1">
                   <input
                     type="password"
-                    className="border px-2 py-1 rounded"
+                    className="w-full rounded-lg border border-gray-200 px-2 py-1"
                     value={newPassword}
                     onChange={handleNewPasswordChange}
+                    placeholder="영문/숫자/특수문자 포함, 8자 이상"
                   />
                   {newPasswordError && (
                     <p className="text-red-500 text-xs mt-1">{newPasswordError}</p>
@@ -609,14 +583,15 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 </div>
               </div>
 
-              <div className="flex items-start">
-                <div className="w-32 text-gray-500 font-medium pt-2">
+              {/* 비밀번호 확인 */}
+              <div className="grid grid-cols-1 sm:grid-cols-[8rem,1fr] items-start gap-2 sm:gap-3">
+                <label className="text-gray-500 font-medium pt-2">
                   비밀번호 확인
-                </div>
-                <div className="flex flex-col w-full">
+                </label>
+                <div className="min-w-0 flex-1">
                   <input
                     type="password"
-                    className="border px-2 py-1 rounded"
+                    className="w-full rounded-lg border border-gray-200 px-2 py-1"
                     value={confirmPassword}
                     onChange={handleConfirmPasswordChange}
                   />
@@ -629,7 +604,6 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
               </div>
             </>
           ) : (
-            // 소셜 로그인 사용자에게는 안내만 표시 (선택)
             <div className="text-xs text-gray-500">
               소셜 로그인 계정은 여기서 비밀번호를 변경할 수 없습니다.
             </div>
