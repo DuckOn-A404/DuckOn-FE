@@ -15,7 +15,7 @@ const OtherProfileCard = ({
   onFollowingClick,
 }: OtherProfileCardProps) => {
   return (
-    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-lg border border-gray-200">
+    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-lg border border-gray-200">
       <div className="flex justify-between items-center mb-6 pb-4 border-b">
         <h1 className="text-xl font-bold text-gray-800">프로필 정보</h1>
         <button
