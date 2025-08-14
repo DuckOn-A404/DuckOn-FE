@@ -1,6 +1,7 @@
 import { api, getRefreshToken } from "./axiosInstance";
 import { type MyUser } from "../types/mypage";
 import { type RecommendedUser } from "../types";
+import type { OtherUser } from "../types/otherUser";
 
 type BlockedUser = {
   userId: string;
@@ -17,10 +18,8 @@ export const fetchMyProfile = async (): Promise<MyUser> => {
 };
 
 // 타 유저 정보 조회
-export const fetchOtherUserProfile = async (
-  userId: string
-): Promise<MyUser> => {
-  const response = await api.get<MyUser>(`/users/${userId}`);
+export const fetchOtherUserProfile = async (userId: string): Promise<OtherUser> => {
+  const response = await api.get<OtherUser>(`/users/${userId}`);
   return response.data;
 };
 
