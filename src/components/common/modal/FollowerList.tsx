@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // ★ 추가
 import type { FollowUser } from "../../../types/follow";
 import { fetchFollowList } from "../../../api/follow/followFollowingList";
 import { followUser, unfollowUser } from "../../../api/follow/followService";
@@ -9,8 +10,8 @@ type FollowerListProps = {
 
 const FollowerList = ({ onClose }: FollowerListProps) => {
   const [followers, setFollowers] = useState<FollowUser[]>([]);
+  const navigate = useNavigate(); // ★
 
-  // 팔로워 목록 가져오기
   useEffect(() => {
     const loadFollowers = async () => {
       try {
@@ -21,7 +22,6 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
     loadFollowers();
   }, []);
 
-  // 팔로우, 언팔로우 토글 함수
   const toggleFollow = async (user: FollowUser) => {
     try {
       if (user.following) {
@@ -29,8 +29,6 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
       } else {
         await followUser(user.userId);
       }
-
-      // 상태 업데이트
       setFollowers((prev) =>
         prev.map((f) =>
           f.userId === user.userId ? { ...f, following: !f.following } : f
@@ -40,6 +38,12 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
       alert("팔로우 처리 중 문제가 발생했습니다.");
     }
   };
+
+  const goToUser = (userId: string) => {
+    navigate(`/user/${userId}`); // ★ 상세 페이지 이동
+    onClose();                    // ★ 모달 닫기
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50 bg-opacity-30 flex justify-center items-center">
       <div className="bg-white rounded-xl p-6 w-[350px] max-h-[80vh] overflow-y-auto relative shadow-xl">
@@ -54,7 +58,16 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
 
         <ul className="space-y-4">
           {followers.map((user) => (
-            <li key={user.userId} className="flex items-center justify-between">
+            <li
+              key={user.userId}
+              className="flex items-center justify-between cursor-pointer hover:bg-gray-50 rounded-lg px-2 py-1"
+              onClick={() => goToUser(user.userId)} // ★ 항목 클릭으로 이동
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") goToUser(user.userId);
+              }}
+            >
               <div className="flex items-center gap-3">
                 <img
                   src={user.profileImg || "/default_image.png"}
@@ -66,7 +79,10 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
                 </span>
               </div>
               <button
-                onClick={() => toggleFollow(user)}
+                onClick={(e) => {
+                  e.stopPropagation(); // ★ 이동 방지
+                  toggleFollow(user);
+                }}
                 className={`text-sm px-3 py-1 rounded transition ${
                   user.following
                     ? "bg-gray-200 hover:bg-gray-300 text-gray-700"
