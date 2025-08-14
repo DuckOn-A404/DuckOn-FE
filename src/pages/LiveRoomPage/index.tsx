@@ -4,39 +4,48 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import {useEffect, useState, useRef, useCallback} from "react";
 import {
   enterRoom,
   exitRoom,
   deleteRoom,
-  fetchRoomById,
 } from "../../api/roomService";
-import { useUserStore } from "../../store/useUserStore";
-import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
-import { createStompClient } from "../../socket";
+import {useUserStore} from "../../store/useUserStore";
+import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
+import {createStompClient} from "../../socket";
 
 import EntryQuizModal from "./EntryQuizModal";
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
-import { useChatSubscription } from "../../hooks/useChatSubscription";
+import {useChatSubscription} from "../../hooks/useChatSubscription";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
-import { onTokenRefreshed } from "../../api/axiosInstance";
-import { fireAndForget } from "../../utils/fireAndForget";
-import { getBlockedUsers } from "../../api/userService";
-import type { LiveRoomSyncDTO } from "../../types/room";
+import {onTokenRefreshed} from "../../api/axiosInstance";
+import {fireAndForget} from "../../utils/fireAndForget";
+import {getBlockedUsers} from "../../api/userService";
+import type {LiveRoomSyncDTO} from "../../types/room";
 
 const DEFAULT_QUIZ_PROMPT = "비밀번호(정답)를 입력하세요.";
 
+type LiveRoomLocationState = {
+  artistId?: number;
+  isHost?: boolean;
+  entryAnswer?: string; // ← 잠금 방 대비
+};
+
 const LiveRoomPage = () => {
-  const { roomId } = useParams();
+  const {roomId} = useParams();
   const [searchParams] = useSearchParams();
-  const location = useLocation() as { state?: { artistId?: number } };
-  const { myUser } = useUserStore();
+  const location = useLocation() as {state?: LiveRoomLocationState};
+  const {myUser} = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
+
+  const navState = location.state as LiveRoomLocationState | undefined;
+  const isHostFromNav = navState?.isHost === true;
+  const entryAnswerFromNav = navState?.entryAnswer ?? "";
 
   const [room, setRoom] = useState<any>(null);
   const [hostNickname, setHostNickname] = useState<string | null>(null);
@@ -46,7 +55,7 @@ const LiveRoomPage = () => {
 
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
-  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
+  const {messages, sendMessage} = useChatSubscription(stompClient, roomId);
 
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
@@ -126,7 +135,7 @@ const LiveRoomPage = () => {
     } finally {
       try {
         await stompClient?.deactivate();
-      } catch {}
+      } catch { }
     }
   }, [roomId, resolvedArtistId, stompClient]);
 
@@ -139,7 +148,7 @@ const LiveRoomPage = () => {
     } finally {
       try {
         await stompClient?.deactivate();
-      } catch {}
+      } catch { }
     }
   }, [roomId, resolvedArtistId, stompClient]);
 
@@ -260,7 +269,7 @@ const LiveRoomPage = () => {
       lastUpdated: Date.now(),
     };
 
-    setRoom((prev: any) => (prev ? { ...prev, ...payload } : prev));
+    setRoom((prev: any) => (prev ? {...prev, ...payload} : prev));
 
     stompClient.publish({
       destination: "/app/room/update",
@@ -272,7 +281,7 @@ const LiveRoomPage = () => {
   const handleVideoEnd = () => {
     if (!isHost || !room || !room.playlist || !myUser) return;
 
-    const { currentVideoIndex, playlist } = room;
+    const {currentVideoIndex, playlist} = room;
     if (currentVideoIndex >= playlist.length - 1) return;
 
     const nextVideoIndex = currentVideoIndex + 1;
@@ -327,7 +336,7 @@ const LiveRoomPage = () => {
     return () => {
       try {
         presenceClient.deactivate();
-      } catch {}
+      } catch { }
       presenceRef.current = null;
     };
   }, [roomId]);
@@ -365,10 +374,10 @@ const LiveRoomPage = () => {
                 setRoom((prev: any) =>
                   prev
                     ? {
-                        ...prev,
-                        title: evt.title ?? prev.title,
-                        hostNickname: evt.hostNickname ?? prev.hostNickname,
-                      }
+                      ...prev,
+                      title: evt.title ?? prev.title,
+                      hostNickname: evt.hostNickname ?? prev.hostNickname,
+                    }
                     : prev
                 );
                 return;
@@ -376,26 +385,26 @@ const LiveRoomPage = () => {
                 setRoom((prev: any) =>
                   prev
                     ? {
-                        ...prev,
-                        title: evt.title ?? prev.title,
-                        hostNickname: evt.hostNickname ?? prev.hostNickname,
-                        roomId: evt.roomId ?? prev.roomId,
-                        hostId: evt.hostId ?? prev.hostId,
-                        playlist: evt.playlist ?? prev.playlist,
-                        currentVideoIndex:
-                          typeof evt.currentVideoIndex === "number"
-                            ? evt.currentVideoIndex
-                            : prev.currentVideoIndex,
-                        currentTime:
-                          typeof evt.currentTime === "number"
-                            ? evt.currentTime
-                            : prev.currentTime,
-                        playing:
-                          typeof evt.playing === "boolean"
-                            ? evt.playing
-                            : prev.playing,
-                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                      }
+                      ...prev,
+                      title: evt.title ?? prev.title,
+                      hostNickname: evt.hostNickname ?? prev.hostNickname,
+                      roomId: evt.roomId ?? prev.roomId,
+                      hostId: evt.hostId ?? prev.hostId,
+                      playlist: evt.playlist ?? prev.playlist,
+                      currentVideoIndex:
+                        typeof evt.currentVideoIndex === "number"
+                          ? evt.currentVideoIndex
+                          : prev.currentVideoIndex,
+                      currentTime:
+                        typeof evt.currentTime === "number"
+                          ? evt.currentTime
+                          : prev.currentTime,
+                      playing:
+                        typeof evt.playing === "boolean"
+                          ? evt.playing
+                          : prev.playing,
+                      lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                    }
                     : prev
                 );
                 return;
@@ -414,10 +423,10 @@ const LiveRoomPage = () => {
     return () => {
       try {
         sub?.unsubscribe();
-      } catch {}
+      } catch { }
       try {
         syncClient.deactivate();
-      } catch {}
+      } catch { }
       syncRef.current = null;
     };
   }, [myUser, myUserId, isQuizModalOpen, roomId, navigate]);
@@ -431,21 +440,11 @@ const LiveRoomPage = () => {
         if (!roomId) return;
 
         // 방 메타 조회로 hostId 파악
-        let imHost = false;
-        try {
-          const meta = await fetchRoomById(roomId);
-          const hostIdFromMeta = meta?.hostId;
-          imHost =
-            myUserId != null &&
-            hostIdFromMeta != null &&
-            String(hostIdFromMeta) === String(myUserId);
-        } catch {
-          // 메타 조회 실패 시 그냥 기존 흐름으로
-        }
+        // const imHost = isHostFromNav;
 
         // 방장이라면 곧바로 enter (모달 금지)
-        if (imHost) {
-          const data = await enterRoom(roomId, "");
+        if (isHostFromNav) {
+          const data = await enterRoom(roomId, entryAnswerFromNav);
           if (!isMounted) return;
           setRoom(data);
           if (data && data.hostNickname) setHostNickname(data.hostNickname);
@@ -479,7 +478,12 @@ const LiveRoomPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [roomId, myUserId]);
+  }, [
+    roomId,
+    myUserId,
+    isHostFromNav,
+    entryAnswerFromNav,
+  ]);
 
   // 액세스 토큰 갱신 → STOMP 재연결
   useEffect(() => {
@@ -490,10 +494,10 @@ const LiveRoomPage = () => {
       if (!newToken) {
         try {
           await presenceRef.current?.deactivate();
-        } catch {}
+        } catch { }
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         presenceRef.current = null;
         syncRef.current = null;
         setStompClient(null);
@@ -503,7 +507,7 @@ const LiveRoomPage = () => {
       if (roomId) {
         try {
           await presenceRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const p = createStompClient(newToken);
         presenceRef.current = p;
         p.onConnect = () => {
@@ -524,7 +528,7 @@ const LiveRoomPage = () => {
       if (myUser && !isQuizModalOpen && roomId) {
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const s = createStompClient(newToken);
         syncRef.current = s;
         setStompClient(s);
@@ -547,10 +551,10 @@ const LiveRoomPage = () => {
                   setRoom((prev: any) =>
                     prev
                       ? {
-                          ...prev,
-                          title: evt.title ?? prev.title,
-                          hostNickname: evt.hostNickname ?? prev.hostNickname,
-                        }
+                        ...prev,
+                        title: evt.title ?? prev.title,
+                        hostNickname: evt.hostNickname ?? prev.hostNickname,
+                      }
                       : prev
                   );
                   return;
@@ -558,26 +562,26 @@ const LiveRoomPage = () => {
                   setRoom((prev: any) =>
                     prev
                       ? {
-                          ...prev,
-                          title: evt.title ?? prev.title,
-                          hostNickname: evt.hostNickname ?? prev.hostNickname,
-                          roomId: evt.roomId ?? prev.roomId,
-                          hostId: evt.hostId ?? prev.hostId,
-                          playlist: evt.playlist ?? prev.playlist,
-                          currentVideoIndex:
-                            typeof evt.currentVideoIndex === "number"
-                              ? evt.currentVideoIndex
-                              : prev.currentVideoIndex,
-                          currentTime:
-                            typeof evt.currentTime === "number"
-                              ? evt.currentTime
-                              : prev.currentTime,
-                          playing:
-                            typeof evt.playing === "boolean"
-                              ? evt.playing
-                              : prev.playing,
-                          lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                        }
+                        ...prev,
+                        title: evt.title ?? prev.title,
+                        hostNickname: evt.hostNickname ?? prev.hostNickname,
+                        roomId: evt.roomId ?? prev.roomId,
+                        hostId: evt.hostId ?? prev.hostId,
+                        playlist: evt.playlist ?? prev.playlist,
+                        currentVideoIndex:
+                          typeof evt.currentVideoIndex === "number"
+                            ? evt.currentVideoIndex
+                            : prev.currentVideoIndex,
+                        currentTime:
+                          typeof evt.currentTime === "number"
+                            ? evt.currentTime
+                            : prev.currentTime,
+                        playing:
+                          typeof evt.playing === "boolean"
+                            ? evt.playing
+                            : prev.playing,
+                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                      }
                       : prev
                   );
                   return;
@@ -665,7 +669,7 @@ const LiveRoomPage = () => {
         onConfirm={async () => {
           try {
             await stompClient?.deactivate();
-          } catch {}
+          } catch { }
           navigate(-1);
         }}
       />
@@ -729,21 +733,19 @@ const LiveRoomPage = () => {
           <div className="flex flex-shrink-0 border-b border-t md:border-t-0 border-gray-700">
             <button
               onClick={() => setActiveTab("chat")}
-              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-                activeTab === "chat"
-                  ? "text-white border-b-2 border-fuchsia-500"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "chat"
+                ? "text-white border-b-2 border-fuchsia-500"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               실시간 채팅
             </button>
             <button
               onClick={() => setActiveTab("playlist")}
-              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-                activeTab === "playlist"
-                  ? "text-white border-b-2 border-fuchsia-500"
-                  : "text-gray-400 hover:text-white"
-              }`}
+              className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "playlist"
+                ? "text-white border-b-2 border-fuchsia-500"
+                : "text-gray-400 hover:text-white"
+                }`}
             >
               플레이리스트
             </button>
