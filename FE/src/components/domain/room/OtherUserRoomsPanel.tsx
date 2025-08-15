@@ -55,11 +55,9 @@ const OtherUserRoomsPanel = ({
     setVisible(pageSize);
     const now = new Date();
     if (q === "all") {
-      setFrom("");
-      setTo("");
-      return;
+      setFrom(""); setTo(""); return;
     }
-    if (q === "7d") {
+    if (q === "7d")  {
       setFrom(addDays(now, -7).toISOString().slice(0, 10));
       setTo(now.toISOString().slice(0, 10));
       return;
@@ -76,8 +74,7 @@ const OtherUserRoomsPanel = ({
     }
   };
 
-  // 라이브 병합(중복 제거): roomId가 히스토리에 있으면 그 카드만 "입장" 활성화.
-  // 히스토리에 없으면 임시 카드 하나를 주입.
+  // 라이브 병합(중복 제거)
   const merged = useMemo<RoomHistory[]>(() => {
     const base = (rooms ?? []).slice();
     const hasLive = !!activeRoom;
@@ -86,7 +83,6 @@ const OtherUserRoomsPanel = ({
     const exists = base.some((r) => r.roomId === activeRoom!.roomId);
     if (exists) return base;
 
-    // 임시 카드 주입 (createdAt은 현재시각로 표시)
     const injected: RoomHistory = {
       roomId: activeRoom!.roomId,
       title: activeRoom!.title,
@@ -103,7 +99,7 @@ const OtherUserRoomsPanel = ({
   // 필터 적용
   const filtered = useMemo(() => {
     const fromDate = from ? new Date(from + "T00:00:00") : null;
-    const toDate = to ? new Date(to + "T23:59:59.999") : null;
+    const toDate   = to   ? new Date(to   + "T23:59:59.999") : null;
     return merged
       .filter((r) => {
         if (!r?.createdAt) return true; // 주입카드 보호
@@ -114,10 +110,7 @@ const OtherUserRoomsPanel = ({
         if (artistId !== "all" && r.artistId !== artistId) return false;
         return true;
       })
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [merged, from, to, artistId]);
 
   const shown = filtered.slice(0, visible);
@@ -125,10 +118,6 @@ const OtherUserRoomsPanel = ({
 
   const liveRoomId = activeRoom?.roomId ?? null;
 
-  //   const handleEnterLive = (roomId: number) => {
-  //     // 보안 질문/잠금 방 처리는 방 페이지에서 진행한다고 가정
-  //     navigate(`/rooms/${roomId}`);
-  //   };
   const handleEnterLive = async (roomId: number) => {
     try {
       await enterRoom(String(roomId), "");
@@ -153,87 +142,96 @@ const OtherUserRoomsPanel = ({
     }
   };
 
-  return (
-    <div className="w-full max-w-[880px] mx-auto">
-      {/* 필터 바 */}
-      <div className="bg-white rounded-xl px-6 py-4 mb-4 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex items-center gap-2">
-            {[
-              { k: "all", label: "전체" },
-              { k: "7d", label: "최근 7일" },
-              { k: "30d", label: "최근 30일" },
-              { k: "thisYear", label: "올해" },
-            ].map(({ k, label }) => (
-              <button
-                key={k}
-                onClick={() => applyQuick(k as QuickRange)}
-                className={`px-3 py-1 rounded-full text-sm border transition ${
-                  quick === k
-                    ? "bg-purple-600 text-white border-purple-600"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-
-          {/* 날짜 범위 */}
-          <div className="flex items-center gap-2 ml-auto">
-            <div className="text-xs text-gray-500">기간</div>
-            <input
-              type="date"
-              value={from}
-              onChange={(e) => {
-                setFrom(e.target.value);
-                setQuick("all");
-                setVisible(pageSize);
-              }}
-              className="border rounded-md px-2 py-1 text-sm"
-            />
-            <span className="text-gray-400">~</span>
-            <input
-              type="date"
-              value={to}
-              onChange={(e) => {
-                setTo(e.target.value);
-                setQuick("all");
-                setVisible(pageSize);
-              }}
-              className="border rounded-md px-2 py-1 text-sm"
-            />
-          </div>
-
-          {/* 아티스트 셀렉트 */}
-          <div className="flex items-center gap-2">
-            <div className="text-xs text-gray-500">아티스트</div>
-            <select
-              value={artistId}
-              onChange={(e) => {
-                const v = e.target.value;
-                setArtistId(v === "all" ? "all" : Number(v));
-                setVisible(pageSize);
-              }}
-              className="border rounded-md px-2 py-1 text-sm"
+  // 🔽 제목 바로 아래에 넣는 반응형 필터 바 (sm↓ 2줄, md↑ 1줄 고정)
+  const Filters = (
+    <div className="mb-4">
+      <div className="flex flex-wrap md:flex-nowrap md:whitespace-nowrap items-center gap-3">
+        {/* 빠른 범위 버튼들 — 모바일에선 첫 줄 전폭 */}
+        <div className="flex items-center gap-2 flex-wrap basis-full md:basis-auto shrink-0">
+          {[
+            { k: "all", label: "전체" },
+            { k: "7d", label: "최근 7일" },
+            { k: "30d", label: "최근 30일" },
+            { k: "thisYear", label: "올해" },
+          ].map(({ k, label }) => (
+            <button
+              key={k}
+              onClick={() => applyQuick(k as QuickRange)}
+              className={`px-3 py-1 rounded-full text-sm border transition ${
+                quick === k
+                  ? "bg-purple-600 text-white border-purple-600"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              }`}
             >
-              <option value="all">전체</option>
-              {artistOptions.map(([id, label]) => (
-                <option key={id} value={id}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </div>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* 구분선: md 이상에서만 보이도록 */}
+        <div className="h-5 w-px bg-gray-200 hidden md:block shrink-0" />
+
+        {/* 기간 필터 (입력 2개가 절대 줄바꿈되지 않도록 shrink-0) */}
+        <div className="flex items-center gap-2 flex-wrap md:flex-nowrap shrink-0">
+          <div className="text-xs text-gray-500 shrink-0">기간</div>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => {
+              setFrom(e.target.value);
+              setQuick("all");
+              setVisible(pageSize);
+            }}
+            className="border rounded-md px-2 py-1 text-sm w-[130px] sm:w-auto shrink-0"
+          />
+          <span className="text-gray-400 shrink-0">~</span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => {
+              setTo(e.target.value);
+              setQuick("all");
+              setVisible(pageSize);
+            }}
+            className="border rounded-md px-2 py-1 text-sm w-[130px] sm:w-auto shrink-0"
+          />
+        </div>
+
+        {/* 구분선: md 이상에서만 */}
+        <div className="h-5 w-px bg-gray-200 hidden md:block shrink-0" />
+
+        {/* 아티스트 셀렉트 */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="text-xs text-gray-500 shrink-0">아티스트</div>
+          <select
+            value={artistId}
+            onChange={(e) => {
+              const v = e.target.value;
+              setArtistId(v === "all" ? "all" : Number(v));
+              setVisible(pageSize);
+            }}
+            className="border rounded-md px-2 py-1 text-sm w-[160px] sm:w-auto shrink-0"
+          >
+            <option value="all">전체</option>
+            {artistOptions.map(([id, label]) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
+    </div>
+  );
 
-      {/* 리스트 (라이브 방은 해당 카드에만 "입장하기" 버튼 노출) */}
+  return (
+    <div className="w-full max-w-[880px] mx-auto">
       <MyCreatedRooms
         rooms={shown}
         title={title}
         liveRoomId={liveRoomId}
         onEnterLive={handleEnterLive}
+        filters={Filters}
       />
 
       {hasMore && (
