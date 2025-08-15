@@ -1,5 +1,5 @@
 import type { RoomHistory } from "../../../types/room";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type Props = {
   rooms: RoomHistory[];
