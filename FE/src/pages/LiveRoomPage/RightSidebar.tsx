@@ -12,22 +12,33 @@ type RightSidebarProps = {
   currentVideoIndex: number;
   onAddToPlaylist: (videoId: string) => void;
   onSelectPlaylistIndex?: (index: number) => void;
+  onBlockUser: (userId: string) => void;
+  onReorderPlaylist?: (from: number, to: number) => void;
+  onDeletePlaylistItem?: (index: number) => void;
 };
 
 const RightSidebar = ({
   selectedTab,
   isHost,
+  // roomId, // (필요시 유지)
   messages,
   sendMessage,
   playlist,
   currentVideoIndex,
   onAddToPlaylist,
   onSelectPlaylistIndex,
+  onBlockUser,
+  onReorderPlaylist,
+  onDeletePlaylistItem,
 }: RightSidebarProps) => {
   return (
     <div className="flex-grow flex flex-col bg-gray-800 min-h-0">
       {selectedTab === "chat" ? (
-        <ChatPanel messages={messages} sendMessage={sendMessage} />
+        <ChatPanel
+          messages={messages}
+          sendMessage={sendMessage}
+          onBlockUser={onBlockUser}
+        />
       ) : (
         <PlaylistPanel
           isHost={isHost}
@@ -35,6 +46,8 @@ const RightSidebar = ({
           currentVideoIndex={currentVideoIndex}
           onAddToPlaylist={onAddToPlaylist}
           onSelect={onSelectPlaylistIndex}
+          onReorder={onReorderPlaylist}
+          onDeleteItem={onDeletePlaylistItem}
         />
       )}
     </div>

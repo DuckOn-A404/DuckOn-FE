@@ -2,7 +2,7 @@ import {useState, useEffect} from "react";
 import {CreateRoom, enterRoom} from "../../../api/roomService";
 import {useNavigate} from "react-router-dom";
 import {X} from "lucide-react";
-import { fetchYouTubeMeta } from "../../../utils/youtubeMeta";
+import {fetchYouTubeMeta} from "../../../utils/youtubeMeta";
 
 
 
@@ -37,16 +37,16 @@ const CreateRoomModal = ({
   const [videoId, setVideoId] = useState<string | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<string>("");
-  const [videoMeta, setVideoMeta] = useState<{ title?: string; author?: string } | null>(null);
-  
+  const [videoMeta, setVideoMeta] = useState<{title?: string; author?: string} | null>(null);
+
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     const id = extractVideoId(videoUrl);
     setVideoId(id);
     if (id) {
       setThumbnailPreview(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
-      fetchYouTubeMeta(id).then((m) => m && setVideoMeta({ title: m.title, author: m.author }));
+      fetchYouTubeMeta(id).then((m) => m && setVideoMeta({title: m.title, author: m.author}));
     } else {
       setThumbnailPreview(null);
       setVideoMeta(null);
@@ -95,12 +95,17 @@ const CreateRoomModal = ({
           alert(
             "로그인이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요."
           );
-          // navigate("/login"); return;
         }
       }
 
       onClose();
-      navigate(`/live/${createdRoom.roomId}`);
+      navigate(`/live/${createdRoom.roomId}`, {
+        state: {
+          artistId,
+          isHost: true,
+          entryAnswer: locked ? entryAnswer : undefined, // 잠금 방 대비
+        },
+      });
     } catch {
       alert("방 생성에 실패했습니다.");
     }
@@ -110,9 +115,9 @@ const CreateRoomModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 overflow-auto">
-      {/* 모달 프레임: 배경, 둥근 모서리, 그림자 담당. 스크롤 없음. */}
+      {/* 모달 프레임 */}
       <div className="bg-white rounded-xl shadow-lg w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-        {/* 모달 헤더: 제목과 닫기 버튼. 스크롤되지 않음. */}
+        {/* 모달 헤더 */}
         <div className="flex justify-between items-center p-5 border-b border-gray-200">
           <h2 className="text-xl font-semibold">새 방 만들기</h2>
           <button
@@ -123,7 +128,7 @@ const CreateRoomModal = ({
           </button>
         </div>
 
-        {/* 모달 본문: 스크롤이 필요한 콘텐츠 영역 */}
+        {/* 모달 본문 */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {errors && (
             <div className="text-red-500 text-sm text-center">{errors}</div>
@@ -162,7 +167,7 @@ const CreateRoomModal = ({
               />
             </div>
           )}
-          
+
           {videoMeta && (videoMeta.title || videoMeta.author) && (
             <div className="mt-2 text-sm text-gray-800">
               <div className="font-semibold truncate">{videoMeta.title || "제목 로딩 중..."}</div>
@@ -224,7 +229,7 @@ const CreateRoomModal = ({
           )}
         </div>
 
-        {/* 모달 푸터: 버튼 영역. 스크롤되지 않음. */}
+        {/* 모달 푸터 */}
         <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
           <button
             className="px-5 py-2.5 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold transition"

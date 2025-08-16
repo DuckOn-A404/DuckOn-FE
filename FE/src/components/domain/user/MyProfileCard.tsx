@@ -51,8 +51,9 @@ const MyProfileCard = ({
   };
 
   return (
-    <div className="bg-white rounded-xl px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
+      {/* 헤더 */}
+      <div className="flex justify-between items-center mb-6 gap-3">
         <h1 className="text-lg font-bold">프로필 정보</h1>
         <div className="relative flex items-center gap-2">
           <button
@@ -92,17 +93,17 @@ const MyProfileCard = ({
         </div>
       </div>
 
-      <div className="flex gap-8 items-start">
-        {/* 왼쪽: 프로필 이미지 + 팔로워/팔로잉 */}
-        <div className="flex flex-col items-center w-32 shrink-0">
+      {/* 본문 */}
+      <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
+        {/* 왼쪽: 프로필 + 팔/팔 */}
+        <div className="flex flex-col items-center w-full sm:w-32 shrink-0">
           <img
             src={user.imgUrl || "/default_image.png"}
             alt="프로필 이미지"
             className="w-24 h-24 object-cover rounded-full"
           />
 
-          <div className="mt-4 flex gap-6 text-center">
-            {/* 팔로워: 숫자+라벨 통째로 클릭 */}
+          <div className="mt-4 flex gap-10 sm:gap-6 text-center">
             <button
               onClick={onFollowerClick}
               disabled={!onFollowerClick}
@@ -116,8 +117,6 @@ const MyProfileCard = ({
                 팔로워
               </div>
             </button>
-
-            {/* 팔로잉: 숫자+라벨 통째로 클릭 */}
             <button
               onClick={onFollowingClick}
               disabled={!onFollowingClick}
@@ -134,19 +133,36 @@ const MyProfileCard = ({
           </div>
         </div>
 
-        {/* 오른쪽: 사용자 정보 */}
-        <div className="flex-1 text-sm grid gap-4">
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">이메일</div>
-            <div>{user.email}</div>
+        {/* 오른쪽: 라벨 옆 값(항상 가로 배치) */}
+        <div className="min-w-0 flex-1 text-sm space-y-2">
+          {/* 이메일 */}
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
+              이메일
+            </div>
+            <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate">
+              {user.email}
+            </div>
           </div>
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">아이디</div>
-            <div>{user.userId}</div>
+
+          {/* 아이디 */}
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
+              아이디
+            </div>
+            <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate">
+              {user.userId}
+            </div>
           </div>
-          <div className="flex">
-            <div className="w-32 text-gray-500 font-medium">닉네임</div>
-            <div>{user.nickname}</div>
+
+          {/* 닉네임 */}
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
+              닉네임
+            </div>
+            <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate">
+              {user.nickname}
+            </div>
           </div>
         </div>
       </div>

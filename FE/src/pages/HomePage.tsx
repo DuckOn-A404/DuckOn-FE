@@ -1,14 +1,17 @@
-import {useEffect, useState} from "react";
-import {useNavigate, Link} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import {getRandomArtists} from "../api/artistService";
-import {type Artist} from "../types/artist";
-import {useTrendingRooms} from "../hooks/useTrendingRooms";
+import { getRandomArtists } from "../api/artistService";
+import { type Artist } from "../types/artist";
+import { useTrendingRooms } from "../hooks/useTrendingRooms";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
 import { Tv, HelpCircle } from "lucide-react";
-import GuideModal, { type GuideStep } from "../components/common/modal/GuideModal";
+import GuideModal, {
+  type GuideStep,
+} from "../components/common/modal/GuideModal";
+import { createSlug } from "../utils/slugUtils";
 
 const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
@@ -22,8 +25,10 @@ const HomePage = () => {
   } = useTrendingRooms(1, 9);
 
   const handleCardClick = (artistId: number, nameEn: string) => {
-    navigate(`/artist/${nameEn}`, {
-      state: {artistId: artistId},
+    const slug = createSlug(nameEn);
+
+    navigate(`/artist/${slug}`, {
+      state: { artistId: artistId },
     });
   };
 
@@ -42,7 +47,6 @@ const HomePage = () => {
     fetchRandomArtists();
   }, []);
 
-  // ---------------- Guide Modal state ----------------
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
 
@@ -77,8 +81,7 @@ const HomePage = () => {
     setGuideIndex(i);
     setGuideOpen(true);
   };
-  const nextGuide = () =>
-    setGuideIndex((i) => (i + 1) % guideSteps.length);
+  const nextGuide = () => setGuideIndex((i) => (i + 1) % guideSteps.length);
   const prevGuide = () =>
     setGuideIndex((i) => (i - 1 + guideSteps.length) % guideSteps.length);
 
@@ -89,7 +92,7 @@ const HomePage = () => {
       {/* 랜딩(Hero) 섹션 */}
       <div
         className="relative w-full h-96 bg-cover bg-center"
-        style={{backgroundImage: "url('/hero-background.png')"}}
+        style={{ backgroundImage: "url('/hero-background.png')" }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
         <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
@@ -124,8 +127,12 @@ const HomePage = () => {
         {/* 핫한 방송 영역 */}
         <section>
           <div className="flex justify-between items-center mb-8">
-
-            <h2 className="text-3xl font-bold">🔥 지금 핫한 방 {trendingRooms && trendingRooms.roomInfoList.length > 0 ? `Top ${trendingRooms.roomInfoList.length}` : null}</h2>
+            <h2 className="text-3xl font-bold">
+              🔥 지금 핫한 방{" "}
+              {trendingRooms && trendingRooms.roomInfoList.length > 0
+                ? `Top ${trendingRooms.roomInfoList.length}`
+                : null}
+            </h2>
             {trendingRooms && trendingRooms.roomInfoList.length > 0 && (
               <Link
                 to="/room-list"
@@ -137,14 +144,15 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-8 flex-grow">
             {isLoadingTrending ? (
-              Array.from({length: 3}).map((_, i) => (
+              Array.from({ length: 3 }).map((_, i) => (
                 <VideoCardSkeleton key={i} />
               ))
             ) : trendingError ? (
               <p className="w-full text-center text-red-500 py-20">
                 {trendingError}
               </p>
-            ) : trendingRooms?.roomInfoList && trendingRooms?.roomInfoList.length > 0 ? (
+            ) : trendingRooms?.roomInfoList &&
+              trendingRooms?.roomInfoList.length > 0 ? (
               trendingRooms.roomInfoList.map((room) => (
                 <VideoCard
                   key={room.roomId}
@@ -154,7 +162,8 @@ const HomePage = () => {
                   hostNickname={room.hostNickname}
                   hostProfileImgUrl={room.hostProfileImgUrl ?? ""}
                   imgUrl={room.imgUrl}
-                  participantCount={room.participantCount} />
+                  participantCount={room.participantCount}
+                />
               ))
             ) : (
               <div className="w-full flex flex-col items-center justify-center text-center text-gray-500 py-20 bg-gray-100 rounded-2xl">
@@ -181,61 +190,54 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             {isLoadingArtists
-              ? Array.from({length: 5}).map((_, i) => (
-                <ArtistCardSkeleton key={i} />
-              ))
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <ArtistCardSkeleton key={i} />
+                ))
               : recommendedArtists.map((artist) => (
-                <ArtistCard
-                  key={artist.artistId}
-                  {...artist}
-                  onClick={() =>
-                    handleCardClick(artist.artistId, artist.nameEn)
-                  }
-                />
-              ))}
+                  <ArtistCard
+                    key={artist.artistId}
+                    {...artist}
+                    onClick={() =>
+                      handleCardClick(artist.artistId, artist.nameEn)
+                    }
+                  />
+                ))}
           </div>
         </section>
 
         {/* === Guide Section === */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold">빠르게 시작하기</h2>
-          {/* <button
-            onClick={() => openGuide(0)}
-            className="text-purple-600 hover:text-purple-800 font-semibold"
-          >
-            전체 가이드 보기 →
-          </button> */}
-        </div>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl md:text-3xl font-bold">빠르게 시작하기</h2>
+          </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {guideSteps.map((s, i) => (
-            <button
-              key={i}
-              onClick={() => openGuide(i)}
-              className="group relative rounded-2xl overflow-hidden bg-white shadow hover:shadow-lg transition-all text-left"
-            >
-              <img
-                src={s.img}
-                alt={s.alt}
-                className="w-full h-48 object-cover"
-                loading="lazy"
-              />
-              <div className="p-4">
-                <p className="text-sm font-semibold text-purple-600">
-                  STEP {i + 1}
-                </p>
-                <h3 className="text-lg font-bold mt-1">{s.title}</h3>
-                <p className="text-gray-600 mt-1 line-clamp-2">{s.desc}</p>
-                <span className="inline-block mt-3 text-purple-600 group-hover:translate-x-0.5 transition">
-                  자세히 보기 →
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
+          <div className="grid md:grid-cols-3 gap-6">
+            {guideSteps.map((s, i) => (
+              <button
+                key={i}
+                onClick={() => openGuide(i)}
+                className="group relative rounded-2xl overflow-hidden bg-white shadow hover:shadow-lg transition-all text-left"
+              >
+                <img
+                  src={s.img}
+                  alt={s.alt}
+                  className="w-full h-48 object-cover"
+                  loading="lazy"
+                />
+                <div className="p-4">
+                  <p className="text-sm font-semibold text-purple-600">
+                    STEP {i + 1}
+                  </p>
+                  <h3 className="text-lg font-bold mt-1">{s.title}</h3>
+                  <p className="text-gray-600 mt-1 line-clamp-2">{s.desc}</p>
+                  <span className="inline-block mt-3 text-purple-600 group-hover:translate-x-0.5 transition">
+                    자세히 보기 →
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
       </main>
 
       {/* 가이드 모달 */}

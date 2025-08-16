@@ -1,16 +1,30 @@
 import type { RoomHistory } from "../../../types/room";
+import type { ReactNode } from "react";
 
 type Props = {
   rooms: RoomHistory[];
   title?: string;
   liveRoomId?: number | null;
   onEnterLive?: (roomId: number) => void;
+  /** 제목 바로 아래에 꽂을 커스텀 필터/정렬 바 */
+  filters?: ReactNode;
 };
 
-const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnterLive }: Props) => {
+const NO_IMAGE = "https://placehold.co/1280x720?text=No+Image";
+
+const MyCreatedRooms = ({
+  rooms,
+  title = "내가 만든 방",
+  liveRoomId,
+  onEnterLive,
+  filters,
+}: Props) => {
   const list = (rooms ?? [])
     .slice()
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
   if (!list.length) {
     return (
@@ -21,11 +35,20 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnte
     );
   }
 
-  const fmt = (iso: string) => { try { return new Date(iso).toLocaleString(); } catch { return iso; } };
+  const fmt = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleString();
+    } catch {
+      return iso;
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl px-8 py-6 w-full max-w-[880px] mx-auto shadow-sm">
       <h2 className="text-lg font-bold mb-4">{title}</h2>
+
+      {/* 제목과 리스트 사이에 필터 바 삽입 */}
+      {filters}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {list.map((r) => {
@@ -33,11 +56,13 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnte
           return (
             <div
               key={r.roomId}
-              className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition ${isLive ? "ring-2 ring-purple-500" : ""}`}
+              className={`border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition ${
+                isLive ? "ring-2 ring-purple-500" : ""
+              }`}
             >
               <div className="relative aspect-video bg-gray-50">
                 <img
-                  src={r.imgUrl || "/default_room.png"}
+                  src={r.imgUrl || NO_IMAGE}
                   alt={r.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -51,13 +76,16 @@ const MyCreatedRooms = ({ rooms, title = "내가 만든 방", liveRoomId, onEnte
 
               <div className="p-4">
                 <div className="font-semibold line-clamp-1">{r.title}</div>
-                <div className="mt-1 text-xs text-gray-500">생성: {fmt(r.createdAt)}</div>
+                <div className="mt-1 text-xs text-gray-500">
+                  생성: {fmt(r.createdAt)}
+                </div>
 
                 <div className="mt-2 text-[11px] text-gray-600 flex flex-wrap gap-2">
                   <span className="px-2 py-0.5 bg-gray-100 rounded-full">
-                    {r.artistNameKr ?? r.artistNameEn ?? `artistId: ${r.artistId}`}
+                    {r.artistNameKr ??
+                      r.artistNameEn ??
+                      `artistId: ${r.artistId}`}
                   </span>
-                  <span className="px-2 py-0.5 bg-gray-100 rounded-full">creator: {r.creatorId}</span>
                 </div>
 
                 {isLive && (

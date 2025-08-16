@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
 import { useDebounce } from "../hooks/useDebounce";
+import { createSlug } from "../utils/slugUtils";
 
 const sortOptions: { label: string; key: SortKey; order: SortOrder }[] = [
   { label: "팔로워 많은순", key: "followers", order: "desc" },
@@ -20,15 +21,15 @@ const sortOptions: { label: string; key: SortKey; order: SortOrder }[] = [
 const ArtistListPage = () => {
   const navigate = useNavigate();
 
-  // 🔎 검색어 입력값 → 300ms 디바운스 후 서버에 전달
+  // 검색어 입력값 → 300ms 디바운스 후 서버에 전달
   const [searchText, setSearchText] = useState("");
   const debouncedSearchText = useDebounce(searchText, 300);
 
-  // 🔽 기본 정렬: 팔로워 많은순
+  // 기본 정렬: 팔로워 많은순
   const [sort, setSort] = useState<SortKey>("followers");
   const [order, setOrder] = useState<SortOrder>("desc");
 
-  // 📦 화면 크기에 따라 1회 로드 개수 동적 계산(한 화면 + 여유 2행)
+  // 화면 크기에 따라 1회 로드 개수 동적 계산(한 화면 + 여유 2행)
   const [pageSize, setPageSize] = useState(30);
   useEffect(() => {
     const compute = () => {
@@ -43,7 +44,7 @@ const ArtistListPage = () => {
     return () => window.removeEventListener("resize", compute);
   }, []);
 
-  // 📡 목록 데이터: 검색/정렬/사이즈를 한 API(getArtistList)로 처리
+  // 목록 데이터: 검색/정렬/사이즈를 한 API(getArtistList)로 처리
   const { artists, totalCount, fetchMore, hasMore, loading } = useArtistList({
     q: debouncedSearchText || undefined,
     sort,
@@ -51,7 +52,7 @@ const ArtistListPage = () => {
     size: pageSize,
   });
 
-  // ♾️ 무한 스크롤: 바닥 600px 전에 프리패치
+  // 무한 스크롤: 바닥 600px 전에 프리패치
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const el = sentinelRef.current;
@@ -63,7 +64,6 @@ const ArtistListPage = () => {
           fetchMore();
         }
       },
-      // ✅ bottom 방향 여백 확장: 아래에서 600px 남았을 때 미리 로드
       { rootMargin: "0px 0px 600px 0px", threshold: 0 }
     );
 
@@ -72,8 +72,9 @@ const ArtistListPage = () => {
   }, [fetchMore, hasMore, loading]);
 
   const handleCardClick = (artistId: number, nameEn: string) => {
-    // NOTE: nameEn에 공백/특수문자가 있다면 slug/encode 고려
-    navigate(`/artist/${nameEn}`, { state: { artistId } });
+    const slug = createSlug(nameEn);
+
+    navigate(`/artist/${slug}`, { state: { artistId } });
   };
 
   return (
