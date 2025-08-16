@@ -82,7 +82,7 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
   const shown = filtered.slice(0, visible);
   const hasMore = filtered.length > visible;
 
-  // ⬇️ 제목 아래에 꽂는 필터바 (작을 땐 2줄, md↑ 한 줄)
+  // 제목 아래에 꽂는 필터바 (작을 땐 2줄, md↑ 한 줄)
   const Filters = (
     <div className="mb-4">
       <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
