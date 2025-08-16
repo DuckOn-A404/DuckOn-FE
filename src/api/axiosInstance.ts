@@ -126,7 +126,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 퀴즈 방(locked) 401은 refresh 시도 금지 → 호출부가 모달 띄움
+    // 퀴즈 방(locked) 401은 refresh 시도 금지. 호출부가 모달 띄움
     const url = (original.url || "") as string;
     const data = (error.response?.data ?? {}) as any;
     // ex) POST /rooms/275/enter
