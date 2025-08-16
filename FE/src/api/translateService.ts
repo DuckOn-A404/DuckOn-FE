@@ -15,11 +15,8 @@ export async function translateMessage(
 ): Promise<string> {
   const { data } = await api.post<TranslateResponse>(
     "/translate",
-    {
-      message,
-      language,
-    } satisfies TranslateRequest,
-    { timeout: 15000 }
+    { message, language } satisfies TranslateRequest
+    // timeout 옵션 제거 — 인터셉터에서 /translate만 50s로 설정됨
   );
 
   if (!data?.translatedMessage) {
