@@ -47,7 +47,7 @@ const MyCreatedRooms = ({
     <div className="bg-white rounded-xl px-8 py-6 w-full max-w-[880px] mx-auto shadow-sm">
       <h2 className="text-lg font-bold mb-4">{title}</h2>
 
-      {/* ← 여기! 제목과 리스트 사이에 필터 바 삽입 */}
+      {/* 제목과 리스트 사이에 필터 바 삽입 */}
       {filters}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
