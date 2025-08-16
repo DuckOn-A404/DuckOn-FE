@@ -75,11 +75,18 @@ declare module "axios" {
 // --- 요청 인터셉터 ---
 // 1) /auth/refresh, /auth/logout 은 호출부가 넣은 Authorization(= refresh)을 그대로 보냄
 // 2) 그 외는 skipAuth가 아니면 access 토큰을 자동 부착
+// --- 요청 인터셉터 ---
 api.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
 
   const url = config.url ?? "";
   const isAuthEndpoint = /\/auth\/(refresh|logout)$/.test(url);
+
+  // 번역 엔드포인트는 타임아웃 50초로 덮어쓰기
+  // url 은 '/translate', '/translate/batch' 같은 형태로 들어옴
+  if (/^\/translate(\/|$)/.test(url) || /^\/translate\/batch(\/|$)/.test(url)) {
+    config.timeout = 50000;
+  }
 
   if (isAuthEndpoint) return config;
 
@@ -94,6 +101,7 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
 
 // ===== 응답 인터셉터 (401 → refresh → 재시도) =====
 let isRefreshing = false;
