@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // ★ 추가
+import { useNavigate } from "react-router-dom"; // 추가
 import type { FollowUser } from "../../../types/follow";
 import { fetchFollowList } from "../../../api/follow/followFollowingList";
 import { followUser, unfollowUser } from "../../../api/follow/followService";
@@ -40,8 +40,8 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
   };
 
   const goToUser = (userId: string) => {
-    navigate(`/user/${userId}`); // ★ 상세 페이지 이동
-    onClose(); // ★ 모달 닫기
+    navigate(`/user/${userId}`); // 상세 페이지 이동
+    onClose(); // 모달 닫기
   };
 
   return (
@@ -67,7 +67,7 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
             <li
               key={user.userId}
               className="flex items-center justify-between cursor-pointer hover:bg-gray-50 rounded-lg px-2 py-1"
-              onClick={() => goToUser(user.userId)} // ★ 항목 클릭으로 이동
+              onClick={() => goToUser(user.userId)} // 항목 클릭으로 이동
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
@@ -86,7 +86,7 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
               </div>
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); // ★ 이동 방지
+                  e.stopPropagation(); // 이동 방지
                   toggleFollow(user);
                 }}
                 className={`text-sm px-3 py-1 rounded transition ${

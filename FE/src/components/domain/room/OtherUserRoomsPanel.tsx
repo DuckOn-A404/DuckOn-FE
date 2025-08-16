@@ -142,7 +142,7 @@ const OtherUserRoomsPanel = ({
     }
   };
 
-  // 🔽 제목 바로 아래에 넣는 반응형 필터 바 (sm↓ 2줄, md↑ 1줄 고정)
+  // 제목 바로 아래에 넣는 반응형 필터 바 (sm↓ 2줄, md↑ 1줄 고정)
   const Filters = (
     <div className="mb-4">
       <div className="flex flex-wrap md:flex-nowrap md:whitespace-nowrap items-center gap-3">
