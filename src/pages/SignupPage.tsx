@@ -1,23 +1,23 @@
-// import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSignupForm } from "../hooks/useSignupForm";
 import LoginSignupCard from "../components/common/LoginSignupCard";
 import InputField from "../components/common/InputField";
-// import SelectField from "../components/common/SelectField";
-// import { fetchLanguages } from "../api/languageSelect";
+import SelectField from "../components/common/SelectField";
+import { fetchLanguages } from "../api/languageSelect";
 import {
   Mail,
   User,
   MessageSquareText,
   LockKeyhole,
   ArrowLeft,
-  // Globe,
+  Globe,
 } from "lucide-react";
 
-// type SelectOption = {
-//   value: string;
-//   label: string;
-// };
+type SelectOption = {
+  value: string;
+  label: string;
+};
 
 const SignupPage = () => {
   const navigate = useNavigate();
@@ -38,21 +38,21 @@ const SignupPage = () => {
     passwordError,
   } = useSignupForm();
 
-  // const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
+  const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
   const iconStyle = "w-5 h-5 text-gray-400";
 
-  // useEffect(() => {
-  //   const loadLanguages = async () => {
-  //     const languages = await fetchLanguages();
-  //     const options = languages.map((lang) => ({
-  //       value: lang.langCode,
-  //       label: lang.langName,
-  //     }));
-  //     setLanguageOptions(options);
-  //   };
+  useEffect(() => {
+    const loadLanguages = async () => {
+      const languages = await fetchLanguages();
+      const options = languages.map((lang) => ({
+        value: lang.langCode,
+        label: lang.langName,
+      }));
+      setLanguageOptions(options);
+    };
 
-  //   loadLanguages();
-  // }, []);
+    loadLanguages();
+  }, []);
 
   // 'Enter' 키 동작을 제어하는 이벤트 핸들러
   const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
@@ -169,14 +169,14 @@ const SignupPage = () => {
             onChange={handleChange}
             error={passwordConfirmError}
           />
-          {/* <SelectField
+          <SelectField
             id="language"
             label="언어 선택"
             icon={<Globe className={iconStyle} />}
             value={formData.language}
             onChange={handleChange}
             options={languageOptions}
-          /> */}
+          />
           <div>
             <label
               htmlFor="profileImg"
