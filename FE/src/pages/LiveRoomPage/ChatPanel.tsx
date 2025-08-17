@@ -264,7 +264,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
                     {/* 다른 사람 메시지에만 점 3개 아이콘 표시 (위치 변경됨) */}
                     {!isMyMessage && (
                       <Popover className="absolute top-1 right-1">
-                        <Popover.Button className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
+                        <Popover.Button className="p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
                           <MoreVertical size={14} className="text-white" />
                         </Popover.Button>
                         <Transition
