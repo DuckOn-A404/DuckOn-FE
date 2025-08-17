@@ -15,10 +15,16 @@ const DEFAULT_IMG = "/default_image.png";
 // 영문/숫자/특수문자 각 1개 이상 + 공백 불가 + 8자 이상
 const PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
 
-const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => {
+const EditProfileCard = ({
+  user,
+  onCancel,
+  onUpdate,
+}: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
   const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl ?? DEFAULT_IMG);
+  const [previewUrl, setPreviewUrl] = useState<string>(
+    user.imgUrl ?? DEFAULT_IMG
+  );
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [didPickNewImage, setDidPickNewImage] = useState(false);
 
@@ -83,7 +89,8 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       }
     }
 
-    const isReset = !profileImage && !!user.imgUrl && previewUrl === DEFAULT_IMG;
+    const isReset =
+      !profileImage && !!user.imgUrl && previewUrl === DEFAULT_IMG;
 
     const formData = new FormData();
     formData.append("nickname", nickname);
@@ -105,8 +112,10 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
         ...(refreshed ?? user),
         nickname,
         imgUrl: didPickNewImage
-          ? (refreshed?.imgUrl ?? user.imgUrl)
-          : (isReset ? DEFAULT_IMG : (user.imgUrl ?? undefined)),
+          ? refreshed?.imgUrl ?? user.imgUrl
+          : isReset
+          ? DEFAULT_IMG
+          : user.imgUrl ?? undefined,
       };
 
       useUserStore.getState().setMyUser({
@@ -139,7 +148,9 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
     }
   };
 
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleConfirmPasswordChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const val = e.target.value;
     setConfirmPassword(val);
 
@@ -151,7 +162,7 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   };
 
   return (
-    <div className="bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[680px] mx-auto shadow-sm">
+    <div className="bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-bold">프로필 수정</h1>
@@ -289,7 +300,9 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                     placeholder="영문/숫자/특수문자 포함, 8자 이상"
                   />
                   {newPasswordError && (
-                    <p className="text-red-500 text-xs mt-1">{newPasswordError}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {newPasswordError}
+                    </p>
                   )}
                 </div>
               </div>
