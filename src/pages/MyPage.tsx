@@ -11,7 +11,7 @@ import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
 import MyCreatedRoomsPanel from "../components/domain/room/MyCreatedRoomsPanel";
-// import BlockedUsersSection from "../components/domain/user/BlockedUsersSection";
+import BlockListModal from "../components/common/modal/BlockListModal";
 
 const isEmptyImg = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
@@ -28,6 +28,7 @@ const MyPage = () => {
   const [openList, setOpenList] = useState<"follower" | "following" | null>(
     null
   );
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
 
   const syncGlobal = (u: MyUser) => {
     useUserStore.getState().setMyUser({
@@ -139,6 +140,7 @@ const MyPage = () => {
           onFollowerClick={() => setOpenList("follower")}
           onFollowingClick={() => setOpenList("following")}
           onDeleteClick={handleOpenDeleteModal}
+          onBlockListClick={() => setIsBlockModalOpen(true)}
         />
       ) : (
         <EditProfileCard
@@ -173,10 +175,7 @@ const MyPage = () => {
       <div className="mt-8">
         <MyCreatedRoomsPanel rooms={myUser.roomList ?? []} pageSize={12} />
       </div>
-      {/* 차단한 사용자 섹션
-      <div className="mt-8">
-        <BlockedUsersSection />
-      </div> */}
+
       {/* 일반 로그인일 때만 모달 렌더링 */}
       {!isSocial && (
         <PasswordConfirm
@@ -199,6 +198,11 @@ const MyPage = () => {
         onCancel={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
       />
+
+      {/* 상태에 따라 BlockListModal 렌더링 */}
+      {isBlockModalOpen && (
+        <BlockListModal onClose={() => setIsBlockModalOpen(false)} />
+      )}
     </div>
   );
 };
