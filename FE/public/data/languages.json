@@ -1,6 +1,8 @@
 [
   { "langCode": "en", "langName": "English" },
   { "langCode": "zh", "langName": "Chinese" },
+  { "langCode": "es", "langName": "Spanish" },
+  { "langCode": "fr", "langName": "French" },
   { "langCode": "ja", "langName": "Japanese" },
   { "langCode": "ko", "langName": "Korean" }
 ]
