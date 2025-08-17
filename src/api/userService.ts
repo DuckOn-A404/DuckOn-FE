@@ -49,11 +49,29 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
  * @param formData - FormData 객체(nickname, language, oldPassword, newPassword, profileImg)
  * @returns 백엔드에서 응답받은 수정된 유저 정보 객체
  */
-export const updateUserProfile = async (
-  formData: FormData
-): Promise<MyUser> => {
-  const response = await api.patch("/users/me", formData);
-  return response.data;
+// export const updateUserProfile = async (
+//   formData: FormData
+// ): Promise<MyUser> => {
+//   const response = await api.patch("/users/me", formData);
+//   return response.data;
+// };
+
+export const updateUserProfile = async (formData: FormData): Promise<MyUser> => {
+  const fd = new FormData();
+  for (const [key, value] of formData.entries()) {
+    if (key === "profileImg") {
+      if (value instanceof File && value.size > 0) fd.append("profileImg", value);
+      continue; // 비어있으면 절대 전송하지 않음
+    }
+    if (typeof value === "string") {
+      const v = value.trim();
+      if (v !== "") fd.append(key, v);
+      continue;
+    }
+    fd.append(key, value as any);
+  }
+  const res = await api.patch<MyUser>("/users/me", fd);
+  return res.data;
 };
 
 /**
