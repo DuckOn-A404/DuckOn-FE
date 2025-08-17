@@ -11,6 +11,7 @@ import FollowerList from "../components/common/modal/FollowerList";
 import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
 import MyCreatedRoomsPanel from "../components/domain/room/MyCreatedRoomsPanel";
+// import BlockedUsersSection from "../components/domain/user/BlockedUsersSection";
 
 const isEmptyImg = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
@@ -168,12 +169,14 @@ const MyPage = () => {
           }}
         />
       )}
-
       {/* 내가 만든 과거 방(입장 불가, 보기 전용) */}
       <div className="mt-8">
         <MyCreatedRoomsPanel rooms={myUser.roomList ?? []} pageSize={12} />
       </div>
-
+      {/* 차단한 사용자 섹션
+      <div className="mt-8">
+        <BlockedUsersSection />
+      </div> */}
       {/* 일반 로그인일 때만 모달 렌더링 */}
       {!isSocial && (
         <PasswordConfirm
@@ -182,7 +185,6 @@ const MyPage = () => {
           onConfirm={handleConfirm}
         />
       )}
-
       {/* 팔로워/팔로잉 모달 */}
       {openList === "follower" && (
         <FollowerList onClose={() => setOpenList(null)} />
@@ -190,7 +192,6 @@ const MyPage = () => {
       {openList === "following" && (
         <FollowingList onClose={() => setOpenList(null)} />
       )}
-
       {/* 탈퇴 확인 모달 */}
       <DeleteAccountModal
         isOpen={showDeleteModal}
