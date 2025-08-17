@@ -3,7 +3,7 @@ import { type MyUser } from "../types/mypage";
 import { type RecommendedUser } from "../types";
 import type { OtherUser } from "../types/otherUser";
 
-type BlockedUser = {
+export type BlockedUser = {
   userId: string;
   nickname: string;
   imgUrl: string | null;
@@ -18,7 +18,9 @@ export const fetchMyProfile = async (): Promise<MyUser> => {
 };
 
 // 타 유저 정보 조회
-export const fetchOtherUserProfile = async (userId: string): Promise<OtherUser> => {
+export const fetchOtherUserProfile = async (
+  userId: string
+): Promise<OtherUser> => {
   const response = await api.get<OtherUser>(`/users/${userId}`);
   return response.data;
 };
@@ -65,6 +67,12 @@ export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
   } catch {
     return [];
   }
+};
+
+/** 차단 해제 */
+export const unblockUser = async (userId: string): Promise<string> => {
+  const { data } = await api.delete(`/block/${userId}`);
+  return data?.message ?? "사용자를 차단 해제하였습니다.";
 };
 
 /**
