@@ -104,13 +104,15 @@ const GuideModal = ({
           </div>
 
           {/* Image */}
-          <div className="bg-white p-4 md:p-6">
-            <img
-              src={step.img}
-              alt={step.alt}
-              className="w-full h-full object-contain rounded-xl shadow"
-              loading="lazy"
-            />
+          <div className="bg-gray-50 p-4 md:p-6 order-1 md:order-2">
+            <div className="aspect-[4/3] bg-gray-100 rounded-xl overflow-hidden shadow">
+              <img
+                src={step.img}
+                alt={step.alt}
+                className="w-full h-full object-contain"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
       </div>
