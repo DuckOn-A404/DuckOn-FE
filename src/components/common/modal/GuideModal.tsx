@@ -29,8 +29,8 @@ const GuideModal = ({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowLeft") onPrev();
-      if (e.key === "ArrowRight") onNext();
+      if (e.key === "ArrowLeft" && index > 0) onPrev();
+      if (e.key === "ArrowRight" && index < steps.length - 1) onNext();
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -38,7 +38,7 @@ const GuideModal = ({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose, onPrev, onNext]);
+  }, [open, onClose, onPrev, onNext, index, steps.length]);
 
   if (!open) return null;
   const step = steps[index];
@@ -85,21 +85,26 @@ const GuideModal = ({
               ))}
             </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={onPrev}
-                className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                이전
-              </button>
-              <button
-                onClick={onNext}
-                className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 flex items-center gap-2"
-              >
-                다음
-                <ChevronRight className="h-4 w-4" />
-              </button>
+            <div className="absolute bottom-6 left-6 md:bottom-8 md:left-8 flex items-center gap-3">
+              {index > 0 && (
+                <button
+                  onClick={onPrev}
+                  className="px-4 py-2 rounded-full border border-gray-300 hover:bg-gray-50 flex items-center gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  이전
+                </button>
+              )}
+
+              {index < steps.length - 1 && (
+                <button
+                  onClick={onNext}
+                  className="px-4 py-2 rounded-full bg-purple-600 text-white hover:bg-purple-700 flex items-center gap-2"
+                >
+                  다음
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
