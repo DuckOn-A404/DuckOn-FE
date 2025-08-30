@@ -2,6 +2,7 @@ import { api, getRefreshToken } from "./axiosInstance";
 import { type MyUser } from "../types/mypage";
 import { type RecommendedUser } from "../types";
 import type { OtherUser } from "../types/otherUser";
+import { getAccessToken } from "./axiosInstance";
 
 export type BlockedUser = {
   userId: string;
@@ -56,11 +57,14 @@ export const verifyPassword = async (password: string): Promise<boolean> => {
 //   return response.data;
 // };
 
-export const updateUserProfile = async (formData: FormData): Promise<MyUser> => {
+export const updateUserProfile = async (
+  formData: FormData
+): Promise<MyUser> => {
   const fd = new FormData();
   for (const [key, value] of formData.entries()) {
     if (key === "profileImg") {
-      if (value instanceof File && value.size > 0) fd.append("profileImg", value);
+      if (value instanceof File && value.size > 0)
+        fd.append("profileImg", value);
       continue; // 비어있으면 절대 전송하지 않음
     }
     if (typeof value === "string") {
@@ -79,6 +83,10 @@ export const updateUserProfile = async (formData: FormData): Promise<MyUser> => 
  * @returns 차단된 사용자 목록 배열
  */
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
+  const token = getAccessToken();
+
+  if (!token) return [];
+
   try {
     const response = await api.get("/block");
     return response.data.blockedList || [];
