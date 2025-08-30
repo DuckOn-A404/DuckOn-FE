@@ -1,0 +1,10 @@
+# .dockerignore
+.git
+node_modules
+dist
+*.log
+*.local
+
+# env는 전부 제외하되 production만 허용
+.env*
+!.env.production
