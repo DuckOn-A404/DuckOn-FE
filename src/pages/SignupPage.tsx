@@ -36,6 +36,7 @@ const SignupPage = () => {
     handleCheckUserId,
     passwordConfirmError,
     passwordError,
+    nicknameError,
   } = useSignupForm();
 
   // const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
@@ -146,6 +147,7 @@ const SignupPage = () => {
                 icon={<MessageSquareText className={iconStyle} />}
                 value={formData.nickname}
                 onChange={handleChange}
+                error={nicknameError}
               />
             </div>
           </div>
