@@ -1,12 +1,12 @@
 // store/useUserStore.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { User } from '../types';
-import { emitTokenRefreshed } from '../api/axiosInstance';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { User } from "../types";
+import { emitTokenRefreshed } from "../api/axiosInstance";
 
 // 공용 유틸 (이미지 보존용)
 const isEmpty = (v: unknown) =>
-  v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
+  v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
 const lastImgKey = (userId: string) => `last-img:${userId}`;
 const saveLastImg = (userId?: string, url?: string) => {
@@ -16,12 +16,12 @@ const saveLastImg = (userId?: string, url?: string) => {
 const loadLastImg = (userId?: string): string | undefined => {
   if (!userId) return undefined;
   const v = localStorage.getItem(lastImgKey(userId)) || undefined;
-  return v && v.trim() !== '' ? v : undefined;
+  return v && v.trim() !== "" ? v : undefined;
 };
 
 type UserState = {
-  myUser: User | null;           // 내 정보
-  otherUser: User | null;        // 타 유저 정보
+  myUser: User | null; // 내 정보
+  otherUser: User | null; // 타 유저 정보
   setMyUser: (user: User | null) => void;
   setOtherUser: (user: User | null) => void;
 
@@ -79,29 +79,28 @@ export const useUserStore = create<UserState>()(
         }),
 
       logout: () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         emitTokenRefreshed(null);
         // last-img 캐시는 남겨둠(다음 로그인 복원용)
         set({ myUser: null, otherUser: null, blockedSet: new Set() });
       },
     }),
     {
-      name: 'user-storage',
-      // 퍼시스트 복원 시 blockedSet을 다시 Set으로 강제 변환
-      onRehydrateStorage: () => (state) => {
-        try {
-          const raw: any = (state as any)?.blockedSet;
-          if (!(raw instanceof Set)) {
-            // raw가 배열이면 그대로, 객체({})면 빈 배열로
-            const ids = Array.isArray(raw) ? raw : raw ? Object.values(raw) : [];
-            // set은 상위 클로저의 set
-            // @ts-ignore
-            useUserStore.setState({ blockedSet: new Set(ids as string[]) });
-          }
-        } catch {
-          // noop
-        }
+      name: "user-storage",
+
+      partialize: (state) => ({
+        ...state,
+        blockedSet: Array.from(state.blockedSet),
+      }),
+
+      merge: (persisted, current) => {
+        const p = persisted as any;
+        return {
+          ...current,
+          ...p,
+          blockedSet: new Set(p?.blockedSet ?? []),
+        } as UserState;
       },
     }
   )
