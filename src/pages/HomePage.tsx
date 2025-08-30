@@ -102,7 +102,7 @@ const HomePage = () => {
             함께 즐기는 시간
           </h1>
           <p className="text-lg md:text-xl max-w-2xl drop-shadow-md">
-            실시간으로 음악을 시청하고 팬들과 채팅으로 소통해보세요
+            실시간으로 영상을 시청하고 팬들과 채팅으로 소통해보세요
           </p>
           <div className="mt-8 flex gap-3">
             <Link
