@@ -5,7 +5,7 @@ import { useUserStore } from "../store/useUserStore";
 import type { artistChatMessage } from "../types/artistChat";
 
 /**
- * HTTP Polling 방식으로 아티스트 채팅 데이터를 관리하는 커스텀 훅 (안정성 개선 버전)
+ * HTTP Polling 방식으로 아티스트 채팅 데이터를 관리하는 커스텀 훅
  * @param artistId - 채팅방의 대상이 되는 아티스트 ID
  */
 export const useArtistChat = (artistId: string) => {
@@ -15,15 +15,27 @@ export const useArtistChat = (artistId: string) => {
 
   const [blockedUserIds, setBlockedUserIds] = useState<Set<string>>(new Set());
 
+  
+  // 차단 유저 목록 불러오기
+  // - 로그인한 유저만 불러옴
   useEffect(() => {
+    if (!myUser) return; 
+
     const fetchBlockedUsers = async () => {
-      const blockedUsers = await getBlockedUsers();
-      const ids = new Set(blockedUsers.map((user) => user.userId));
-      setBlockedUserIds(ids);
+      try {
+        const blockedUsers = await getBlockedUsers();
+        const ids = new Set(blockedUsers?.map((u) => u.userId) ?? []);
+        setBlockedUserIds(ids);
+      } catch {
+        setBlockedUserIds(new Set()); 
+      }
     };
     fetchBlockedUsers();
   }, []);
 
+
+  // 신규 메시지 가져오기 (Polling이라 재사용 가능하도록)
+  // - 마지막 받은 메시지 이후의 메시지만 서버에 요청
   const fetchNewMessages = useCallback(async () => {
     if (!artistId) return;
     try {
@@ -50,6 +62,9 @@ export const useArtistChat = (artistId: string) => {
     } catch {}
   }, [artistId]);
 
+
+  // 초기 메시지 로드 
+  // - 로그인한 사용자만 폴링 요청을 지속적으로 보냄
   useEffect(() => {
     if (!artistId) return;
 
@@ -76,6 +91,7 @@ export const useArtistChat = (artistId: string) => {
     return () => clearInterval(intervalId);
   }, [artistId, fetchNewMessages]);
 
+  // 메시지 전송
   const sendMessage = async (content: string) => {
     if (!myUser || !content.trim()) return;
     try {
@@ -84,6 +100,7 @@ export const useArtistChat = (artistId: string) => {
     } catch {}
   };
 
+  // 차단한 유저 메시지 필터링
   const filteredMessages = useMemo(() => {
     return messages.filter((msg) => !blockedUserIds.has(msg.userId));
   }, [messages, blockedUserIds]);
