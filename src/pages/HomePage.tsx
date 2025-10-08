@@ -1,23 +1,23 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useNavigate, Link} from "react-router-dom";
 import VideoCard from "../components/domain/video/VideoCard";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import { getRandomArtists } from "../api/artistService";
-import { type Artist } from "../types/artist";
-import { useTrendingRooms } from "../hooks/useTrendingRooms";
+import {getRandomArtists} from "../api/artistService";
+import {type Artist} from "../types/artist";
+import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
-import { Tv, HelpCircle } from "lucide-react";
+import {Tv, HelpCircle} from "lucide-react";
 import GuideModal, {
   type GuideStep,
 } from "../components/common/modal/GuideModal";
-import { createSlug } from "../utils/slugUtils";
+import {createSlug} from "../utils/slugUtils";
 
 const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
   const navigate = useNavigate();
-
+  console.log("CICD test");
   const {
     data: trendingRooms,
     isLoading: isLoadingTrending,
@@ -28,7 +28,7 @@ const HomePage = () => {
     const slug = createSlug(nameEn);
 
     navigate(`/artist/${slug}`, {
-      state: { artistId: artistId },
+      state: {artistId: artistId},
     });
   };
 
@@ -92,7 +92,7 @@ const HomePage = () => {
       {/* 랜딩(Hero) 섹션 */}
       <div
         className="relative w-full h-96 bg-cover bg-center"
-        style={{ backgroundImage: "url('/hero-background.png')" }}
+        style={{backgroundImage: "url('/hero-background.png')"}}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
         <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
@@ -144,7 +144,7 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-8 flex-grow">
             {isLoadingTrending ? (
-              Array.from({ length: 3 }).map((_, i) => (
+              Array.from({length: 3}).map((_, i) => (
                 <VideoCardSkeleton key={i} />
               ))
             ) : trendingError ? (
@@ -190,18 +190,18 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             {isLoadingArtists
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <ArtistCardSkeleton key={i} />
-                ))
+              ? Array.from({length: 5}).map((_, i) => (
+                <ArtistCardSkeleton key={i} />
+              ))
               : recommendedArtists.map((artist) => (
-                  <ArtistCard
-                    key={artist.artistId}
-                    {...artist}
-                    onClick={() =>
-                      handleCardClick(artist.artistId, artist.nameEn)
-                    }
-                  />
-                ))}
+                <ArtistCard
+                  key={artist.artistId}
+                  {...artist}
+                  onClick={() =>
+                    handleCardClick(artist.artistId, artist.nameEn)
+                  }
+                />
+              ))}
           </div>
         </section>
 
