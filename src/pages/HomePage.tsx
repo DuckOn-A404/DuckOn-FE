@@ -171,7 +171,7 @@ const HomePage = () => {
                 <p className="font-semibold text-gray-600">
                   아직 생성된 방이 없습니다.
                 </p>
-                <p className="text-sm mt-1">가장 먼저 라이브를 시작해보세요!!!</p>
+                <p className="text-sm mt-1">가장 먼저 라이브를 시작해보세요!!!!!</p>
               </div>
             )}
           </div>
