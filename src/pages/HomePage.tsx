@@ -17,7 +17,7 @@ const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
   const navigate = useNavigate();
-  console.log("CICD test");
+
   const {
     data: trendingRooms,
     isLoading: isLoadingTrending,
@@ -97,7 +97,7 @@ const HomePage = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
         <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight drop-shadow-md">
-            좋아하는 아티스트와
+            좋아하는 아티스트와2
             <br />
             함께 즐기는 시간
           </h1>
