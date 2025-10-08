@@ -17,7 +17,7 @@ const HomePage = () => {
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
   const navigate = useNavigate();
-  console.log("CICD Test");
+
   const {
     data: trendingRooms,
     isLoading: isLoadingTrending,
