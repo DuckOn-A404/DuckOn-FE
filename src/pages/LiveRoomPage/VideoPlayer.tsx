@@ -8,7 +8,7 @@ type VideoPlayerProps = {
   videoId: string;
   isHost: boolean;
   stompClient: Client;
-  user: User;
+  user?: User | null;
   roomId: number;
   playlist: string[];
   currentVideoIndex: number;
