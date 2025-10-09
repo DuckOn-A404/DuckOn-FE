@@ -13,5 +13,4 @@
   "endOfLine": "auto",
   "proseWrap": "preserve",
   "htmlWhitespaceSensitivity": "ignore",
-  "plugins": ["prettier-plugin-tailwindcss"]
 }

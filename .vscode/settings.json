@@ -3,7 +3,7 @@
   "editor.formatOnSave": false, // 저장 시 자동 포맷 일단 false.. conflict 폭탄을 방지하기 위해서
   "editor.defaultFormatter": "esbenp.prettier-vscode", // 기본 포매터를 Prettier로 지정
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": false
   },
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
