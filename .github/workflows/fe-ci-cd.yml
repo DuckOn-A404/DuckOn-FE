@@ -91,7 +91,8 @@ jobs:
           push: true
           build-args: |
             NGINX_CONF=${{ steps.vars.outputs.nginx_conf }}
-            VITE_API_BASE_URL=/api
+            VITE_API_BASE_URL=${{ steps.vars.outputs.env == 'prod' && secrets.VITE_API_BASE_URL_PROD || secrets.VITE_API_BASE_URL_DEV }}
+            VITE_OAUTH2_BASE_URL=${{ steps.vars.outputs.env == 'prod' && secrets.VITE_OAUTH2_BASE_URL_PROD || secrets.VITE_OAUTH2_BASE_URL_DEV }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.latest }}
             ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
