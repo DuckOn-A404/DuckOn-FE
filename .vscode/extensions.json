@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",         // ESLint
+    "esbenp.prettier-vscode",         // Prettier
+    "bradlc.vscode-tailwindcss",      // TailwindCSS IntelliSense
+    "streetsidesoftware.code-spell-checker" // 코드 오타 검사
+  ]
+}

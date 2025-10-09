@@ -1,0 +1,44 @@
+{
+  // ===== 편집기 기본 설정 =====
+  "editor.formatOnSave": false, // 저장 시 자동 포맷 일단 false.. conflict 폭탄을 방지하기 위해서
+  "editor.defaultFormatter": "esbenp.prettier-vscode", // 기본 포매터를 Prettier로 지정
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // ===== Tailwind / Prettier =====
+  "tailwindCSS.experimental.classRegex": [
+    "tw`([^`]*)",
+    "className=\"([^\"]*)",
+    "className={`([^`]*)",
+    "clsx\\(([^)]*)\\)",
+    "classnames\\(([^)]*)\\)"
+  ],
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+
+  // ===== ESLint =====
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.alwaysShowStatus": true,
+  "eslint.format.enable": false,
+  "eslint.options": {
+    "cache": true
+  },
+
+  // ===== Prettier =====
+  "prettier.requireConfig": true,
+  "prettier.ignorePath": ".prettierignore",
+
+  // ===== 기타 =====
+  "files.associations": {
+    "*.tsx": "typescriptreact",
+    "*.ts": "typescript"
+  }
+}
