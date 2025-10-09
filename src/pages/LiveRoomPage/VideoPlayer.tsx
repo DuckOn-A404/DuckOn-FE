@@ -8,7 +8,7 @@ type VideoPlayerProps = {
   videoId: string;
   isHost: boolean;
   stompClient: Client;
-  user: User;
+  user?: User | null;
   roomId: number;
   playlist: string[];
   currentVideoIndex: number;
@@ -159,9 +159,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const payload: LiveRoomSyncDTO = {
       eventType: "SYNC_STATE",
       roomId,
-      hostId: user.userId,
+      hostId: user!.userId,
       title: roomTitle,
-      hostNickname: hostNickname ?? user.nickname ?? "",
+      hostNickname: hostNickname ?? user!.nickname ?? "",
       playlist,
       currentVideoIndex,
       currentTime: player.getCurrentTime(),
@@ -264,7 +264,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // 방장: 하트비트
   useEffect(() => {
-    if (!isHost || !stompClient.connected || isPlaylistUpdating) return;
+    if (!isHost || !stompClient.connected || isPlaylistUpdating || (isHost && user==null)) return;
 
     const interval = setInterval(() => {
       const player = playerRef.current;
@@ -273,9 +273,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const payload: LiveRoomSyncDTO = {
         eventType: "SYNC_STATE",
         roomId,
-        hostId: user.userId,
+        hostId: user!.userId,
         title: roomTitle,
-        hostNickname: hostNickname ?? user.nickname ?? "",
+        hostNickname: hostNickname ?? user!.nickname ?? "",
         playlist,
         currentVideoIndex,
         currentTime: player.getCurrentTime(),
