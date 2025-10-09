@@ -16,7 +16,6 @@ import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
 import { useChatSubscription } from "../../hooks/useChatSubscription";
-import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
 import { onTokenRefreshed, onRefreshState } from "../../api/axiosInstance";
@@ -948,11 +947,11 @@ const LiveRoomPage = () => {
     };
   }, [roomId, resolvedArtistId]);
 
-  if (!myUser) {
-    return (
-      <ConnectionErrorModal isOpen={true} onClose={() => navigate("/login")} />
-    );
-  }
+  // if (!myUser) {
+  //   return (
+  //     <ConnectionErrorModal isOpen={true} onClose={() => navigate("/login")} />
+  //   );
+  // }
 
   if (!room) {
     return (
