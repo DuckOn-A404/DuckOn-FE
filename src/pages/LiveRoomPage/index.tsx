@@ -948,11 +948,11 @@ const LiveRoomPage = () => {
     };
   }, [roomId, resolvedArtistId]);
 
-  if (!myUser) {
-    return (
-      <ConnectionErrorModal isOpen={true} onClose={() => navigate("/login")} />
-    );
-  }
+  // if (!myUser) {
+  //   return (
+  //     <ConnectionErrorModal isOpen={true} onClose={() => navigate("/login")} />
+  //   );
+  // }
 
   if (!room) {
     return (
