@@ -1,8 +1,8 @@
-import {useState, useEffect} from "react";
-import {useLocation} from "react-router-dom";
-import {useUserStore} from "../../store/useUserStore";
-import {useArtistFollowStore} from "../../store/useArtistFollowStore";
-import {useArtistRooms} from "../../hooks/useArtistRooms";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { useUserStore } from "../../store/useUserStore";
+import { useArtistFollowStore } from "../../store/useArtistFollowStore";
+import { useArtistRooms } from "../../hooks/useArtistRooms";
 import {
   followArtist,
   unfollowArtist,
@@ -13,12 +13,11 @@ import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import type { ArtistDetailInfo } from "../../api/artistService";
 import type { Artist } from "../../types/artist";
-import {Video, Plus} from "lucide-react";
+import { Video, Plus } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 
 const PLACEHOLDER_URL =
   "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
-
 
 const ArtistDetailPage = () => {
   const location = useLocation();
@@ -29,7 +28,7 @@ const ArtistDetailPage = () => {
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {myUser} = useUserStore();
+  const { myUser } = useUserStore();
   const {
     isFollowing: followingSet,
     addFollow,
@@ -142,7 +141,7 @@ const ArtistDetailPage = () => {
       if (isFollowing) {
         await unfollowArtist(artist.artistId);
         removeFollow(artist.artistId);
-        setArtist((prev) => (prev ? {...prev, followedAt: null} : prev));
+        setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
       } else {
         await followArtist(artist.artistId);
         // addFollow(artist);
@@ -150,12 +149,12 @@ const ArtistDetailPage = () => {
           artistId: artist.artistId,
           nameEn: artist.nameEn,
           nameKr: artist.nameKr,
-          imgUrl: artist.imgUrl ?? "",          // null → 빈 문자열로 보정 (Artist는 string)
-          debutDate: artist.debutDate,          // Artist 타입이 string|Date라면 string 유지 OK
+          imgUrl: artist.imgUrl ?? "", // null → 빈 문자열로 보정 (Artist는 string)
+          debutDate: artist.debutDate, // Artist 타입이 string|Date라면 string 유지 OK
           followerCount: artist.followerCount ?? 0,
         } as Artist);
         setArtist((prev) =>
-          prev ? {...prev, followedAt: new Date().toISOString()} : prev
+          prev ? { ...prev, followedAt: new Date().toISOString() } : prev
         );
       }
     } catch {
@@ -244,7 +243,13 @@ const ArtistDetailPage = () => {
                     <span>새 방 만들기</span>
                   </button>
                 ) : (
-                  <div className="w-full sm:w-auto text-sm text-gray-600 bg-purple-50 border border-purple-200 px-4 py-2 rounded-lg">
+                  <div
+                    className="flex items-center justify-center 
+                   text-sm text-gray-600 
+                   bg-purple-50 border border-purple-200 
+                   px-4 py-2 rounded-lg 
+                   break-words max-w-xs sm:max-w-sm text-center"
+                  >
                     이 아티스트를{" "}
                     <span className="font-semibold text-purple-700">
                       팔로우
@@ -253,7 +258,13 @@ const ArtistDetailPage = () => {
                   </div>
                 )
               ) : (
-                <div className="w-full sm:w-auto text-sm text-gray-600 bg-gray-50 border border-gray-200 px-4 py-2 rounded-lg">
+                <div
+                  className="flex items-center justify-center 
+                 text-sm text-gray-600 
+                 bg-gray-50 border border-gray-200 
+                 px-4 py-2 rounded-lg 
+                 break-words max-w-xs sm:max-w-sm text-center"
+                >
                   <span className="font-semibold">로그인</span> 후 방을 생성할
                   수 있습니다.
                 </div>

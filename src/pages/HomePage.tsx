@@ -102,7 +102,7 @@ const HomePage = () => {
             함께 즐기는 시간
           </h1>
           <p className="text-lg md:text-xl max-w-2xl drop-shadow-md">
-            실시간으로 음악을 시청하고 팬들과 채팅으로 소통해보세요
+            실시간으로 영상을 시청하고 팬들과 채팅으로 소통해보세요
           </p>
           <div className="mt-8 flex gap-3">
             <Link
@@ -125,9 +125,9 @@ const HomePage = () => {
       {/* 메인 콘텐츠 영역 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* 핫한 방송 영역 */}
-        <section>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">
+            <h2 className="text-2xl md:text-3xl font-bold">
               🔥 지금 핫한 방{" "}
               {trendingRooms && trendingRooms.roomInfoList.length > 0
                 ? `Top ${trendingRooms.roomInfoList.length}`
@@ -178,9 +178,11 @@ const HomePage = () => {
         </section>
 
         {/* 아티스트 목록 영역 */}
-        <section>
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">주목해야 할 아티스트!</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">
+              주목해야 할 아티스트!
+            </h2>
             <Link
               to="/artist-list"
               className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"

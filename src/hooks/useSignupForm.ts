@@ -44,6 +44,8 @@ export const useSignupForm = () => {
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  const [nicknameError, setNicknameError] = useState("");
+
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{8,}$/;
 
   const validatePassword = (pwd: string): string | undefined => {
@@ -54,12 +56,23 @@ export const useSignupForm = () => {
     return undefined;
   };
 
+  // 비밀번호 확인 유효성 검증
   const validatePasswordConfirm = (
     pwd: string,
     confirm: string
   ): string | undefined => {
     if (!confirm) return "비밀번호 확인을 입력해주세요.";
     if (pwd !== confirm) return "비밀번호가 일치하지 않습니다.";
+    return undefined;
+  };
+
+  // 닉네임 바이트 검사 함수
+  const validateNickname = (nickname: string): string | undefined => {
+    // TextEncoder를 사용하면 브라우저 표준 API로 정확한 UTF-8 바이트 길이를 계산할 수 있습니다.
+    const byteLength = new TextEncoder().encode(nickname).length;
+    if (byteLength > 24) {
+      return "닉네임은 한글 8자, 영문 24자까지 가능합니다.";
+    }
     return undefined;
   };
 
@@ -92,6 +105,9 @@ export const useSignupForm = () => {
     } else if (name === "passwordConfirm") {
       const cErr = validatePasswordConfirm(formData.password, value);
       setPasswordConfirmError(cErr ?? "");
+    } else if (name === "nickname") {
+      const err = validateNickname(value);
+      setNicknameError(err ?? "");
     }
   };
 
@@ -123,14 +139,24 @@ export const useSignupForm = () => {
       return;
     }
 
+    const nicknameErr = validateNickname(formData.nickname);
+    setNicknameError(nicknameErr ?? "");
+
+    if (nicknameErr) {
+      setError(nicknameErr);
+      return;
+    }
+
     // 제출 직전 최종 검증
     const pwdErr = validatePassword(formData.password);
     const confirmErr = validatePasswordConfirm(
       formData.password,
       formData.passwordConfirm
     );
+
     setPasswordError(pwdErr ?? "");
     setPasswordConfirmError(confirmErr ?? "");
+
     if (pwdErr || confirmErr) {
       setError(pwdErr || confirmErr || "비밀번호를 확인해주세요.");
       return;
@@ -221,5 +247,6 @@ export const useSignupForm = () => {
     userIdChecked,
     passwordConfirmError,
     passwordError,
+    nicknameError,
   };
 };
