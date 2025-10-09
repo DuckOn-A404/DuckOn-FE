@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   Send,
@@ -325,6 +326,43 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
 
         {/* 메시지 입력 영역 */}
         <div className="p-3 border-t border-gray-700 bg-gray-800/80">
+          <div className="relative flex items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => {
+                // @ts-ignore
+                if (e.key === "Enter" && !e.nativeEvent?.isComposing) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={myUser ? "메시지를 입력하세요..." : "게스트로 채팅하기..."}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg
+                        px-4 md:px-4 py-3 md:py-2.5
+                        text-base md:text-sm
+                        outline-none focus:border-purple-500 transition-colors pr-12"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onPointerDown={(e) => { e.preventDefault(); }}
+              onPointerUp={(e) => { e.preventDefault(); sentByPointerRef.current = true; handleSendMessage(); }}
+              onClick={(e) => {
+                if (sentByPointerRef.current) { sentByPointerRef.current = false; return; }
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              disabled={!newMessage.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-gray-600 rounded-full hover:bg-gray-500 transition-colors disabled:bg-gray-700 disabled:cursor-not-allowed touch-manipulation"
+            >
+              <Send size={18} className="text-white" />
+            </button>
+          </div>
+        </div>
+        {/* <div className="p-3 border-t border-gray-700 bg-gray-800/80">
           {myUser ? (
             <div className="relative flex items-center">
               <input
@@ -390,7 +428,10 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
+
+
+
       </div>
     </>
   );
