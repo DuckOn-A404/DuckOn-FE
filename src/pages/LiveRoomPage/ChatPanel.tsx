@@ -3,7 +3,7 @@ import {
   Send,
   MoreVertical,
   UserX,
-  LockKeyhole,
+  // LockKeyhole,
   // Languages,
 } from "lucide-react";
 import { Popover, Transition } from "@headlessui/react";
