@@ -1,54 +1,50 @@
-import {useEffect, useState} from "react";
-import {useNavigate, Link} from "react-router-dom";
-import VideoCard from "../components/domain/video/VideoCard";
+import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Tv, HelpCircle } from "lucide-react";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import {getRandomArtists} from "../api/artistService";
-import {type Artist} from "../types/artist";
-import {useTrendingRooms} from "../hooks/useTrendingRooms";
-import VideoCardSkeleton from "../components/domain/video/VideoCardSkeleton";
+import { getRandomArtists } from "../api/artistService";
+import { type Artist } from "../types/artist";
+import { useTrendingRooms } from "../hooks/useTrendingRooms";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
-import {Tv, HelpCircle} from "lucide-react";
-import GuideModal, {
-  type GuideStep,
-} from "../components/common/modal/GuideModal";
-import {createSlug} from "../utils/slugUtils";
+import GuideModal, { type GuideStep } from "../components/common/modal/GuideModal";
+import { createSlug } from "../utils/slugUtils";
 
 const HomePage = () => {
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [guideIndex, setGuideIndex] = useState(0);
+  const [expandedRoomIndex, setExpandedRoomIndex] = useState(0);
   const navigate = useNavigate();
-  console.log("CICD Test");
+
   const {
     data: trendingRooms,
     isLoading: isLoadingTrending,
     error: trendingError,
-  } = useTrendingRooms(1, 9);
+  } = useTrendingRooms(1, 4);
 
-  const handleCardClick = (artistId: number, nameEn: string) => {
-    const slug = createSlug(nameEn);
-
-    navigate(`/artist/${slug}`, {
-      state: {artistId: artistId},
-    });
-  };
-
-  useEffect(() => {
-    const fetchRandomArtists = async () => {
-      try {
-        const data = await getRandomArtists(5);
-        setRecommendedArtists(data);
-      } catch (error) {
-        console.error("추천 아티스트를 불러오는 데 실패했습니다.", error);
-        setRecommendedArtists([]);
-      } finally {
-        setIsLoadingArtists(false);
-      }
-    };
-    fetchRandomArtists();
-  }, []);
-
-  const [guideOpen, setGuideOpen] = useState(false);
-  const [guideIndex, setGuideIndex] = useState(0);
+  // 배너 데이터 (임시)
+  const banners = [
+    { 
+      id: 1, 
+      title: "좋아하는 아티스트와 함께하는 시간", 
+      subtitle: "실시간으로 영상을 시청하고 팬들과 소통해보세요",
+      bgImage: "/hero-background.png"
+    },
+    { 
+      id: 2, 
+      title: "새로운 라이브 경험", 
+      subtitle: "아티스트와 팬이 함께 만드는 특별한 순간",
+      bgImage: "/hero-background.png"
+    },
+    { 
+      id: 3, 
+      title: "지금 바로 시작하세요", 
+      subtitle: "방을 만들고 팬들과 함께 즐겨보세요",
+      bgImage: "/hero-background.png"
+    },
+  ];
 
   const guideSteps: GuideStep[] = [
     {
@@ -77,32 +73,73 @@ const HomePage = () => {
     },
   ];
 
+  const handleCardClick = (artistId: number, nameEn: string) => {
+    const slug = createSlug(nameEn);
+    navigate(`/artist/${slug}`, {
+      state: { artistId: artistId },
+    });
+  };
+
+  const handlePrevBanner = () => {
+    setCurrentBannerIndex((prev) =>
+      prev === 0 ? banners.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextBanner = () => {
+    setCurrentBannerIndex((prev) =>
+      prev === banners.length - 1 ? 0 : prev + 1
+    );
+  };
+
   const openGuide = (i = 0) => {
     setGuideIndex(i);
     setGuideOpen(true);
   };
+
   const nextGuide = () => setGuideIndex((i) => (i + 1) % guideSteps.length);
   const prevGuide = () =>
     setGuideIndex((i) => (i - 1 + guideSteps.length) % guideSteps.length);
 
-  // ---------------------------------------------------
+  useEffect(() => {
+    const fetchRandomArtists = async () => {
+      try {
+        const data = await getRandomArtists(5);
+        setRecommendedArtists(data);
+      } catch (error) {
+        console.error("추천 아티스트를 불러오는 데 실패했습니다.", error);
+        setRecommendedArtists([]);
+      } finally {
+        setIsLoadingArtists(false);
+      }
+    };
+    fetchRandomArtists();
+  }, []);
 
   return (
-    <div>
-      {/* 랜딩(Hero) 섹션 */}
-      <div
-        className="relative w-full h-96 bg-cover bg-center"
-        style={{backgroundImage: "url('/hero-background.png')"}}
+    <div className="w-full bg-white">
+      {/* 배너 광고 섹션 */}
+      <section className="relative w-full h-96 bg-cover bg-center overflow-hidden"
+        style={{ backgroundImage: `url('${banners[currentBannerIndex].bgImage}')` }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
+        
+        {/* 좌측 화살표 */}
+        <button
+          onClick={handlePrevBanner}
+          className="absolute left-5 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+          aria-label="이전 배너"
+        >
+          <ChevronLeft size={28} className="text-white" />
+        </button>
+
+        {/* 배너 콘텐츠 */}
         <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight drop-shadow-md">
-            좋아하는 아티스트와
-            <br />
-            함께 즐기는 시간
+            {banners[currentBannerIndex].title}
           </h1>
           <p className="text-lg md:text-xl max-w-2xl drop-shadow-md">
-            실시간으로 영상을 시청하고 팬들과 채팅으로 소통해보세요
+            {banners[currentBannerIndex].subtitle}
           </p>
           <div className="mt-8 flex gap-3">
             <Link
@@ -120,12 +157,37 @@ const HomePage = () => {
             </button>
           </div>
         </div>
-      </div>
+
+        {/* 우측 화살표 */}
+        <button
+          onClick={handleNextBanner}
+          className="absolute right-5 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+          aria-label="다음 배너"
+        >
+          <ChevronRight size={28} className="text-white" />
+        </button>
+
+        {/* 배너 인디케이터 */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentBannerIndex(index)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                index === currentBannerIndex
+                  ? "bg-white w-8"
+                  : "bg-white/50 hover:bg-white/70"
+              }`}
+              aria-label={`배너 ${index + 1}`}
+            />
+          ))}
+        </div>
+      </section>
 
       {/* 메인 콘텐츠 영역 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
         {/* 핫한 방송 영역 */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <section>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold">
               🔥 지금 핫한 방{" "}
@@ -142,43 +204,182 @@ const HomePage = () => {
               </Link>
             )}
           </div>
-          <div className="flex flex-wrap justify-center gap-8 flex-grow">
-            {isLoadingTrending ? (
-              Array.from({length: 3}).map((_, i) => (
-                <VideoCardSkeleton key={i} />
-              ))
-            ) : trendingError ? (
-              <p className="w-full text-center text-red-500 py-20">
-                {trendingError}
-              </p>
-            ) : trendingRooms?.roomInfoList &&
-              trendingRooms?.roomInfoList.length > 0 ? (
-              trendingRooms.roomInfoList.map((room) => (
-                <VideoCard
-                  key={room.roomId}
-                  roomId={room.roomId}
-                  title={room.title}
-                  hostId={room.hostId}
-                  hostNickname={room.hostNickname}
-                  hostProfileImgUrl={room.hostProfileImgUrl ?? ""}
-                  imgUrl={room.imgUrl}
-                  participantCount={room.participantCount}
+
+          {isLoadingTrending ? (
+            <div className="flex flex-col md:flex-row gap-2 md:h-[400px]">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex-1 h-[250px] md:h-auto bg-gray-200 rounded-2xl animate-pulse"
                 />
-              ))
-            ) : (
-              <div className="w-full flex flex-col items-center justify-center text-center text-gray-500 py-20 bg-gray-100 rounded-2xl">
-                <Tv size={48} className="text-gray-300 mb-4" />
-                <p className="font-semibold text-gray-600">
-                  아직 생성된 방이 없습니다.
-                </p>
-                <p className="text-sm mt-1">가장 먼저 라이브를 시작해보세요!!!!!</p>
+              ))}
+            </div>
+          ) : trendingError ? (
+            <p className="w-full text-center text-red-500 py-20">
+              {trendingError}
+            </p>
+          ) : trendingRooms?.roomInfoList &&
+            trendingRooms?.roomInfoList.length > 0 ? (
+            <>
+              {/* PC 버전 - 가로 확장형 */}
+              <div className="hidden md:flex gap-0 h-[400px] overflow-hidden rounded-2xl">
+                {trendingRooms.roomInfoList.slice(0, 4).map((room, index) => {
+                  const isExpanded = expandedRoomIndex === index;
+                  const isFirst = index === 0;
+                  const isLast = index === trendingRooms.roomInfoList.slice(0, 4).length - 1;
+                  const PLACEHOLDER_URL =
+                    "https://placehold.co/1280x720?text=No+Image&font=roboto";
+
+                  return (
+                    <div
+                      key={room.roomId}
+                      className={`relative overflow-hidden cursor-pointer transition-all duration-500 ease-out ${
+                        isExpanded ? "flex-[9]" : "flex-[2]"
+                      } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""}`}
+                      onMouseEnter={() => setExpandedRoomIndex(index)}
+                      onClick={() => navigate(`/live/${room.roomId}`)}
+                    >
+                    {/* 배경 이미지 */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500"
+                      style={{
+                        backgroundImage: `url('${room.imgUrl || PLACEHOLDER_URL}')`,
+                        transform: isExpanded ? "scale(1)" : "scale(1.1)",
+                      }}
+                    />
+
+                    {/* 그라데이션 오버레이 */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-500 ${
+                        isExpanded
+                          ? "from-black/80 via-black/40 to-transparent opacity-100"
+                          : "from-black/60 to-transparent opacity-80"
+                      }`}
+                    />
+
+                    {/* 시청자 수 - 좌측 상단 고정 */}
+                    <div className="absolute top-4 left-4 z-10">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
+                        <Tv className="h-4 w-4" />
+                        <span className="font-semibold">
+                          {room.participantCount.toLocaleString()}명 시청 중
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 콘텐츠 - 하단 정보 */}
+                    <div className="relative h-full flex flex-col justify-end p-6">
+                      {/* 방 제목 */}
+                      <h3
+                        className={`text-white font-bold mb-2 transition-all duration-500 ${
+                          isExpanded
+                            ? "text-2xl line-clamp-2"
+                            : "text-lg line-clamp-3"
+                        }`}
+                      >
+                        {room.title}
+                      </h3>
+
+                      {/* 방장 정보 */}
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={room.hostProfileImgUrl || "/default_image.png"}
+                          alt={room.hostNickname}
+                          className={`rounded-full object-cover border-2 border-white/50 transition-all duration-500 ${
+                            isExpanded ? "w-10 h-10" : "w-8 h-8"
+                          }`}
+                        />
+                        <span
+                          className={`text-white/90 font-medium transition-all duration-500 ${
+                            isExpanded ? "text-base" : "text-sm"
+                          }`}
+                        >
+                          {room.hostNickname}
+                        </span>
+                      </div>
+                    </div>
+
+                      {/* 호버 효과 */}
+                      <div
+                        className={`absolute inset-0 border-4 border-purple-500 transition-opacity duration-300 ${
+                          isExpanded ? "opacity-100" : "opacity-0"
+                        } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""}`}
+                      />
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
+
+              {/* 모바일 버전 - 세로 스크롤 */}
+              <div className="md:hidden flex flex-col gap-4">
+                {trendingRooms.roomInfoList.slice(0, 4).map((room) => {
+                  const PLACEHOLDER_URL =
+                    "https://placehold.co/1280x720?text=No+Image&font=roboto";
+
+                  return (
+                    <div
+                      key={room.roomId}
+                      className="relative h-[250px] overflow-hidden cursor-pointer rounded-2xl"
+                      onClick={() => navigate(`/live/${room.roomId}`)}
+                    >
+                      {/* 배경 이미지 */}
+                      <div
+                        className="absolute inset-0 bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url('${room.imgUrl || PLACEHOLDER_URL}')`,
+                        }}
+                      />
+
+                      {/* 그라데이션 오버레이 */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                      {/* 시청자 수 - 좌측 상단 */}
+                      <div className="absolute top-3 left-3 z-10">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-xs">
+                          <Tv className="h-3 w-3" />
+                          <span className="font-semibold">
+                            {room.participantCount.toLocaleString()}명 시청 중
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 콘텐츠 - 하단 정보 */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        {/* 방 제목 */}
+                        <h3 className="text-white text-lg font-bold mb-2 line-clamp-2">
+                          {room.title}
+                        </h3>
+
+                        {/* 방장 정보 */}
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={room.hostProfileImgUrl || "/default_image.png"}
+                            alt={room.hostNickname}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white/50"
+                          />
+                          <span className="text-white/90 text-sm font-medium">
+                            {room.hostNickname}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="w-full flex flex-col items-center justify-center text-center text-gray-500 py-20 bg-gray-100 rounded-2xl">
+              <Tv size={48} className="text-gray-300 mb-4" />
+              <p className="font-semibold text-gray-600">
+                아직 생성된 방이 없습니다.
+              </p>
+              <p className="text-sm mt-1">가장 먼저 라이브를 시작해보세요!</p>
+            </div>
+          )}
         </section>
 
-        {/* 아티스트 목록 영역 */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* 주목해야 할 아티스트 섹션 */}
+        <section>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold">
               주목해야 할 아티스트!
@@ -192,23 +393,23 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             {isLoadingArtists
-              ? Array.from({length: 5}).map((_, i) => (
-                <ArtistCardSkeleton key={i} />
-              ))
+              ? Array.from({ length: 5 }).map((_, i) => (
+                  <ArtistCardSkeleton key={i} />
+                ))
               : recommendedArtists.map((artist) => (
-                <ArtistCard
-                  key={artist.artistId}
-                  {...artist}
-                  onClick={() =>
-                    handleCardClick(artist.artistId, artist.nameEn)
-                  }
-                />
-              ))}
+                  <ArtistCard
+                    key={artist.artistId}
+                    {...artist}
+                    onClick={() =>
+                      handleCardClick(artist.artistId, artist.nameEn)
+                    }
+                  />
+                ))}
           </div>
         </section>
 
-        {/* === Guide Section === */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* 빠르게 시작하기 섹션 */}
+        <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl md:text-3xl font-bold">빠르게 시작하기</h2>
           </div>
