@@ -865,8 +865,8 @@
 // //   showingTranslated?: boolean;
 // // };
 
-// // 최근 메시지 미리보기: 그래펨 기준 10자, 초과 시 …
-// function previewGraphemes(s: string, limit = 10): string {
+// // 최근 메시지/이름 미리보기: 그래펨 기준 limit, 초과 시 …
+// function previewGraphemes(s: string, limit: number): string {
 //   if (!s) return "";
 //   // @ts-ignore
 //   if (typeof Intl !== "undefined" && Intl.Segmenter) {
@@ -1076,7 +1076,7 @@
 
 //     // 전송 직후 다시 포커스 (렌더 한 프레임 뒤에)
 //     requestAnimationFrame(() => {
-//       scrollToBottom("auto"); // ✅ 낙관적 스크롤
+//       scrollToBottom("auto"); // ✅ 내 메시지는 항상 하단으로
 //       setAtBottom(true);
 //       isAtBottomRef.current = true;
 //       const el = inputRef.current;
@@ -1171,14 +1171,21 @@
 //         onCancel={() => setBlockConfirm({ isOpen: false, user: null })}
 //         nickname={blockConfirm.user?.nickname ?? ""}
 //       />
-//       <div className="flex flex-col h-full bg-gray-800 text-white">
+
+//       {/* ✅ 배지 위치를 위해 relative로 감싼다 (이 안에서만 absolute로 배치) */}
+//       <div className="relative flex flex-col h-full bg-gray-800 text-white">
 //         {/* 메시지 목록 영역 */}
 //         {/* <div className="flex-1 space-y-4 overflow-y-auto p-4"> */}
 //         <div
 //           ref={listRef}
 //           onScroll={onScroll}
 //           className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 min-h-0"
-//           style={{ paddingBottom: (footerH || 88) + 8 }} // ✅ 입력창 높이만큼 여유 패딩
+//           // ✅ 실제 padding-bottom은 작게 유지, 스크롤 패딩만 입력창 높이 반영 → 시각적 여백 제거
+//           style={{
+//             paddingBottom: 8,
+//             scrollPaddingBottom: (footerH || 88) + 8,
+//             scrollbarGutter: "stable both-edges" as any, // 레이아웃 점프 감소(지원 브라우저)
+//           }}
 //         >
 //           {messages.map((msg, index) => {
 //             if (msg.chatType === "ENTER") {
@@ -1249,7 +1256,7 @@
 //                     {/* 다른 사람 메시지에만 점 3개 아이콘 표시 (위치 변경됨) */}
 //                     {!isMyMessage && (
 //                       <Popover className="absolute top-1 right-1">
-//                         <Popover.Button className="p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
+//                         <Popover.Button className="p-0.5 rounded-full hover:bg_black/20 focus:outline-none">
 //                           <MoreVertical size={14} className="text-white" />
 //                         </Popover.Button>
 //                         <Transition
@@ -1305,10 +1312,16 @@
 //               </div>
 //             );
 //           })}
-//           <div ref={messagesEndRef} />
+
+//           {/* 마지막 스크롤 앵커: 실제 레이아웃 여백 없이 스크롤만 보정 */}
+//           <div
+//             ref={messagesEndRef}
+//             style={{ scrollMarginBottom: (footerH || 88) + 8 }}
+//           />
 //         </div>
 
-//         {lastUnread && !atBottom && ( // ✅ 렌더 시점 반영: ref 대신 state 사용
+//         {/* ✅ 배지를 '컴포넌트 내부'에 절대 위치로 배치: 비디오 가운데로 안 튐 */}
+//         {lastUnread && !atBottom && (
 //           <div
 //             onClick={() => {
 //               setLastUnread(null);
@@ -1316,47 +1329,40 @@
 //               setAtBottom(true);
 //               isAtBottomRef.current = true;
 //             }}
-//             className="
-//               fixed left-1/2 -translate-x-1/2
-//               z-[200] cursor-pointer
-//               bottom-[88px] sm:bottom-[96px]
-//               md:bottom-[92px]
-//             "
+//             className="absolute left-1/2 -translate-x-1/2 z-[200] cursor-pointer"
 //             style={{
-//               // ✅ 입력영역 높이에 맞게 추가 보정
-//               bottom: (footerH || 88) + 12,
+//               bottom: (footerH || 88) + 8, // 채팅 입력창 '바로 위'
 //               paddingBottom: "env(safe-area-inset-bottom)",
 //             }}
 //           >
-//             {/* 카톡 느낌의 말풍선 카드: '닉네임 · 내용(10자 …)' */}
-//             <div className="relative bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
-//               {/* 꼬리 */}
-//               <div className="absolute -left-1.5 bottom-2 w-3 h-3 bg-white border-l border-b border-gray-200 rotate-45" />
-//               <div className="flex items-center gap-2 max-w-[260px]">
-//                 {/* 아바타 원 */}
-//                 <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-//                   <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-//                     <circle cx="12" cy="8" r="3" fill="#9CA3AF"></circle>
-//                     <path d="M4 20c0-3.3137 3.5817-6 8-6s8 2.6863 8 6" fill="#9CA3AF"></path>
-//                   </svg>
-//                 </div>
-//                 {/* 발신자 + 미리보기(10자, 초과 …) */}
-//                 <div className="flex items-center gap-1 min-w-0">
-//                   <span className="text-gray-900 text-sm font-semibold shrink-0">
-//                     {lastUnread.senderNickName}
-//                   </span>
-//                   <span className="text-gray-500">·</span>
-//                   <span className="text-gray-800 text-sm truncate">
-//                     {previewGraphemes(lastUnread.content ?? "", 10)}
-//                   </span>
-//                 </div>
+//             {/* 카톡 느낌의 말풍선 카드: '닉네임(7자 …) · 내용(10자 …)' */}
+//             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
+//               <div className="flex items-center gap-1 max-w-[280px]">
+//                 <span className="text-gray-900 text-sm font-semibold shrink-0">
+//                   {previewGraphemes(lastUnread.senderNickName ?? "", 7)}
+//                 </span>
+//                 <span className="text-gray-500">·</span>
+//                 <span className="text-gray-800 text-sm truncate">
+//                   {previewGraphemes(lastUnread.content ?? "", 10)}
+//                 </span>
 //               </div>
 //             </div>
 //           </div>
 //         )}
 
 //         {/* 메시지 입력 영역 (세로 확장 textarea + 100자 제한) */}
-//         <div ref={footerRef} className="p-3 border-t border-gray-700 bg-gray-800/80">
+//         <div
+//           ref={footerRef}
+//           className="p-3 border-t border-gray-700 bg-gray-800/80"
+//           // ✅ 모든 기기에서 일관되게 맞추기 위한 전송 버튼 크기/간격을 CSS 변수로 선언
+//           style={
+//             {
+//               // @ts-ignore
+//               "--send-size": "38px", // 34~44px 사이 조정 가능
+//               "--send-gap": "10px",
+//             } as React.CSSProperties
+//           }
+//         >
 //           <div className="relative">
 //             <textarea
 //               ref={inputRef}
@@ -1373,10 +1379,14 @@
 //               }}
 //               placeholder={myUser ? "메시지를 입력하세요..." : "게스트로 채팅하기..."}
 //               className={`w-full bg-gray-700 border rounded-lg
-//                           px-4 py-3 pr-12
+//                           px-4 py-3
 //                           text-base md:text-sm leading-6
 //                           outline-none transition-colors resize-none overflow-y-hidden max-h-40
 //                           ${overLimit ? "border-red-500 focus:border-red-500" : "border-gray-600 focus:border-purple-500"}`}
+//               // ✅ 전송 버튼이 겹치는 영역만큼 우측 안쪽 패딩을 동적으로 비워둠
+//               style={{
+//                 paddingRight: `calc(var(--send-size) + var(--send-gap) + 8px)`,
+//               }}
 //             />
 //             <button
 //               type="button"
@@ -1389,14 +1399,23 @@
 //                 if (!overLimit) handleSendMessage();
 //               }}
 //               disabled={!newMessage.trim() || overLimit}
-//               className={`absolute right-2 bottom-2 p-2 rounded-full
-//                           ${!newMessage.trim() || overLimit
-//                             ? "bg-gray-700 cursor-not-allowed"
-//                             : "bg-gray-600 hover:bg-gray-500"}`}
+//               className="absolute rounded-full flex items-center justify-center
+//                          disabled:bg-gray-700 disabled:cursor-not-allowed
+//                          bg-gray-600 hover:bg-gray-500 transition-colors"
+//               style={{
+//                 width: "var(--send-size)",
+//                 height: "var(--send-size)",
+//                 right: "var(--send-gap)",
+//                 bottom: "var(--send-gap)",
+//               }}
 //             >
 //               <Send size={18} className="text-white" />
 //             </button>
-//             <div className="mt-1 flex justify-end">
+//             <div
+//               className="mt-1 flex justify-end"
+//               // ✅ 카운터도 동일한 우측 여백 확보 → 어떤 노트북에서도 겹치지 않음
+//               style={{ paddingRight: `calc(var(--send-size) + var(--send-gap))` }}
+//             >
 //               <span className={`text-xs ${overLimit ? "text-red-400" : "text-gray-400"}`}>
 //                 {charCount}/{MAX_LEN}{overLimit ? " (최대 초과)" : ""}
 //               </span>
@@ -1617,6 +1636,9 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [footerH, setFooterH] = useState(0);
 
+  // ✅ 한 줄/멀티라인 판단용
+  const [isMultiline, setIsMultiline] = useState(false);
+
   // 입력영역 높이 자동 추적
   useEffect(() => {
     const el = footerRef.current;
@@ -1700,7 +1722,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ textarea 자동 리사이즈 (최대 높이 제한)
+  // ✅ textarea 자동 리사이즈 (최대 높이 제한) + 멀티라인 판정
   const autoResize = () => {
     const el = inputRef.current;
     if (!el) return;
@@ -1709,6 +1731,9 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
     const h = Math.min(el.scrollHeight, MAX_H);
     el.style.height = `${h}px`;
     el.style.overflowY = el.scrollHeight > MAX_H ? "auto" : "hidden";
+
+    // ✅ 한 줄 기준 높이(대략 48px) 이상이면 멀티라인으로 판단
+    setIsMultiline(h > 48);
   };
 
   useEffect(() => {
@@ -1905,7 +1930,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
                     {/* 다른 사람 메시지에만 점 3개 아이콘 표시 (위치 변경됨) */}
                     {!isMyMessage && (
                       <Popover className="absolute top-1 right-1">
-                        <Popover.Button className="p-0.5 rounded-full hover:bg_black/20 focus:outline-none">
+                        <Popover.Button className="p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
                           <MoreVertical size={14} className="text-white" />
                         </Popover.Button>
                         <Transition
@@ -1984,13 +2009,12 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
               paddingBottom: "env(safe-area-inset-bottom)",
             }}
           >
-            {/* 카톡 느낌의 말풍선 카드: '닉네임(7자 …) · 내용(10자 …)' */}
+            {/* 카톡 느낌의 말풍선 카드: '닉네임(7자 …)  내용(10자 …)' (중간 점 제거) */}
             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
-              <div className="flex items-center gap-1 max-w-[280px]">
+              <div className="flex items-center gap-2 max-w-[280px]">
                 <span className="text-gray-900 text-sm font-semibold shrink-0">
                   {previewGraphemes(lastUnread.senderNickName ?? "", 7)}
                 </span>
-                <span className="text-gray-500">·</span>
                 <span className="text-gray-800 text-sm truncate">
                   {previewGraphemes(lastUnread.content ?? "", 10)}
                 </span>
@@ -2032,11 +2056,13 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
                           text-base md:text-sm leading-6
                           outline-none transition-colors resize-none overflow-y-hidden max-h-40
                           ${overLimit ? "border-red-500 focus:border-red-500" : "border-gray-600 focus:border-purple-500"}`}
-              // ✅ 전송 버튼이 겹치는 영역만큼 우측 안쪽 패딩을 동적으로 비워둠
+              // ✅ 전송 버튼과 겹치지 않도록 우측 안쪽 패딩 확보( +14px 로 여유 증가)
               style={{
-                paddingRight: `calc(var(--send-size) + var(--send-gap) + 8px)`,
+                paddingRight: `calc(var(--send-size) + var(--send-gap) + 14px)`,
               }}
             />
+
+            {/* ✅ 전송 버튼: 포커스 링 분리 + 정렬 동적 + 살짝 바깥으로 */}
             <button
               type="button"
               tabIndex={-1}
@@ -2054,15 +2080,23 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
               style={{
                 width: "var(--send-size)",
                 height: "var(--send-size)",
-                right: "var(--send-gap)",
-                bottom: "var(--send-gap)",
+                // 살짝 바깥으로 빼서 포커스 링과 겹침 최소화
+                right: "calc(var(--send-gap) - 6px)",
+                // 한 줄이면 중앙, 여러 줄이면 아래 정렬
+                ...(isMultiline
+                  ? { bottom: "var(--send-gap)" }
+                  : { top: "50%", transform: "translateY(-50%)" }),
+                // 패널 배경(#1f2937 = tailwind bg-gray-800)으로 링 분리
+                boxShadow: "0 0 0 4px #1f2937",
+                zIndex: 1,
               }}
             >
               <Send size={18} className="text-white" />
             </button>
+
             <div
               className="mt-1 flex justify-end"
-              // ✅ 카운터도 동일한 우측 여백 확보 → 어떤 노트북에서도 겹치지 않음
+              // ✅ 카운터도 동일한 우측 여백 확보
               style={{ paddingRight: `calc(var(--send-size) + var(--send-gap))` }}
             >
               <span className={`text-xs ${overLimit ? "text-red-400" : "text-gray-400"}`}>
