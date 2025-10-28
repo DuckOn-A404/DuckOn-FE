@@ -1143,7 +1143,7 @@ const LiveRoomPage = () => {
                 videoId={room.playlist?.[room.currentVideoIndex] ?? ""}
                 isHost={room.hostId === myUserId}
                 stompClient={stompClient}
-                user={myUser ?? null}
+                user={myUser!}
                 roomId={room.roomId}
                 playlist={room.playlist || []}
                 currentVideoIndex={room.currentVideoIndex ?? 0}
