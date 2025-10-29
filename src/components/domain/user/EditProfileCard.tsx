@@ -40,6 +40,18 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // 8MB = 8 * 1024 * 1024 bytes
+      const MAX_SIZE = 8 * 1024 * 1024;
+      
+      if (file.size > MAX_SIZE) {
+        alert("이미지 용량이 너무 큽니다. 8MB 이하의 이미지를 선택해주세요.");
+        // 파일 입력 초기화
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+      
       setProfileImage(file);
       setPreviewUrl(URL.createObjectURL(file));
       setShowImageOptions(false);
