@@ -45,7 +45,9 @@ const CreateRoomModal = ({
     const id = extractVideoId(videoUrl);
     setVideoId(id);
     if (id) {
-      setThumbnailPreview(`https://img.youtube.com/vi/${id}/hqdefault.jpg`);
+      // 최고화질 썸네일 사용 (1280x720 HD 화질)
+      // 대부분의 최신 영상은 maxresdefault 지원
+      setThumbnailPreview(`https://img.youtube.com/vi/${id}/maxresdefault.jpg`);
       fetchYouTubeMeta(id).then((m) => m && setVideoMeta({title: m.title, author: m.author}));
     } else {
       setThumbnailPreview(null);

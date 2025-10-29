@@ -30,19 +30,31 @@ const HomePage = () => {
       id: 1, 
       title: "좋아하는 아티스트와 함께하는 시간", 
       subtitle: "실시간으로 영상을 시청하고 팬들과 소통해보세요",
-      bgImage: "/hero-background.png"
+      bgColor: "from-blue-600 to-purple-600"
     },
     { 
       id: 2, 
       title: "새로운 라이브 경험", 
       subtitle: "아티스트와 팬이 함께 만드는 특별한 순간",
-      bgImage: "/hero-background.png"
+      bgColor: "from-pink-500 to-rose-600"
     },
     { 
       id: 3, 
       title: "지금 바로 시작하세요", 
       subtitle: "방을 만들고 팬들과 함께 즐겨보세요",
-      bgImage: "/hero-background.png"
+      bgColor: "from-green-500 to-teal-600"
+    },
+    { 
+      id: 4, 
+      title: "실시간 소통의 즐거움", 
+      subtitle: "채팅과 이모티콘으로 함께 즐기세요",
+      bgColor: "from-orange-500 to-red-600"
+    },
+    { 
+      id: 5, 
+      title: "특별한 순간을 공유하세요", 
+      subtitle: "팬들과 함께 만드는 최고의 라이브",
+      bgColor: "from-indigo-500 to-blue-600"
     },
   ];
 
@@ -101,6 +113,15 @@ const HomePage = () => {
   const prevGuide = () =>
     setGuideIndex((i) => (i - 1 + guideSteps.length) % guideSteps.length);
 
+  // 배너 자동 스크롤
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
   useEffect(() => {
     const fetchRandomArtists = async () => {
       try {
@@ -119,40 +140,38 @@ const HomePage = () => {
   return (
     <div className="w-full bg-white">
       {/* 배너 광고 섹션 */}
-      <section className="relative w-full h-96 bg-cover bg-center overflow-hidden"
-        style={{ backgroundImage: `url('${banners[currentBannerIndex].bgImage}')` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-purple-800/70" />
+      <section className="relative w-full h-[230px] md:h-[269px] overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-r ${banners[currentBannerIndex].bgColor}`} />
         
         {/* 좌측 화살표 */}
         <button
           onClick={handlePrevBanner}
-          className="absolute left-5 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
           aria-label="이전 배너"
         >
-          <ChevronLeft size={28} className="text-white" />
+          <ChevronLeft size={20} className="text-white" />
         </button>
 
         {/* 배너 콘텐츠 */}
         <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight drop-shadow-md">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight drop-shadow-md">
             {banners[currentBannerIndex].title}
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl drop-shadow-md">
+          <p className="text-sm md:text-base max-w-2xl drop-shadow-md">
             {banners[currentBannerIndex].subtitle}
           </p>
-          <div className="mt-8 flex gap-3">
+          <div className="mt-4 flex gap-2">
             <Link
               to="/artist-list"
-              className="px-8 py-3 bg-white text-purple-700 font-semibold rounded-full shadow-lg transition-transform duration-300 hover:scale-105"
+              className="px-5 py-2 text-sm bg-white text-purple-700 font-semibold rounded-full shadow-lg transition-transform duration-300 hover:scale-105"
             >
               아티스트 둘러보기
             </Link>
             <button
               onClick={() => openGuide(0)}
-              className="px-5 py-3 rounded-full bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-700 flex items-center gap-2"
+              className="px-4 py-2 text-sm rounded-full bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-700 flex items-center gap-2"
             >
-              <HelpCircle className="h-5 w-5" />
+              <HelpCircle className="h-4 w-4" />
               사용 가이드
             </button>
           </div>
@@ -161,14 +180,14 @@ const HomePage = () => {
         {/* 우측 화살표 */}
         <button
           onClick={handleNextBanner}
-          className="absolute right-5 top-1/2 -translate-y-1/2 z-10 w-12 h-12 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
           aria-label="다음 배너"
         >
-          <ChevronRight size={28} className="text-white" />
+          <ChevronRight size={20} className="text-white" />
         </button>
 
         {/* 배너 인디케이터 */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {banners.map((_, index) => (
             <button
               key={index}
@@ -206,7 +225,7 @@ const HomePage = () => {
           </div>
 
           {isLoadingTrending ? (
-            <div className="flex flex-col md:flex-row gap-2 md:h-[400px]">
+            <div className="flex flex-col md:flex-row gap-2 md:h-[432px]">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
@@ -222,7 +241,7 @@ const HomePage = () => {
             trendingRooms?.roomInfoList.length > 0 ? (
             <>
               {/* PC 버전 - 가로 확장형 */}
-              <div className="hidden md:flex gap-0 h-[400px] overflow-hidden rounded-2xl">
+              <div className="hidden md:flex gap-0 h-[432px] overflow-hidden rounded-2xl">
                 {trendingRooms.roomInfoList.slice(0, 4).map((room, index) => {
                   const isExpanded = expandedRoomIndex === index;
                   const isFirst = index === 0;
@@ -240,13 +259,14 @@ const HomePage = () => {
                       onClick={() => navigate(`/live/${room.roomId}`)}
                     >
                     {/* 배경 이미지 */}
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-500"
-                      style={{
-                        backgroundImage: `url('${room.imgUrl || PLACEHOLDER_URL}')`,
-                        transform: isExpanded ? "scale(1)" : "scale(1.1)",
-                      }}
-                    />
+                    <div className="absolute inset-0 overflow-hidden">
+                      <img
+                        src={room.imgUrl || PLACEHOLDER_URL}
+                        alt={room.title}
+                        className="h-full min-w-full object-cover object-center"
+                        style={{ width: 'auto' }}
+                      />
+                    </div>
 
                     {/* 그라데이션 오버레이 */}
                     <div
