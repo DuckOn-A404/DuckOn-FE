@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Tv, HelpCircle } from "lucide-react";
+import {useEffect, useState} from "react";
+import {useNavigate, Link} from "react-router-dom";
+import {ChevronLeft, ChevronRight, Tv, HelpCircle} from "lucide-react";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import { getRandomArtists } from "../api/artistService";
-import { type Artist } from "../types/artist";
-import { useTrendingRooms } from "../hooks/useTrendingRooms";
+import {getRandomArtists} from "../api/artistService";
+import {type Artist} from "../types/artist";
+import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
-import GuideModal, { type GuideStep } from "../components/common/modal/GuideModal";
-import { createSlug } from "../utils/slugUtils";
+import GuideModal, {type GuideStep} from "../components/common/modal/GuideModal";
+import {createSlug} from "../utils/slugUtils";
 
 const HomePage = () => {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -26,36 +26,97 @@ const HomePage = () => {
 
   // 배너 데이터 (임시)
   const banners = [
-    { 
-      id: 1, 
-      title: "좋아하는 아티스트와 함께하는 시간", 
-      subtitle: "실시간으로 영상을 시청하고 팬들과 소통해보세요",
-      bgColor: "from-blue-600 to-purple-600"
+    {
+      id: 1,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blackpink_HYLT_banner.jpeg"
     },
-    { 
-      id: 2, 
-      title: "새로운 라이브 경험", 
-      subtitle: "아티스트와 팬이 함께 만드는 특별한 순간",
-      bgColor: "from-pink-500 to-rose-600"
+    {
+      id: 2,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg"
     },
-    { 
-      id: 3, 
-      title: "지금 바로 시작하세요", 
+    {
+      id: 3,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg"
+    },
+    {
+      id: 4,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_dirtywork_banner.jpeg"
+    },
+    {
+      id: 5,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_pink_banner.jpeg"
+    },
+
+    {
+      id: 6,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_supernova_banner.jpeg"
+    },
+    {
+      id: 7,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_supernova_banner2.jpeg"
+    },
+    {
+      id: 8,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnpink_black_banner.jpeg"
+    },
+    {
+      id: 9,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/Le+sserafim+come+over+title+card+edit.jpeg"
+    },
+    {
+      id: 10,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg"
+    },
+    {
+      id: 11,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"
+    },
+    {
+      id: 12,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_debut_banner.jpeg"
+    },
+    {
+      id: 13,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg"
+    },
+    {
+      id: 14,
+      title: "",
+      subtitle: "",
+      img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_nymchore_banner.jpeg"
+    },
+    {
+      id: 15,
+      title: "지금 바로 시작하세요",
       subtitle: "방을 만들고 팬들과 함께 즐겨보세요",
-      bgColor: "from-green-500 to-teal-600"
-    },
-    { 
-      id: 4, 
-      title: "실시간 소통의 즐거움", 
-      subtitle: "채팅과 이모티콘으로 함께 즐기세요",
-      bgColor: "from-orange-500 to-red-600"
-    },
-    { 
-      id: 5, 
-      title: "특별한 순간을 공유하세요", 
-      subtitle: "팬들과 함께 만드는 최고의 라이브",
-      bgColor: "from-indigo-500 to-blue-600"
-    },
+      gradient: "from-pink-500 to-rose-600"
+    }
   ];
 
   const guideSteps: GuideStep[] = [
@@ -88,7 +149,7 @@ const HomePage = () => {
   const handleCardClick = (artistId: number, nameEn: string) => {
     const slug = createSlug(nameEn);
     navigate(`/artist/${slug}`, {
-      state: { artistId: artistId },
+      state: {artistId: artistId},
     });
   };
 
@@ -118,7 +179,7 @@ const HomePage = () => {
     const interval = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
     }, 4000);
-    
+
     return () => clearInterval(interval);
   }, [banners.length]);
 
@@ -139,69 +200,96 @@ const HomePage = () => {
 
   return (
     <div className="w-full bg-white">
+
       {/* 배너 광고 섹션 */}
       <section className="relative w-full h-[230px] md:h-[269px] overflow-hidden">
-        <div className={`absolute inset-0 bg-gradient-to-r ${banners[currentBannerIndex].bgColor}`} />
-        
-        {/* 좌측 화살표 */}
-        <button
-          onClick={handlePrevBanner}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
-          aria-label="이전 배너"
-        >
-          <ChevronLeft size={20} className="text-white" />
-        </button>
+        {(() => {
+          const isImageOnly = currentBannerIndex < 14; // 0,1 => 이미지 전용 / 2 => 기존 스타일
+          const current = banners[currentBannerIndex];
 
-        {/* 배너 콘텐츠 */}
-        <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight drop-shadow-md">
-            {banners[currentBannerIndex].title}
-          </h1>
-          <p className="text-sm md:text-base max-w-2xl drop-shadow-md">
-            {banners[currentBannerIndex].subtitle}
-          </p>
-          <div className="mt-4 flex gap-2">
-            <Link
-              to="/artist-list"
-              className="px-5 py-2 text-sm bg-white text-purple-700 font-semibold rounded-full shadow-lg transition-transform duration-300 hover:scale-105"
-            >
-              아티스트 둘러보기
-            </Link>
-            <button
-              onClick={() => openGuide(0)}
-              className="px-4 py-2 text-sm rounded-full bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-700 flex items-center gap-2"
-            >
-              <HelpCircle className="h-4 w-4" />
-              사용 가이드
-            </button>
-          </div>
-        </div>
+          return (
+            <>
+              {/* 배경 */}
+              {isImageOnly ? (
+                // 1,2번째: 이미지만 표시 (오버레이/텍스트/버튼 없음)
+                <img
+                  key={current.id}
+                  src={current.img}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="eager"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                      "https://placehold.co/1280x720?text=No+Image";
+                  }}
+                />
+              ) : (
+                // 3번째: 기존 스타일(그라데이션 배경 + 콘텐츠)
+                <>
+                  <div className={`absolute inset-0 bg-gradient-to-r ${current.gradient || ""}`} />
+                  {/* 배너 콘텐츠 */}
+                  <div className="relative h-full flex flex-col justify-center items-center text-center text-white p-4 z-10">
+                    <h1 className="text-2xl md:text-3xl font-bold mb-2 leading-tight drop-shadow-md">
+                      {current.title}
+                    </h1>
+                    <p className="text-sm md:text-base max-w-2xl drop-shadow-md">
+                      {current.subtitle}
+                    </p>
+                    <div className="mt-4 flex gap-2">
+                      <Link
+                        to="/artist-list"
+                        className="px-5 py-2 text-sm bg-white text-purple-700 font-semibold rounded-full shadow-lg transition-transform duration-300 hover:scale-105"
+                      >
+                        아티스트 둘러보기
+                      </Link>
+                      <button
+                        onClick={() => openGuide(0)}
+                        className="px-4 py-2 text-sm rounded-full bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-700 flex items-center gap-2"
+                      >
+                        <HelpCircle className="h-4 w-4" />
+                        사용 가이드
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
-        {/* 우측 화살표 */}
-        <button
-          onClick={handleNextBanner}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
-          aria-label="다음 배너"
-        >
-          <ChevronRight size={20} className="text-white" />
-        </button>
+              {/* 좌측 화살표 */}
+              <button
+                onClick={handlePrevBanner}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+                aria-label="이전 배너"
+              >
+                <ChevronLeft size={20} className="text-white" />
+              </button>
 
-        {/* 배너 인디케이터 */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentBannerIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentBannerIndex
-                  ? "bg-white w-8"
-                  : "bg-white/50 hover:bg-white/70"
-              }`}
-              aria-label={`배너 ${index + 1}`}
-            />
-          ))}
-        </div>
+              {/* 우측 화살표 */}
+              <button
+                onClick={handleNextBanner}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm transition-all"
+                aria-label="다음 배너"
+              >
+                <ChevronRight size={20} className="text-white" />
+              </button>
+
+              {/* 배너 인디케이터 */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {banners.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentBannerIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${index === currentBannerIndex ? "bg-white w-8" : "bg-white/50 hover:bg-white/70"
+                      }`}
+                    aria-label={`배너 ${index + 1}`}
+                  />
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </section>
+
+
 
       {/* 메인 콘텐츠 영역 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-24">
@@ -226,7 +314,7 @@ const HomePage = () => {
 
           {isLoadingTrending ? (
             <div className="flex flex-col md:flex-row gap-2 md:h-[432px]">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({length: 4}).map((_, i) => (
                 <div
                   key={i}
                   className="flex-1 h-[250px] md:h-auto bg-gray-200 rounded-2xl animate-pulse"
@@ -252,78 +340,72 @@ const HomePage = () => {
                   return (
                     <div
                       key={room.roomId}
-                      className={`relative overflow-hidden cursor-pointer transition-all duration-500 ease-out ${
-                        isExpanded ? "flex-[9]" : "flex-[2]"
-                      } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""}`}
+                      className={`relative overflow-hidden cursor-pointer transition-all duration-500 ease-out ${isExpanded ? "flex-[9]" : "flex-[2]"
+                        } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""}`}
                       onMouseEnter={() => setExpandedRoomIndex(index)}
                       onClick={() => navigate(`/live/${room.roomId}`)}
                     >
-                    {/* 배경 이미지 */}
-                    <div className="absolute inset-0 overflow-hidden">
-                      <img
-                        src={room.imgUrl || PLACEHOLDER_URL}
-                        alt={room.title}
-                        className="h-full min-w-full object-cover object-center"
-                        style={{ width: 'auto' }}
-                      />
-                    </div>
+                      {/* 배경 이미지 */}
+                      <div className="absolute inset-0 overflow-hidden">
+                        <img
+                          src={room.imgUrl || PLACEHOLDER_URL}
+                          alt={room.title}
+                          className="h-full min-w-full object-cover object-center"
+                          style={{width: 'auto'}}
+                        />
+                      </div>
 
-                    {/* 그라데이션 오버레이 */}
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-500 ${
-                        isExpanded
+                      {/* 그라데이션 오버레이 */}
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-500 ${isExpanded
                           ? "from-black/80 via-black/40 to-transparent opacity-100"
                           : "from-black/60 to-transparent opacity-80"
-                      }`}
-                    />
+                          }`}
+                      />
 
-                    {/* 시청자 수 - 좌측 상단 고정 */}
-                    <div className="absolute top-4 left-4 z-10">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
-                        <Tv className="h-4 w-4" />
-                        <span className="font-semibold">
-                          {room.participantCount.toLocaleString()}명 시청 중
-                        </span>
+                      {/* 시청자 수 - 좌측 상단 고정 */}
+                      <div className="absolute top-4 left-4 z-10">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
+                          <Tv className="h-4 w-4" />
+                          <span className="font-semibold">
+                            {room.participantCount.toLocaleString()}명 시청 중
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* 콘텐츠 - 하단 정보 */}
-                    <div className="relative h-full flex flex-col justify-end p-6">
-                      {/* 방 제목 */}
-                      <h3
-                        className={`text-white font-bold mb-2 transition-all duration-500 ${
-                          isExpanded
+                      {/* 콘텐츠 - 하단 정보 */}
+                      <div className="relative h-full flex flex-col justify-end p-6">
+                        {/* 방 제목 */}
+                        <h3
+                          className={`text-white font-bold mb-2 transition-all duration-500 ${isExpanded
                             ? "text-2xl line-clamp-2"
                             : "text-lg line-clamp-3"
-                        }`}
-                      >
-                        {room.title}
-                      </h3>
-
-                      {/* 방장 정보 */}
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={room.hostProfileImgUrl || "/default_image.png"}
-                          alt={room.hostNickname}
-                          className={`rounded-full object-cover border-2 border-white/50 transition-all duration-500 ${
-                            isExpanded ? "w-10 h-10" : "w-8 h-8"
-                          }`}
-                        />
-                        <span
-                          className={`text-white/90 font-medium transition-all duration-500 ${
-                            isExpanded ? "text-base" : "text-sm"
-                          }`}
+                            }`}
                         >
-                          {room.hostNickname}
-                        </span>
+                          {room.title}
+                        </h3>
+
+                        {/* 방장 정보 */}
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={room.hostProfileImgUrl || "/default_image.png"}
+                            alt={room.hostNickname}
+                            className={`rounded-full object-cover border-2 border-white/50 transition-all duration-500 ${isExpanded ? "w-10 h-10" : "w-8 h-8"
+                              }`}
+                          />
+                          <span
+                            className={`text-white/90 font-medium transition-all duration-500 ${isExpanded ? "text-base" : "text-sm"
+                              }`}
+                          >
+                            {room.hostNickname}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
                       {/* 호버 효과 */}
                       <div
-                        className={`absolute inset-0 border-4 border-purple-500 transition-opacity duration-300 ${
-                          isExpanded ? "opacity-100" : "opacity-0"
-                        } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""}`}
+                        className={`absolute inset-0 border-4 border-purple-500 transition-opacity duration-300 ${isExpanded ? "opacity-100" : "opacity-0"
+                          } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""}`}
                       />
                     </div>
                   );
@@ -413,18 +495,18 @@ const HomePage = () => {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             {isLoadingArtists
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <ArtistCardSkeleton key={i} />
-                ))
+              ? Array.from({length: 5}).map((_, i) => (
+                <ArtistCardSkeleton key={i} />
+              ))
               : recommendedArtists.map((artist) => (
-                  <ArtistCard
-                    key={artist.artistId}
-                    {...artist}
-                    onClick={() =>
-                      handleCardClick(artist.artistId, artist.nameEn)
-                    }
-                  />
-                ))}
+                <ArtistCard
+                  key={artist.artistId}
+                  {...artist}
+                  onClick={() =>
+                    handleCardClick(artist.artistId, artist.nameEn)
+                  }
+                />
+              ))}
           </div>
         </section>
 
