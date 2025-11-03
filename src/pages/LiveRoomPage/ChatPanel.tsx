@@ -1213,7 +1213,7 @@ function countGraphemes(s: string): number {
   return [...s].length;
 }
 
-const MAX_LEN = 100;
+const MAX_LEN = 500;
 
 // --- 차단 확인 모달 컴포넌트 ---
 const ConfirmModal = ({
