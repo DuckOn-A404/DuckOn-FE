@@ -121,7 +121,7 @@ const LoginPage = () => {
         </div>
         {/* Google 로그인 */}
         <a
-          href={`${API_BASE_URL}/oauth2/authorization/google`}
+          href={`${API_BASE_URL}/login/oauth2/authorization/google`}
           className="w-full flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-xl text-sm font-medium text-gray-700 mb-3 transition-colors hover:bg-gray-50"
         >
           {" "}
@@ -152,7 +152,7 @@ const LoginPage = () => {
         </a>
         {/* Kakao 로그인 */}
         <a
-          href={`${API_BASE_URL}/oauth2/authorization/kakao`}
+          href={`${API_BASE_URL}/login/oauth2/authorization/kakao`}
           className="w-full flex items-center justify-center gap-2 bg-[#FEE500] py-3 rounded-xl text-sm font-medium text-black mb-3 transition-colors hover:bg-yellow-400"
         >
           <svg
@@ -169,7 +169,7 @@ const LoginPage = () => {
         </a>
         {/* Naver 로그인 */}
         <a
-          href={`${API_BASE_URL}/oauth2/authorization/naver`}
+          href={`${API_BASE_URL}/login/oauth2/authorization/naver`}
           className="w-full flex items-center justify-center gap-2 bg-[#03C75A] py-3 rounded-xl text-sm font-medium text-white transition-colors hover:bg-green-600"
         >
           {/* Naver 로고 SVG */}
