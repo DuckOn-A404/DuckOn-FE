@@ -1313,6 +1313,1284 @@
 
 // export default ChatPanel;
 
+// import { useState, useEffect, useRef } from "react";
+// import { Send, MoreVertical, UserX } from "lucide-react";
+// import { Popover, Transition } from "@headlessui/react";
+// import { useUserStore } from "../../store/useUserStore";
+// import type { ChatMessage } from "../../types/chat";
+// import { blockUser } from "../../api/userService";
+
+// type ChatPanelProps = {
+//   messages: ChatMessage[];
+//   sendMessage: (content: string) => Promise<void> | void;
+//   onBlockUser: (userId: string) => void;
+// };
+
+// // 최근 메시지/이름 미리보기
+// function previewGraphemes(s: string, limit: number): string {
+//   if (!s) return "";
+//   // @ts-ignore
+//   if (typeof Intl !== "undefined" && Intl.Segmenter) {
+//     // @ts-ignore
+//     const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
+//     const parts = Array.from(seg.segment(s)).map((p: any) => p.segment);
+//     return parts.length > limit ? parts.slice(0, limit).join("") + "…" : s;
+//   }
+//   return s.length > limit ? s.slice(0, limit) + "…" : s;
+// }
+
+// function countGraphemes(s: string): number {
+//   if (!s) return 0;
+//   // @ts-ignore
+//   if (typeof Intl !== "undefined" && Intl.Segmenter) {
+//     // @ts-ignore
+//     const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
+//     return Array.from(seg.segment(s)).length;
+//   }
+//   return [...s].length;
+// }
+
+// const MAX_LEN = 500;
+
+// // --- 차단 확인 모달 ---
+// const ConfirmModal = ({
+//   isOpen,
+//   onConfirm,
+//   onCancel,
+//   nickname,
+// }: {
+//   isOpen: boolean;
+//   onConfirm: () => void;
+//   onCancel: () => void;
+//   nickname: string;
+// }) => {
+//   if (!isOpen) return null;
+
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+//       <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
+//         <h3 className="text-lg font-bold text-white">사용자 차단</h3>
+//         <p className="text-sm text-gray-300 mt-2">
+//           정말로{" "}
+//           <span className="font-semibold text-purple-400">{nickname}</span>님을
+//           차단하시겠습니까? <br />
+//           차단하면 이 사용자의 메시지가 더 이상 보이지 않습니다.
+//         </p>
+//         <div className="mt-6 flex justify-end gap-3">
+//           <button
+//             onClick={onCancel}
+//             className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+//           >
+//             취소
+//           </button>
+//           <button
+//             onClick={onConfirm}
+//             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+//           >
+//             차단
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
+//   const { myUser } = useUserStore();
+//   const [newMessage, setNewMessage] = useState("");
+
+//   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+//   const listRef = useRef<HTMLDivElement | null>(null);
+//   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+//   const sentByPointerRef = useRef(false);
+//   const isAtBottomRef = useRef(true);
+//   const prevLenRef = useRef(0);
+
+//   const [lastUnread, setLastUnread] = useState<ChatMessage | null>(null);
+
+//   // 차단 확인 모달
+//   const [blockConfirm, setBlockConfirm] = useState<{
+//     isOpen: boolean;
+//     user: { id: string; nickname: string } | null;
+//   }>({ isOpen: false, user: null });
+
+//   const [atBottom, setAtBottom] = useState(true);
+//   const footerRef = useRef<HTMLDivElement | null>(null);
+//   const [footerH, setFooterH] = useState(0);
+//   const [isMultiline, setIsMultiline] = useState(false);
+
+//   // ✅ 도배 감지용
+//   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+//   const pendingSendRef = useRef<{ content: string; at: number } | null>(null);
+//   const lastMsgCountRef = useRef<number>(messages.length);
+
+//   // footer 높이 추적
+//   useEffect(() => {
+//     const el = footerRef.current;
+//     if (!el) return;
+//     const update = () => setFooterH(el.offsetHeight);
+//     const ro = new ResizeObserver(update);
+//     ro.observe(el);
+//     update();
+//     return () => ro.disconnect();
+//   }, []);
+
+//   const calcIsAtBottom = (el: HTMLElement) => {
+//     const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+//     return gap <= 100;
+//   };
+
+//   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+//     messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+//   };
+
+//   const onScroll = () => {
+//     const el = listRef.current;
+//     if (!el) return;
+//     const atBottomNow = calcIsAtBottom(el);
+//     isAtBottomRef.current = atBottomNow;
+//     setAtBottom(atBottomNow);
+
+//     if (atBottomNow && lastUnread) {
+//       setLastUnread(null);
+//     }
+//   };
+
+//   // 메시지 들어올 때 처리
+//   useEffect(() => {
+//     const addedCount = messages.length - prevLenRef.current;
+
+//     if (addedCount > 0) {
+//       const last = messages[messages.length - 1];
+//       const isSystem = (last as any)?.chatType === "ENTER";
+//       if (!last || isSystem) {
+//         prevLenRef.current = messages.length;
+//         return;
+//       }
+
+//       const fromMe =
+//         String(last?.senderId ?? "") === String(myUser?.userId ?? "");
+
+//       requestAnimationFrame(() => {
+//         requestAnimationFrame(() => {
+//           const el = listRef.current;
+//           if (!el) return;
+
+//           const wasAtBottom = calcIsAtBottom(el);
+//           isAtBottomRef.current = wasAtBottom;
+//           setAtBottom(wasAtBottom);
+
+//           if (fromMe || wasAtBottom) {
+//             scrollToBottom(fromMe ? "auto" : "smooth");
+//             setLastUnread(null);
+//           } else {
+//             setLastUnread(last);
+//           }
+//         });
+//       });
+//     }
+
+//     prevLenRef.current = messages.length;
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [messages.length, myUser?.userId]);
+
+//   // 첫 로드시 맨 아래로
+//   useEffect(() => {
+//     setTimeout(() => {
+//       scrollToBottom("auto");
+//       setAtBottom(true);
+//       isAtBottomRef.current = true;
+//     }, 100);
+//   }, []);
+
+//   // textarea 자동 리사이즈
+//   const autoResize = () => {
+//     const el = inputRef.current;
+//     if (!el) return;
+//     const MAX_H = 160;
+//     el.style.height = "auto";
+//     const h = Math.min(el.scrollHeight, MAX_H);
+//     el.style.height = `${h}px`;
+//     el.style.overflowY = el.scrollHeight > MAX_H ? "auto" : "hidden";
+//     setIsMultiline(h > 48);
+//   };
+
+//   useEffect(() => {
+//     autoResize();
+//   }, [newMessage]);
+
+//   // ✅ 도배 감지: 메시지 실제 도착 확인
+//   useEffect(() => {
+//     const pending = pendingSendRef.current;
+//     if (!pending) {
+//       lastMsgCountRef.current = messages.length;
+//       return;
+//     }
+
+//     const last = messages[messages.length - 1];
+//     if (
+//       last &&
+//       myUser?.userId &&
+//       String(last.senderId) === String(myUser.userId) &&
+//       last.content === pending.content
+//     ) {
+//       // 서버가 받아줌
+//       pendingSendRef.current = null;
+//       lastMsgCountRef.current = messages.length;
+//       return;
+//     }
+
+//     // 게스트일 때는 일단 개수만 갱신
+//     lastMsgCountRef.current = messages.length;
+//   }, [messages, myUser?.userId]);
+
+//   // ✅ 배너 띄우는 공통 함수
+//   const triggerRateLimited = (ms = 5000) => {
+//     const now = Date.now();
+//     // 다시 누르면 시간 리셋
+//     setRateLimitedUntil(now + ms);
+//   };
+
+//   const handleSendMessage = () => {
+//     const v = newMessage.trim();
+//     if (!v) return;
+//     if (countGraphemes(newMessage) > MAX_LEN) return;
+
+//     const now = Date.now();
+//     const isRateLimitedNow =
+//       rateLimitedUntil !== null && now < rateLimitedUntil;
+
+//     // ✅ 이미 막혀있는 상태에서 또 누르면 바로 배너만 다시 보여주고 끝
+//     if (isRateLimitedNow) {
+//       triggerRateLimited(); // 시간 리셋해서 계속 보이게
+//       return;
+//     }
+
+//     // 전송 직후 "보냈다" 기록
+//     const sentAt = Date.now();
+//     pendingSendRef.current = { content: v, at: sentAt };
+
+//     const maybePromise = sendMessage(v);
+//     setNewMessage("");
+
+//     // 포커스/스크롤
+//     requestAnimationFrame(() => {
+//       scrollToBottom("auto");
+//       setAtBottom(true);
+//       isAtBottomRef.current = true;
+//       const el = inputRef.current;
+//       if (el) {
+//         el.style.height = "auto";
+//         el.style.overflowY = "hidden";
+//         el.focus({ preventScroll: true });
+//       }
+//     });
+
+//     // 혹시 진짜로 에러를 던져주면 그걸로도 감지
+//     Promise.resolve(maybePromise).catch((err) => {
+//       const type =
+//         (err as any)?.response?.data?.type || (err as any)?.type || "";
+//       if (type === "CHAT_RATE_LIMITED" || (err as any)?.status === 429) {
+//         triggerRateLimited();
+//         pendingSendRef.current = null;
+//       }
+//     });
+
+//     // 100ms 안에 메시지가 안 돌아오면 "막혔다"라고 거의 즉시 판단
+//     setTimeout(() => {
+//       const pendingNow = pendingSendRef.current;
+//       if (!pendingNow) return;
+//       if (pendingNow.at === sentAt) {
+//         // 여전히 안 왔다 → 막힌 걸로 본다
+//         triggerRateLimited();
+//         pendingSendRef.current = null;
+//       }
+//     }, 100);
+//   };
+
+//   // 차단 모달 열기
+//   const openBlockConfirm = (user: { id: string; nickname: string }) => {
+//     setBlockConfirm({ isOpen: true, user });
+//   };
+
+//   // 차단 확정
+//   const confirmBlock = async () => {
+//     if (!blockConfirm.user) return;
+//     const id = blockConfirm.user.id;
+
+//     onBlockUser(id);
+//     try {
+//       const res = await blockUser(id);
+//       console.log(res.message);
+//     } catch (err) {
+//       console.error("차단 실패:", err);
+//     } finally {
+//       setBlockConfirm({ isOpen: false, user: null });
+//     }
+//   };
+
+//   const charCount = countGraphemes(newMessage);
+//   const overLimit = charCount > MAX_LEN;
+
+//   const previewContent = (m: ChatMessage | null) => {
+//     if (!m) return "";
+//     if ((m as any).isImage) return "[GIF]";
+//     return previewGraphemes(m.content ?? "", 10);
+//   };
+
+//   const isRateLimitedNow =
+//     rateLimitedUntil !== null && Date.now() < rateLimitedUntil;
+
+//   return (
+//     <>
+//       <ConfirmModal
+//         isOpen={blockConfirm.isOpen}
+//         onConfirm={confirmBlock}
+//         onCancel={() => setBlockConfirm({ isOpen: false, user: null })}
+//         nickname={blockConfirm.user?.nickname ?? ""}
+//       />
+
+//       <div className="relative flex flex-col h-full bg-gray-800 text-white">
+//         {/* ✅ 도배 안내 말풍선: 채팅창 바로 위에, 한 줄, 크게 */}
+//         {isRateLimitedNow && (
+//           <div
+//             className="absolute left-1/2 -translate-x-1/2 z-[300] transition-opacity"
+//             style={{
+//               bottom: (footerH || 88) + 12,
+//               maxWidth: "92%",
+//             }}
+//           >
+//             <div className="bg-red-500 text-white text-sm md:text-base px-5 py-2 rounded-2xl shadow-lg border border-red-300 flex items-center gap-2 whitespace-nowrap justify-center">
+//               ⚠️ 채팅 도배로 5초간 채팅이 제한됩니다.
+//             </div>
+//           </div>
+//         )}
+
+//         {/* 메시지 목록 */}
+//         <div
+//           ref={listRef}
+//           onScroll={onScroll}
+//           className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 min-h-0"
+//           style={{
+//             paddingBottom: 8,
+//             scrollPaddingBottom: (footerH || 88) + 8,
+//             scrollbarGutter: "stable both-edges" as any,
+//           }}
+//         >
+//           {messages.map((msg, index) => {
+//             if ((msg as any).chatType === "ENTER") {
+//               return (
+//                 <div
+//                   key={`system-${index}`}
+//                   className="text-center text-xs text-gray-500 py-1"
+//                 >
+//                   {msg.content}
+//                 </div>
+//               );
+//             }
+
+//             const uniqueKey = `${msg.senderId}-${(msg as any).sentAt || index}`;
+//             const isMyMessage =
+//               String(msg.senderId ?? "") === String(myUser?.userId ?? "");
+
+//             return (
+//               <div
+//                 key={uniqueKey}
+//                 className={`flex flex-col ${
+//                   isMyMessage ? "items-end" : "items-start"
+//                 }`}
+//               >
+//                 <span className="text-xs text-gray-500 mb-1">
+//                   {msg.senderNickName}
+//                 </span>
+
+//                 <div
+//                   className={`group relative flex items-end gap-2 max-w-[85%] ${
+//                     isMyMessage ? "flex-row-reverse" : "flex-row"
+//                   }`}
+//                 >
+//                   {(msg as any).isImage ? (
+//                     <div className="relative">
+//                       <img
+//                         src={msg.content}
+//                         alt="gif"
+//                         className="rounded-2xl border border-black/5
+//                                   max-w-full sm:max-w-[240px] max-h-[240px]
+//                                   object-contain block"
+//                         style={{
+//                           width: "100%",
+//                           height: "auto",
+//                         }}
+//                         loading="lazy"
+//                         onLoad={() => scrollToBottom("auto")}
+//                         onError={(e) => {
+//                           (e.currentTarget as HTMLImageElement).style.display =
+//                             "none";
+//                         }}
+//                       />
+//                       {!isMyMessage && (
+//                         <Popover className="absolute top-1 right-1">
+//                           <Popover.Button className="p-0.5 rounded-full bg-black/30 hover:bg-black/50 focus:outline-none">
+//                             <MoreVertical size={14} className="text-white" />
+//                           </Popover.Button>
+//                           <Transition
+//                             enter="transition duration-100 ease-out"
+//                             enterFrom="transform scale-95 opacity-0"
+//                             enterTo="transform scale-100 opacity-100"
+//                             leave="transition duration-75 ease-out"
+//                             leaveFrom="transform scale-100 opacity-100"
+//                             leaveTo="transform scale-95 opacity-0"
+//                           >
+//                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
+//                               <div className="flex flex-col p-1">
+//                                 <button
+//                                   onClick={() =>
+//                                     openBlockConfirm({
+//                                       id: msg.senderId,
+//                                       nickname: msg.senderNickName,
+//                                     })
+//                                   }
+//                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
+//                                 >
+//                                   <UserX size={14} />
+//                                   <span className="whitespace-nowrap">
+//                                     차단하기
+//                                   </span>
+//                                 </button>
+//                               </div>
+//                             </Popover.Panel>
+//                           </Transition>
+//                         </Popover>
+//                       )}
+//                     </div>
+//                   ) : (
+//                     <div
+//                       className={`relative group px-4 py-2 rounded-lg text-sm ${
+//                         isMyMessage ? "bg-purple-600" : "bg-gray-700"
+//                       } break-all`}
+//                     >
+//                       <span className={!isMyMessage ? "pr-5" : ""}>
+//                         {msg.content}
+//                       </span>
+
+//                       {!isMyMessage && (
+//                         <Popover className="absolute top-1 right-1">
+//                           <Popover.Button className="p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
+//                             <MoreVertical size={14} className="text-white" />
+//                           </Popover.Button>
+//                           <Transition
+//                             enter="transition duration-100 ease-out"
+//                             enterFrom="transform scale-95 opacity-0"
+//                             enterTo="transform scale-100 opacity-100"
+//                             leave="transition duration-75 ease-out"
+//                             leaveFrom="transform scale-100 opacity-100"
+//                             leaveTo="transform scale-95 opacity-0"
+//                           >
+//                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
+//                               <div className="flex flex-col p-1">
+//                                 <button
+//                                   onClick={() =>
+//                                     openBlockConfirm({
+//                                       id: msg.senderId,
+//                                       nickname: msg.senderNickName,
+//                                     })
+//                                   }
+//                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
+//                                 >
+//                                   <UserX size={14} />
+//                                   <span className="whitespace-nowrap">
+//                                     차단하기
+//                                   </span>
+//                                 </button>
+//                               </div>
+//                             </Popover.Panel>
+//                           </Transition>
+//                         </Popover>
+//                       )}
+//                     </div>
+//                   )}
+
+//                   <span className="text-xs text-gray-500 whitespace-nowrap">
+//                     {new Date((msg as any).sentAt).toLocaleTimeString("ko-KR", {
+//                       hour: "2-digit",
+//                       minute: "2-digit",
+//                     })}
+//                   </span>
+//                 </div>
+//               </div>
+//             );
+//           })}
+
+//           <div
+//             ref={messagesEndRef}
+//             style={{ scrollMarginBottom: (footerH || 88) + 8 }}
+//           />
+//         </div>
+
+//         {/* 새 메시지 배지 */}
+//         {lastUnread && !atBottom && (
+//           <div
+//             onClick={() => {
+//               setLastUnread(null);
+//               scrollToBottom("smooth");
+//               setAtBottom(true);
+//               isAtBottomRef.current = true;
+//             }}
+//             className="absolute left-1/2 -translate-x-1/2 z-[200] cursor-pointer"
+//             style={{
+//               bottom: (footerH || 88) + 8,
+//               paddingBottom: "env(safe-area-inset-bottom)",
+//             }}
+//           >
+//             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
+//               <div className="flex items-center gap-2 max-w-[280px]">
+//                 <span className="text-gray-900 text-sm font-semibold shrink-0">
+//                   {previewGraphemes(lastUnread.senderNickName ?? "", 7)}
+//                 </span>
+//                 <span className="text-gray-800 text-sm truncate">
+//                   {previewContent(lastUnread)}
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* 입력 영역 */}
+//         <div
+//           ref={footerRef}
+//           className="p-3 border-t border-gray-700 bg-gray-800/80"
+//         >
+//           <div
+//             className={`rounded-lg border bg-gray-700 transition-colors
+//                         ${
+//                           overLimit
+//                             ? "border-red-500"
+//                             : "border-gray-600 focus-within:border-purple-500"
+//                         } ${isRateLimitedNow ? "opacity-70" : ""}`}
+//           >
+//             <div
+//               className={`flex ${
+//                 isMultiline ? "items-end" : "items-center"
+//               } gap-2 px-3 py-2`}
+//             >
+//               <textarea
+//                 ref={inputRef}
+//                 rows={1}
+//                 value={newMessage}
+//                 onChange={(e) => setNewMessage(e.target.value)}
+//                 onInput={autoResize}
+//                 onKeyDown={(e) => {
+//                   // @ts-ignore
+//                   if (
+//                     e.key === "Enter" &&
+//                     !e.shiftKey &&
+//                     !e.nativeEvent?.isComposing
+//                   ) {
+//                     e.preventDefault();
+//                     if (!overLimit) handleSendMessage();
+//                   }
+//                 }}
+//                 placeholder={
+//                   isRateLimitedNow
+//                     ? "채팅 도배로 잠시 제한되었습니다."
+//                     : myUser
+//                     ? "메시지를 입력하세요..."
+//                     : "게스트로 채팅하기..."
+//                 }
+//                 className="flex-1 bg-transparent border-0 outline-none resize-none max-h-40
+//                           text-base md:text-sm leading-6 placeholder:text-gray-400
+//                           focus:ring-0 p-0"
+//                 disabled={isRateLimitedNow}
+//               />
+
+//               <button
+//                 type="button"
+//                 tabIndex={-1}
+//                 onPointerDown={(e) => {
+//                   e.preventDefault();
+//                 }}
+//                 onPointerUp={(e) => {
+//                   e.preventDefault();
+//                   sentByPointerRef.current = true;
+//                   if (!overLimit) handleSendMessage();
+//                 }}
+//                 onClick={(e) => {
+//                   if (sentByPointerRef.current) {
+//                     sentByPointerRef.current = false;
+//                     return;
+//                   }
+//                   e.preventDefault();
+//                   if (!overLimit) handleSendMessage();
+//                 }}
+//                 disabled={!newMessage.trim() || overLimit || isRateLimitedNow}
+//                 className="h-9 w-9 rounded-full flex items-center justify-center
+//                           bg-gray-600 hover:bg-gray-500 transition-colors
+//                           disabled:bg-gray-700 disabled:cursor-not-allowed
+//                           shrink-0"
+//                 aria-label="메시지 전송"
+//               >
+//                 <Send size={18} className="text-white" />
+//               </button>
+//             </div>
+//           </div>
+
+//           <div className="mt-1 flex justify-end">
+//             <span
+//               className={`text-xs ${
+//                 overLimit ? "text-red-400" : "text-gray-400"
+//               }`}
+//             >
+//               {charCount}/{MAX_LEN}
+//               {overLimit ? " (최대 초과)" : ""}
+//             </span>
+//           </div>
+//         </div>
+//       </div>
+//     </>
+//   );
+// };
+
+// export default ChatPanel;
+
+// import { useState, useEffect, useRef } from "react";
+// import { Send, MoreVertical, UserX } from "lucide-react";
+// import { Popover, Transition } from "@headlessui/react";
+// import { useUserStore } from "../../store/useUserStore";
+// import type { ChatMessage } from "../../types/chat";
+// import { blockUser } from "../../api/userService";
+
+// type ChatPanelProps = {
+//   messages: ChatMessage[];
+//   sendMessage: (content: string) => Promise<void> | void;
+//   onBlockUser: (userId: string) => void;
+// };
+
+// // 최근 메시지/이름 미리보기
+// function previewGraphemes(s: string, limit: number): string {
+//   if (!s) return "";
+//   // @ts-ignore
+//   if (typeof Intl !== "undefined" && Intl.Segmenter) {
+//     // @ts-ignore
+//     const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
+//     const parts = Array.from(seg.segment(s)).map((p: any) => p.segment);
+//     return parts.length > limit ? parts.slice(0, limit).join("") + "…" : s;
+//   }
+//   return s.length > limit ? s.slice(0, limit) + "…" : s;
+// }
+
+// function countGraphemes(s: string): number {
+//   if (!s) return 0;
+//   // @ts-ignore
+//   if (typeof Intl !== "undefined" && Intl.Segmenter) {
+//     // @ts-ignore
+//     const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
+//     return Array.from(seg.segment(s)).length;
+//   }
+//   return [...s].length;
+// }
+
+// const MAX_LEN = 500;
+
+// // --- 차단 확인 모달 ---
+// const ConfirmModal = ({
+//   isOpen,
+//   onConfirm,
+//   onCancel,
+//   nickname,
+// }: {
+//   isOpen: boolean;
+//   onConfirm: () => void;
+//   onCancel: () => void;
+//   nickname: string;
+// }) => {
+//   if (!isOpen) return null;
+
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+//       <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
+//         <h3 className="text-lg font-bold text-white">사용자 차단</h3>
+//         <p className="text-sm text-gray-300 mt-2">
+//           정말로{" "}
+//           <span className="font-semibold text-purple-400">{nickname}</span>님을
+//           차단하시겠습니까? <br />
+//           차단하면 이 사용자의 메시지가 더 이상 보이지 않습니다.
+//         </p>
+//         <div className="mt-6 flex justify-end gap-3">
+//           <button
+//             onClick={onCancel}
+//             className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
+//           >
+//             취소
+//           </button>
+//           <button
+//             onClick={onConfirm}
+//             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+//           >
+//             차단
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
+//   const { myUser } = useUserStore();
+//   const [newMessage, setNewMessage] = useState("");
+
+//   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+//   const listRef = useRef<HTMLDivElement | null>(null);
+//   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+//   const sentByPointerRef = useRef(false);
+//   const isAtBottomRef = useRef(true);
+//   const prevLenRef = useRef(0);
+
+//   const [lastUnread, setLastUnread] = useState<ChatMessage | null>(null);
+
+//   // 차단 확인 모달
+//   const [blockConfirm, setBlockConfirm] = useState<{
+//     isOpen: boolean;
+//     user: { id: string; nickname: string } | null;
+//   }>({ isOpen: false, user: null });
+
+//   const [atBottom, setAtBottom] = useState(true);
+//   const footerRef = useRef<HTMLDivElement | null>(null);
+//   const [footerH, setFooterH] = useState(0);
+//   const [isMultiline, setIsMultiline] = useState(false);
+
+//   // ✅ 도배 감지용
+//   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+//   const pendingSendRef = useRef<{ content: string; at: number } | null>(null);
+//   const lastMsgCountRef = useRef<number>(messages.length);
+
+//   // footer 높이 추적
+//   useEffect(() => {
+//     const el = footerRef.current;
+//     if (!el) return;
+//     const update = () => setFooterH(el.offsetHeight);
+//     const ro = new ResizeObserver(update);
+//     ro.observe(el);
+//     update();
+//     return () => ro.disconnect();
+//   }, []);
+
+//   const calcIsAtBottom = (el: HTMLElement) => {
+//     const gap = el.scrollHeight - el.scrollTop - el.clientHeight;
+//     return gap <= 100;
+//   };
+
+//   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
+//     messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+//   };
+
+//   const onScroll = () => {
+//     const el = listRef.current;
+//     if (!el) return;
+//     const atBottomNow = calcIsAtBottom(el);
+//     isAtBottomRef.current = atBottomNow;
+//     setAtBottom(atBottomNow);
+
+//     if (atBottomNow && lastUnread) {
+//       setLastUnread(null);
+//     }
+//   };
+
+//   // 메시지 들어올 때 처리
+//   useEffect(() => {
+//     const addedCount = messages.length - prevLenRef.current;
+
+//     if (addedCount > 0) {
+//       const last = messages[messages.length - 1];
+//       const isSystem = (last as any)?.chatType === "ENTER";
+//       if (!last || isSystem) {
+//         prevLenRef.current = messages.length;
+//         return;
+//       }
+
+//       const fromMe =
+//         String(last?.senderId ?? "") === String(myUser?.userId ?? "");
+
+//       requestAnimationFrame(() => {
+//         requestAnimationFrame(() => {
+//           const el = listRef.current;
+//           if (!el) return;
+
+//           const wasAtBottom = calcIsAtBottom(el);
+//           isAtBottomRef.current = wasAtBottom;
+//           setAtBottom(wasAtBottom);
+
+//           if (fromMe || wasAtBottom) {
+//             scrollToBottom(fromMe ? "auto" : "smooth");
+//             setLastUnread(null);
+//           } else {
+//             setLastUnread(last);
+//           }
+//         });
+//       });
+//     }
+
+//     prevLenRef.current = messages.length;
+//     // eslint-disable-next-line react-hooks/exhaustive-deps
+//   }, [messages.length, myUser?.userId]);
+
+//   // 첫 로드시 맨 아래로
+//   useEffect(() => {
+//     setTimeout(() => {
+//       scrollToBottom("auto");
+//       setAtBottom(true);
+//       isAtBottomRef.current = true;
+//     }, 100);
+//   }, []);
+
+//   // textarea 자동 리사이즈
+//   const autoResize = () => {
+//     const el = inputRef.current;
+//     if (!el) return;
+//     const MAX_H = 160;
+//     el.style.height = "auto";
+//     const h = Math.min(el.scrollHeight, MAX_H);
+//     el.style.height = `${h}px`;
+//     el.style.overflowY = el.scrollHeight > MAX_H ? "auto" : "hidden";
+//     setIsMultiline(h > 48);
+//   };
+
+//   useEffect(() => {
+//     autoResize();
+//   }, [newMessage]);
+
+//   // ✅ 도배 감지: 메시지 실제 도착 확인
+//   useEffect(() => {
+//     const pending = pendingSendRef.current;
+//     if (!pending) {
+//       lastMsgCountRef.current = messages.length;
+//       return;
+//     }
+
+//     const last = messages[messages.length - 1];
+//     if (
+//       last &&
+//       myUser?.userId &&
+//       String(last.senderId) === String(myUser.userId) &&
+//       last.content === pending.content
+//     ) {
+//       // 서버가 받아줌
+//       pendingSendRef.current = null;
+//       lastMsgCountRef.current = messages.length;
+//       return;
+//     }
+
+//     // 게스트일 때는 일단 개수만 갱신
+//     lastMsgCountRef.current = messages.length;
+//   }, [messages, myUser?.userId]);
+
+//   // ✅ 배너 띄우는 공통 함수
+//   const triggerRateLimited = (ms = 5000) => {
+//     const now = Date.now();
+//     // 다시 누르면 시간 리셋
+//     setRateLimitedUntil(now + ms);
+//   };
+
+//   const handleSendMessage = () => {
+//     const v = newMessage.trim();
+//     if (!v) return;
+//     if (countGraphemes(newMessage) > MAX_LEN) return;
+
+//     const now = Date.now();
+//     const isRateLimitedNow =
+//       rateLimitedUntil !== null && now < rateLimitedUntil;
+
+//     // ✅ 이미 막혀있는 상태에서 또 누르면 바로 배너만 다시 보여주고 끝
+//     if (isRateLimitedNow) {
+//       triggerRateLimited(); // 시간 리셋해서 계속 보이게
+//       return;
+//     }
+
+//     // 전송 직후 "보냈다" 기록
+//     const sentAt = Date.now();
+//     pendingSendRef.current = { content: v, at: sentAt };
+
+//     const maybePromise = sendMessage(v);
+//     setNewMessage("");
+
+//     // 포커스/스크롤
+//     requestAnimationFrame(() => {
+//       scrollToBottom("auto");
+//       setAtBottom(true);
+//       isAtBottomRef.current = true;
+//       const el = inputRef.current;
+//       if (el) {
+//         el.style.height = "auto";
+//         el.style.overflowY = "hidden";
+//         el.focus({ preventScroll: true });
+//       }
+//     });
+
+//     // 혹시 진짜로 에러를 던져주면 그걸로도 감지
+//     Promise.resolve(maybePromise).catch((err) => {
+//       const type =
+//         (err as any)?.response?.data?.type || (err as any)?.type || "";
+//       if (type === "CHAT_RATE_LIMITED" || (err as any)?.status === 429) {
+//         triggerRateLimited();
+//         pendingSendRef.current = null;
+//       }
+//     });
+
+//     // 100ms 안에 메시지가 안 돌아오면 "막혔다"라고 거의 즉시 판단
+//     setTimeout(() => {
+//       const pendingNow = pendingSendRef.current;
+//       if (!pendingNow) return;
+//       if (pendingNow.at === sentAt) {
+//         // 여전히 안 왔다 → 막힌 걸로 본다
+//         triggerRateLimited();
+//         pendingSendRef.current = null;
+//       }
+//     }, 100);
+//   };
+
+//   // 차단 모달 열기
+//   const openBlockConfirm = (user: { id: string; nickname: string }) => {
+//     setBlockConfirm({ isOpen: true, user });
+//   };
+
+//   // 차단 확정
+//   const confirmBlock = async () => {
+//     if (!blockConfirm.user) return;
+//     const id = blockConfirm.user.id;
+
+//     onBlockUser(id);
+//     try {
+//       const res = await blockUser(id);
+//       console.log(res.message);
+//     } catch (err) {
+//       console.error("차단 실패:", err);
+//     } finally {
+//       setBlockConfirm({ isOpen: false, user: null });
+//     }
+//   };
+
+//   const charCount = countGraphemes(newMessage);
+//   const overLimit = charCount > MAX_LEN;
+
+//   const previewContent = (m: ChatMessage | null) => {
+//     if (!m) return "";
+//     if ((m as any).isImage) return "[GIF]";
+//     return previewGraphemes(m.content ?? "", 10);
+//   };
+
+//   const isRateLimitedNow =
+//     rateLimitedUntil !== null && Date.now() < rateLimitedUntil;
+
+//   return (
+//     <>
+//       <ConfirmModal
+//         isOpen={blockConfirm.isOpen}
+//         onConfirm={confirmBlock}
+//         onCancel={() => setBlockConfirm({ isOpen: false, user: null })}
+//         nickname={blockConfirm.user?.nickname ?? ""}
+//       />
+
+//       <div className="relative flex flex-col h-full bg-gray-800 text-white">
+//         {/* ✅ 도배 안내 말풍선: 채팅창 바로 위에, 한 줄, 크게 */}
+//         {isRateLimitedNow && (
+//           <div
+//             className="absolute left-1/2 -translate-x-1/2 z-[300] transition-opacity"
+//             style={{
+//               bottom: (footerH || 88) + 12,
+//               maxWidth: "92%",
+//             }}
+//           >
+//             <div className="bg-red-500 text-white text-sm md:text-base px-5 py-2 rounded-2xl shadow-lg border border-red-300 flex items-center gap-2 whitespace-nowrap justify-center">
+//               ⚠️ 채팅 도배로 5초간 채팅이 제한됩니다.
+//             </div>
+//           </div>
+//         )}
+
+//         {/* 메시지 목록 */}
+//         <div
+//           ref={listRef}
+//           onScroll={onScroll}
+//           className="flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 min-h-0"
+//           style={{
+//             paddingBottom: 8,
+//             scrollPaddingBottom: (footerH || 88) + 8,
+//             scrollbarGutter: "stable both-edges" as any,
+//           }}
+//         >
+//           {messages.map((msg, index) => {
+//             if ((msg as any).chatType === "ENTER") {
+//               return (
+//                 <div
+//                   key={`system-${index}`}
+//                   className="text-center text-xs text-gray-500 py-1"
+//                 >
+//                   {msg.content}
+//                 </div>
+//               );
+//             }
+
+//             const uniqueKey = `${msg.senderId}-${(msg as any).sentAt || index}`;
+//             const isMyMessage =
+//               String(msg.senderId ?? "") === String(myUser?.userId ?? "");
+
+//             return (
+//               <div
+//                 key={uniqueKey}
+//                 className={`flex flex-col ${
+//                   isMyMessage ? "items-end" : "items-start"
+//                 }`}
+//               >
+//                 <span className="text-xs text-gray-500 mb-1">
+//                   {msg.senderNickName}
+//                 </span>
+
+//                 <div
+//                   className={`group relative flex items-end gap-2 max-w-[85%] ${
+//                     isMyMessage ? "flex-row-reverse" : "flex-row"
+//                   }`}
+//                 >
+//                   {(msg as any).isImage ? (
+//                     <div className="relative">
+//                       <img
+//                         src={msg.content}
+//                         alt="gif"
+//                         className="rounded-2xl border border-black/5
+//                                   max-w-full sm:max-w-[240px] max-h-[240px]
+//                                   object-contain block"
+//                         style={{
+//                           width: "100%",
+//                           height: "auto",
+//                         }}
+//                         loading="lazy"
+//                         onLoad={() => scrollToBottom("auto")}
+//                         onError={(e) => {
+//                           (e.currentTarget as HTMLImageElement).style.display =
+//                             "none";
+//                         }}
+//                       />
+//                       {!isMyMessage && (
+//                         <Popover className="absolute top-1 right-1">
+//                           <Popover.Button className="p-0.5 rounded-full bg-black/30 hover:bg-black/50 focus:outline-none">
+//                             <MoreVertical size={14} className="text-white" />
+//                           </Popover.Button>
+//                           <Transition
+//                             enter="transition duration-100 ease-out"
+//                             enterFrom="transform scale-95 opacity-0"
+//                             enterTo="transform scale-100 opacity-100"
+//                             leave="transition duration-75 ease-out"
+//                             leaveFrom="transform scale-100 opacity-100"
+//                             leaveTo="transform scale-95 opacity-0"
+//                           >
+//                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
+//                               <div className="flex flex-col p-1">
+//                                 <button
+//                                   onClick={() =>
+//                                     openBlockConfirm({
+//                                       id: msg.senderId,
+//                                       nickname: msg.senderNickName,
+//                                     })
+//                                   }
+//                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
+//                                 >
+//                                   <UserX size={14} />
+//                                   <span className="whitespace-nowrap">
+//                                     차단하기
+//                                   </span>
+//                                 </button>
+//                               </div>
+//                             </Popover.Panel>
+//                           </Transition>
+//                         </Popover>
+//                       )}
+//                     </div>
+//                   ) : (
+//                     <div
+//                       className={`relative group px-4 py-2 rounded-lg text-sm ${
+//                         isMyMessage ? "bg-purple-600" : "bg-gray-700"
+//                       } break-all`}
+//                     >
+//                       <span className={!isMyMessage ? "pr-5" : ""}>
+//                         {msg.content}
+//                       </span>
+
+//                       {!isMyMessage && (
+//                         <Popover className="absolute top-1 right-1">
+//                           <Popover.Button className="p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
+//                             <MoreVertical size={14} className="text-white" />
+//                           </Popover.Button>
+//                           <Transition
+//                             enter="transition duration-100 ease-out"
+//                             enterFrom="transform scale-95 opacity-0"
+//                             enterTo="transform scale-100 opacity-100"
+//                             leave="transition duration-75 ease-out"
+//                             leaveFrom="transform scale-100 opacity-100"
+//                             leaveTo="transform scale-95 opacity-0"
+//                           >
+//                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
+//                               <div className="flex flex-col p-1">
+//                                 <button
+//                                   onClick={() =>
+//                                     openBlockConfirm({
+//                                       id: msg.senderId,
+//                                       nickname: msg.senderNickName,
+//                                     })
+//                                   }
+//                                   className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
+//                                 >
+//                                   <UserX size={14} />
+//                                   <span className="whitespace-nowrap">
+//                                     차단하기
+//                                   </span>
+//                                 </button>
+//                               </div>
+//                             </Popover.Panel>
+//                           </Transition>
+//                         </Popover>
+//                       )}
+//                     </div>
+//                   )}
+
+//                   <span className="text-xs text-gray-500 whitespace-nowrap">
+//                     {new Date((msg as any).sentAt).toLocaleTimeString("ko-KR", {
+//                       hour: "2-digit",
+//                       minute: "2-digit",
+//                     })}
+//                   </span>
+//                 </div>
+//               </div>
+//             );
+//           })}
+
+//           <div
+//             ref={messagesEndRef}
+//             style={{ scrollMarginBottom: (footerH || 88) + 8 }}
+//           />
+//         </div>
+
+//         {/* 새 메시지 배지 */}
+//         {lastUnread && !atBottom && (
+//           <div
+//             onClick={() => {
+//               setLastUnread(null);
+//               scrollToBottom("smooth");
+//               setAtBottom(true);
+//               isAtBottomRef.current = true;
+//             }}
+//             className="absolute left-1/2 -translate-x-1/2 z-[200] cursor-pointer"
+//             style={{
+//               bottom: (footerH || 88) + 8,
+//               paddingBottom: "env(safe-area-inset-bottom)",
+//             }}
+//           >
+//             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
+//               <div className="flex items-center gap-2 max-w-[280px]">
+//                 <span className="text-gray-900 text-sm font-semibold shrink-0">
+//                   {previewGraphemes(lastUnread.senderNickName ?? "", 7)}
+//                 </span>
+//                 <span className="text-gray-800 text-sm truncate">
+//                   {previewContent(lastUnread)}
+//                 </span>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* 입력 영역 */}
+//         <div
+//           ref={footerRef}
+//           className="p-3 border-t border-gray-700 bg-gray-800/80"
+//         >
+//           <div
+//             className={`rounded-lg border bg-gray-700 transition-colors
+//                         ${
+//                           overLimit
+//                             ? "border-red-500"
+//                             : "border-gray-600 focus-within:border-purple-500"
+//                         } ${isRateLimitedNow ? "opacity-70" : ""}`}
+//           >
+//             <div
+//               className={`flex ${
+//                 isMultiline ? "items-end" : "items-center"
+//               } gap-2 px-3 py-2`}
+//             >
+//               <textarea
+//                 ref={inputRef}
+//                 rows={1}
+//                 value={newMessage}
+//                 onChange={(e) => setNewMessage(e.target.value)}
+//                 onInput={autoResize}
+//                 onKeyDown={(e) => {
+//                   // @ts-ignore
+//                   if (
+//                     e.key === "Enter" &&
+//                     !e.shiftKey &&
+//                     !e.nativeEvent?.isComposing
+//                   ) {
+//                     e.preventDefault();
+//                     if (!overLimit) handleSendMessage();
+//                   }
+//                 }}
+//                 placeholder={
+//                   isRateLimitedNow
+//                     ? "채팅 도배로 잠시 제한되었습니다."
+//                     : myUser
+//                     ? "메시지를 입력하세요..."
+//                     : "게스트로 채팅하기..."
+//                 }
+//                 className="flex-1 bg-transparent border-0 outline-none resize-none max-h-40
+//                           text-base md:text-sm leading-6 placeholder:text-gray-400
+//                           focus:ring-0 p-0"
+//                 disabled={isRateLimitedNow}
+//               />
+
+//               <button
+//                 type="button"
+//                 tabIndex={-1}
+//                 onPointerDown={(e) => {
+//                   e.preventDefault();
+//                 }}
+//                 onPointerUp={(e) => {
+//                   e.preventDefault();
+//                   sentByPointerRef.current = true;
+//                   if (!overLimit) handleSendMessage();
+//                 }}
+//                 onClick={(e) => {
+//                   if (sentByPointerRef.current) {
+//                     sentByPointerRef.current = false;
+//                     return;
+//                   }
+//                   e.preventDefault();
+//                   if (!overLimit) handleSendMessage();
+//                 }}
+//                 disabled={!newMessage.trim() || overLimit || isRateLimitedNow}
+//                 className="h-9 w-9 rounded-full flex items-center justify-center
+//                           bg-gray-600 hover:bg-gray-500 transition-colors
+//                           disabled:bg-gray-700 disabled:cursor-not-allowed
+//                           shrink-0"
+//                 aria-label="메시지 전송"
+//               >
+//                 <Send size={18} className="text-white" />
+//               </button>
+//             </div>
+//           </div>
+
+//           <div className="mt-1 flex justify-end">
+//             <span
+//               className={`text-xs ${
+//                 overLimit ? "text-red-400" : "text-gray-400"
+//               }`}
+//             >
+//               {charCount}/{MAX_LEN}
+//               {overLimit ? " (최대 초과)" : ""}
+//             </span>
+//           </div>
+//         </div>
+//       </div>
+//     </>
+//   );
+// };
+
+// export default ChatPanel;
+
 import { useState, useEffect, useRef } from "react";
 import { Send, MoreVertical, UserX } from "lucide-react";
 import { Popover, Transition } from "@headlessui/react";
@@ -1424,6 +2702,8 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
   const pendingSendRef = useRef<{ content: string; at: number } | null>(null);
   const lastMsgCountRef = useRef<number>(messages.length);
 
+  const isLoggedIn = !!myUser?.userId; // ← 이게 핵심 플래그
+
   // footer 높이 추적
   useEffect(() => {
     const el = footerRef.current;
@@ -1521,6 +2801,13 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
 
   // ✅ 도배 감지: 메시지 실제 도착 확인
   useEffect(() => {
+    // 게스트면 여기서 감지하지 않고 바로 빠짐
+    if (!isLoggedIn) {
+      pendingSendRef.current = null;
+      lastMsgCountRef.current = messages.length;
+      return;
+    }
+
     const pending = pendingSendRef.current;
     if (!pending) {
       lastMsgCountRef.current = messages.length;
@@ -1540,14 +2827,12 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
       return;
     }
 
-    // 게스트일 때는 일단 개수만 갱신
     lastMsgCountRef.current = messages.length;
-  }, [messages, myUser?.userId]);
+  }, [messages, myUser?.userId, isLoggedIn]);
 
   // ✅ 배너 띄우는 공통 함수
   const triggerRateLimited = (ms = 5000) => {
     const now = Date.now();
-    // 다시 누르면 시간 리셋
     setRateLimitedUntil(now + ms);
   };
 
@@ -1560,20 +2845,23 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
     const isRateLimitedNow =
       rateLimitedUntil !== null && now < rateLimitedUntil;
 
-    // ✅ 이미 막혀있는 상태에서 또 누르면 바로 배너만 다시 보여주고 끝
     if (isRateLimitedNow) {
-      triggerRateLimited(); // 시간 리셋해서 계속 보이게
+      triggerRateLimited();
       return;
     }
 
-    // 전송 직후 "보냈다" 기록
-    const sentAt = Date.now();
-    pendingSendRef.current = { content: v, at: sentAt };
+    // 로그인한 사용자만 "내 메시지 돌아왔나" 체크를 위해 pending 설정
+    let sentAt = Date.now();
+    if (isLoggedIn) {
+      pendingSendRef.current = { content: v, at: sentAt };
+    } else {
+      // 게스트는 optimistic 감지 안 함
+      pendingSendRef.current = null;
+    }
 
     const maybePromise = sendMessage(v);
     setNewMessage("");
 
-    // 포커스/스크롤
     requestAnimationFrame(() => {
       scrollToBottom("auto");
       setAtBottom(true);
@@ -1586,7 +2874,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
       }
     });
 
-    // 혹시 진짜로 에러를 던져주면 그걸로도 감지
+    // Promise 에러가 429면 누구든 띄움
     Promise.resolve(maybePromise).catch((err) => {
       const type =
         (err as any)?.response?.data?.type || (err as any)?.type || "";
@@ -1596,16 +2884,17 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
       }
     });
 
-    // 100ms 안에 메시지가 안 돌아오면 "막혔다"라고 거의 즉시 판단
-    setTimeout(() => {
-      const pendingNow = pendingSendRef.current;
-      if (!pendingNow) return;
-      if (pendingNow.at === sentAt) {
-        // 여전히 안 왔다 → 막힌 걸로 본다
-        triggerRateLimited();
-        pendingSendRef.current = null;
-      }
-    }, 100);
+    // ✅ 이 타이머도 로그인 사용자에게만 적용
+    if (isLoggedIn) {
+      setTimeout(() => {
+        const pendingNow = pendingSendRef.current;
+        if (!pendingNow) return;
+        if (pendingNow.at === sentAt) {
+          triggerRateLimited();
+          pendingSendRef.current = null;
+        }
+      }, 100);
+    }
   };
 
   // 차단 모달 열기
@@ -1651,7 +2940,7 @@ const ChatPanel = ({ messages, sendMessage, onBlockUser }: ChatPanelProps) => {
       />
 
       <div className="relative flex flex-col h-full bg-gray-800 text-white">
-        {/* ✅ 도배 안내 말풍선: 채팅창 바로 위에, 한 줄, 크게 */}
+        {/* ✅ 도배 안내 말풍선 */}
         {isRateLimitedNow && (
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[300] transition-opacity"
