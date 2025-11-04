@@ -26,14 +26,14 @@ const MyCreatedRooms = ({
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
-  if (!list.length) {
-    return (
-      <div className="bg-white rounded-xl px-8 py-6 w-full max-w-[880px] mx-auto shadow-sm">
-        <h2 className="text-lg font-bold mb-2">{title}</h2>
-        <p className="text-sm text-gray-500">아직 만든 방이 없습니다.</p>
-      </div>
-    );
-  }
+  // if (!list.length) {
+  //   return (
+  //     <div className="bg-white rounded-xl px-8 py-6 w-full max-w-[880px] mx-auto shadow-sm">
+  //       <h2 className="text-lg font-bold mb-2">{title}</h2>
+  //       <p className="text-sm text-gray-500">아직 만든 방이 없습니다.</p>
+  //     </div>
+  //   );
+  // }
 
   const fmt = (iso: string) => {
     try {
@@ -50,6 +50,7 @@ const MyCreatedRooms = ({
       {/* 제목과 리스트 사이에 필터 바 삽입 */}
       {filters}
 
+     {list.length > 0 && (
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {list.map((r) => {
           const isLive = liveRoomId != null && r.roomId === liveRoomId;
@@ -101,6 +102,12 @@ const MyCreatedRooms = ({
           );
         })}
       </div>
+    )}
+    {list.length === 0 && (
+      <div className="text-center text-gray-500">
+        <p>아직 만든 방이 없습니다.</p>
+      </div>
+    )}
     </div>
   );
 };
