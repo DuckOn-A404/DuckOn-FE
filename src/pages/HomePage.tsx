@@ -65,8 +65,6 @@ const HomePage = () => {
     })();
   }, []);
 
-  const openGuide = (i = 0) => {setGuideIndex(i); setGuideOpen(true);};
-
   return (
     <div className="w-full relative">
       <AuroraStreakBG />
@@ -78,7 +76,9 @@ const HomePage = () => {
           current={currentBannerIndex}
           setCurrent={setCurrentBannerIndex}
           autoplayMs={BANNER_AUTOPLAY_MS}
+          onOpenGuide={(i = 0) => {setGuideIndex(i); setGuideOpen(true);}} // ← 추가
         />
+
       </div>
 
       {/* 메인 콘텐츠 */}

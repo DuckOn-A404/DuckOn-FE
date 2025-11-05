@@ -1,5 +1,5 @@
 import {useRef, useState} from "react";
-import {Users, Sparkles} from "lucide-react";
+import {Users} from "lucide-react";
 import {motion, useMotionValue, useSpring, useTransform} from "framer-motion";
 
 type ArtistCardProps = {
