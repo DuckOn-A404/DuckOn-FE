@@ -38,6 +38,7 @@ const RightSidebar = ({
           messages={messages}
           sendMessage={sendMessage}
           onBlockUser={onBlockUser}
+          isHost={isHost}
         />
       ) : (
         <PlaylistPanel
