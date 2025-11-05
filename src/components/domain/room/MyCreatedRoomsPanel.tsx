@@ -122,7 +122,10 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
               setQuick("all");
               setVisible(pageSize);
             }}
-            className="border rounded-md px-2 py-1 text-sm w-[130px] sm:w-auto"
+            // className="border rounded-md px-2 py-1 text-sm w-[130px] sm:w-auto"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      hover:border-gray-400 transition-colors shadow-sm bg-white w-[130px] sm:w-auto"
           />
           <span className="text-gray-400">~</span>
           <input
@@ -133,7 +136,10 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
               setQuick("all");
               setVisible(pageSize);
             }}
-            className="border rounded-md px-2 py-1 text-sm w-[130px] sm:w-auto"
+            // className="border rounded-md px-2 py-1 text-sm w-[130px] sm:w-auto"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      hover:border-gray-400 transition-colors shadow-sm bg-white w-[130px] sm:w-auto"
           />
         </div>
 
@@ -150,7 +156,9 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
               setArtistId(v === "all" ? "all" : Number(v));
               setVisible(pageSize);
             }}
-            className="border rounded-md px-2 py-1 text-sm w-[160px] sm:w-auto"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                      hover:border-gray-400 transition-colors shadow-sm bg-white w-[160px] sm:w-auto"
           >
             <option value="all">전체</option>
             {artistOptions.map(([id, label]) => (
