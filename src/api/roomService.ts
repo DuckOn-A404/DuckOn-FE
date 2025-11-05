@@ -251,3 +251,4 @@ export const ejectUserFromRoom = async (
     params: { artistId },
   });
 };
+
