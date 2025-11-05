@@ -1363,7 +1363,7 @@ type ChatPanelProps = {
   messages: ChatMessage[];
   sendMessage: (content: string) => Promise<void> | void;
   onBlockUser: (userId: string) => void;
-  isHost?: boolean; // ✅ 방장 여부 추가 (기본 false)
+  isHost?: boolean; // ✅ 방장 여부만 추가
 };
 
 // 최근 메시지/이름 미리보기
@@ -1393,73 +1393,38 @@ function countGraphemes(s: string): number {
 const MAX_LEN = 500;
 const SCROLL_CLASS = "duckon-chat-scroll";
 
-// --- 차단 확인 모달 ---
+// --- 공통 ConfirmModal (차단/강퇴 둘 다 여기서) ---
 const ConfirmModal = ({
   isOpen,
   onConfirm,
   onCancel,
   nickname,
+  variant = "block",
 }: {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
   nickname: string;
+  variant?: "block" | "eject";
 }) => {
   if (!isOpen) return null;
+
+  const isEject = variant === "eject";
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
-        <h3 className="text-lg font-bold text-white">사용자 차단</h3>
+        <h3 className="text-lg font-bold text-white">
+          {isEject ? "사용자 강퇴" : "사용자 차단"}
+        </h3>
         <p className="text-sm text-gray-300 mt-2">
           정말로{" "}
           <span className="font-semibold text-purple-400">{nickname}</span>님을
-          차단하시겠습니까? <br />
-          차단하면 이 사용자의 메시지가 더 이상 보이지 않습니다.
-        </p>
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
-          >
-            취소
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
-          >
-            차단
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- 강퇴 확인 모달 (디자인만, 실제 강퇴 없음) ---
-const EjectConfirmModal = ({
-  isOpen,
-  onConfirm,
-  onCancel,
-  nickname,
-}: {
-  isOpen: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-  nickname: string;
-}) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
-        <h3 className="text-lg font-bold text-white">사용자 강퇴</h3>
-        <p className="text-sm text-gray-300 mt-2">
-          정말로{" "}
-          <span className="font-semibold text-purple-400">{nickname}</span>님을
-          강퇴하시겠습니까?
+          {isEject ? " 강퇴하시겠습니까?" : " 차단하시겠습니까?"}
           <br />
-          강퇴된 참가자는 현재 방에 더 이상 참여하지 못합니다.
+          {isEject
+            ? "강퇴되면 이 방에 다시 입장하지 못할 수 있습니다."
+            : "차단하면 이 사용자의 메시지가 더 이상 보이지 않습니다."}
         </p>
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -1472,7 +1437,7 @@ const EjectConfirmModal = ({
             onClick={onConfirm}
             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
           >
-            강퇴
+            {isEject ? "강퇴" : "차단"}
           </button>
         </div>
       </div>
@@ -1498,13 +1463,13 @@ const ChatPanel = ({
 
   const [lastUnread, setLastUnread] = useState<ChatMessage | null>(null);
 
-  // 차단 확인 모달
+  // ✅ 차단 확인 모달
   const [blockConfirm, setBlockConfirm] = useState<{
     isOpen: boolean;
     user: { id: string; nickname: string } | null;
   }>({ isOpen: false, user: null });
 
-  // 강퇴 확인 모달
+  // ✅ 강퇴 확인 모달 (같은 ConfirmModal 쓸 거라 구조만 같게)
   const [ejectConfirm, setEjectConfirm] = useState<{
     isOpen: boolean;
     user: { id: string; nickname: string } | null;
@@ -1637,7 +1602,7 @@ const ChatPanel = ({
       ) {
         pendingSendRef.current = null;
       } else if (messages.length > pending.msgCount) {
-        pendingSendRef.current = null;
+          pendingSendRef.current = null;
       }
     }
 
@@ -1710,12 +1675,12 @@ const ChatPanel = ({
     }, 200);
   };
 
-  // 차단 모달 열기
+  // ✅ 차단 모달 열기
   const openBlockConfirm = (user: { id: string; nickname: string }) => {
     setBlockConfirm({ isOpen: true, user });
   };
 
-  // 차단 확정
+  // ✅ 차단 확정
   const confirmBlock = async () => {
     if (!blockConfirm.user) return;
     const id = blockConfirm.user.id;
@@ -1731,14 +1696,14 @@ const ChatPanel = ({
     }
   };
 
-  // 강퇴 모달 열기
+  // ✅ 강퇴 모달 열기
   const openEjectConfirm = (user: { id: string; nickname: string }) => {
     setEjectConfirm({ isOpen: true, user });
   };
 
-  // 강퇴 확인 (지금은 닫기만)
+  // ✅ 강퇴 확인 (지금은 닫기만)
   const confirmEject = () => {
-    // TODO: 나중에 실제 강퇴 처리 넣기
+    // 나중에 실제 강퇴 로직 연결
     setEjectConfirm({ isOpen: false, user: null });
   };
 
@@ -1756,20 +1721,22 @@ const ChatPanel = ({
 
   return (
     <>
-      {/* 차단 모달 */}
+      {/* ✅ 차단 모달 */}
       <ConfirmModal
         isOpen={blockConfirm.isOpen}
         onConfirm={confirmBlock}
         onCancel={() => setBlockConfirm({ isOpen: false, user: null })}
         nickname={blockConfirm.user?.nickname ?? ""}
+        variant="block"
       />
 
-      {/* 강퇴 모달 */}
-      <EjectConfirmModal
+      {/* ✅ 강퇴 모달 - 같은 컴포넌트, variant만 다름 */}
+      <ConfirmModal
         isOpen={ejectConfirm.isOpen}
         onConfirm={confirmEject}
         onCancel={() => setEjectConfirm({ isOpen: false, user: null })}
         nickname={ejectConfirm.user?.nickname ?? ""}
+        variant="eject"
       />
 
       <div className="relative flex flex-col h-full bg-gray-800 text-white">
@@ -1865,7 +1832,7 @@ const ChatPanel = ({
                           >
                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
                               <div className="flex flex-col p-1">
-                                {/* 방장일 때만 강퇴 */}
+                                {/* ✅ 방장일 때만 강퇴 노출 */}
                                 {isHost && (
                                   <button
                                     onClick={() =>
@@ -1883,7 +1850,7 @@ const ChatPanel = ({
                                   </button>
                                 )}
 
-                                {/* 공통: 차단하기 */}
+                                {/* ✅ 공통: 차단하기 */}
                                 <button
                                   onClick={() =>
                                     openBlockConfirm({
@@ -1929,7 +1896,7 @@ const ChatPanel = ({
                           >
                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
                               <div className="flex flex-col p-1">
-                                {/* 방장일 때만 강퇴 */}
+                                {/* ✅ 방장일 때만 강퇴 노출 */}
                                 {isHost && (
                                   <button
                                     onClick={() =>
@@ -1947,7 +1914,7 @@ const ChatPanel = ({
                                   </button>
                                 )}
 
-                                {/* 공통: 차단하기 */}
+                                {/* ✅ 공통: 차단하기 */}
                                 <button
                                   onClick={() =>
                                     openBlockConfirm({
@@ -2108,7 +2075,6 @@ const ChatPanel = ({
 
         <style>{`
           .duckon-chat-scroll {
-            /* Firefox */
             scrollbar-width: thin;
             scrollbar-color: rgba(148,163,184,.3) #1e293b;
           }
@@ -2134,3 +2100,4 @@ const ChatPanel = ({
 };
 
 export default ChatPanel;
+
