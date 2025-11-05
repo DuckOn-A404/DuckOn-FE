@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DuckOn</string>
+    <string name="title_activity_main">DuckOn</string>
+    <string name="package_name">com.teamduck.duckon</string>
+    <string name="custom_url_scheme">com.teamduck.duckon</string>
+</resources>

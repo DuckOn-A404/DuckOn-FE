@@ -3,7 +3,6 @@ import type { RoomHistory } from "./room";
 export type MyUser = {
   userId: string;
   email: string;
-  password: string; // 사용자 비밀번호(해시값)
   nickname: string;
   artistList?: number[];
   language: string;
