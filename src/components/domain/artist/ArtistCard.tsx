@@ -133,7 +133,6 @@ export default function ArtistCard({
               animate={{opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.8}}
               transition={{duration: 0.16}}
             >
-              <Sparkles className="w-5 h-5 text-purple-500" />
             </motion.div>
           </div>
         </div>

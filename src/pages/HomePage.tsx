@@ -35,19 +35,12 @@ const HomePage = () => {
   const banners = useMemo(
     () => [
       {id: 1, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blackpink_HYLT_banner.jpeg"},
+      {id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"},
       {id: 2, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg"},
       {id: 3, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg"},
-      {id: 4, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_dirtywork_banner.jpeg"},
-      {id: 5, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_pink_banner.jpeg"},
-      {id: 6, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_supernova_banner.jpeg"},
-      {id: 7, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_supernova_banner2.jpeg"},
       {id: 8, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnpink_black_banner.jpeg"},
-      {id: 9, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/Le+sserafim+come+over+title+card+edit.jpeg"},
       {id: 10, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg"},
-      {id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"},
-      {id: 12, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_debut_banner.jpeg"},
       {id: 13, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg"},
-      {id: 14, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_nymchore_banner.jpeg"},
       {id: 15, title: "지금 바로 시작하세요", subtitle: "방을 만들고 팬들과 함께 즐겨보세요", gradient: "from-fuchsia-500 via-rose-500 to-amber-500"},
     ],
     []
@@ -90,7 +83,7 @@ const HomePage = () => {
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-24">
-        {/* 🔥 트렌딩 방 (원본 유지) */}
+        {/* 🔥 트렌딩 방 */}
         <section>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold">
