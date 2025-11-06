@@ -5,6 +5,7 @@ import { Popover } from "@headlessui/react";
 import { MoreVertical, UserX } from "lucide-react";
 import { blockUser, getBlockedUsers } from "../../api/userService";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
+import NicknameWithRank from "../../components/common/NicknameWithRank";
 
 type ChatTabProps = {
   messages: artistChatMessage[];
@@ -158,11 +159,21 @@ const ArtistChatTab = ({ messages, scrollContainerRef }: ChatTabProps) => {
                     isMyMessage ? "items-end" : "items-start"
                   }`}
                 >
-                  {!isSameUser && (
+                  { (
+                    <span className="text-sm font-semibold text-gray-700 mb-1 mt-1">
+                      <NicknameWithRank
+                        nickname={msg.userNickname}
+                        rankLevel={msg.userRank?.rankLevel ?? "GREEN"}
+                        badgeSize={18}
+                      />
+                    </span>
+                  )}
+                  
+                  {/* {!isSameUser && (
                     <span className="text-sm font-semibold text-gray-700 mb-1 mt-1">
                       {msg.userNickname}
                     </span>
-                  )}
+                  )} */}
 
                 <div className={`flex items-end gap-2 ${isSameUser ? "mt-0.5" : "mt-1"}`}>
 

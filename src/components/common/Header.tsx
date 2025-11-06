@@ -2,6 +2,7 @@ import {type User} from "../../types";
 import {useNavigate} from "react-router-dom";
 import {Menu} from "@headlessui/react";
 import {ChevronDown} from "lucide-react";
+import NicknameWithRank from "./NicknameWithRank";
 
 type HeaderProps = {
   user: User | null;
@@ -44,9 +45,17 @@ const Header = ({user, onLogin, onSignup, onLogout}: HeaderProps) => {
                     alt="프로필 이미지"
                     className="w-8 h-8 rounded-full object-cover ring-1 ring-black/5"
                   />
-                  <span className="text-sm font-semibold text-gray-800">
-                    {user.nickname}
-                  </span>
+                  <div className="flex items-center gap-1.5 max-w-[130px]">
+                    <NicknameWithRank
+                      nickname={
+                        user.nickname.length > 10
+                          ? `${user.nickname.slice(0, 10)}...`
+                          : user.nickname
+                      }
+                      rankLevel={user.userRank?.rankLevel ?? "GREEN"}
+                      badgeSize={18}
+                    />
+                  </div>
                   <ChevronDown className="w-4 h-4 text-gray-500 transition-transform group-data-[headlessui-state=open]:rotate-180" />
                 </Menu.Button>
 

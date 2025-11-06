@@ -1,9 +1,9 @@
 import type { OtherUser } from "../../../types/otherUser";
+import RankProgress from "../../common/RankProgress"; // ✅ 추가
 
 type OtherProfileCardProps = {
   user: OtherUser;
   onToggleFollow: () => void;
-  // 타인 페이지에서는 아래 두 핸들러를 쓰지 않습니다(비인터랙티브).
   onFollowerClick?: () => void;
   onFollowingClick?: () => void;
   isFollowLoading?: boolean;
@@ -13,8 +13,10 @@ const OtherProfileCard = ({
   user,
   onToggleFollow,
 }: OtherProfileCardProps) => {
+  const rankLevel = user.userRank?.rankLevel ?? "GREEN";
+
   return (
-    <div className="bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
+    <div className="relative bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-6 gap-3">
         <h1 className="text-lg font-bold text-gray-800">프로필 정보</h1>
@@ -32,7 +34,7 @@ const OtherProfileCard = ({
 
       {/* 본문 */}
       <div className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start">
-        {/* 왼쪽: 프로필 + 팔/팔 (비인터랙티브) */}
+        {/* 왼쪽: 프로필 + 팔/팔 */}
         <div className="flex flex-col items-center w-full sm:w-32 shrink-0">
           <img
             src={user.imgUrl || "/default_image.png"}
@@ -42,31 +44,52 @@ const OtherProfileCard = ({
 
           <div className="mt-4 flex gap-10 sm:gap-6 text-center select-none">
             <div className="text-center">
-              <div className="text-lg font-bold">{user.followerCount?.toLocaleString() ?? "0"}</div>
+              <div className="text-lg font-bold">
+                {user.followerCount?.toLocaleString() ?? "0"}
+              </div>
               <div className="text-xs text-gray-500">팔로워</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold">{user.followingCount?.toLocaleString() ?? "0"}</div>
+              <div className="text-lg font-bold">
+                {user.followingCount?.toLocaleString() ?? "0"}
+              </div>
               <div className="text-xs text-gray-500">팔로잉</div>
             </div>
           </div>
         </div>
 
-        {/* 오른쪽: 라벨 옆 값(항상 가로 배치) */}
-        <div className="min-w-0 flex-1 text-sm space-y-2">
+        {/* 가운데: 정보 영역 */}
+        <div className="min-w-0 flex-[0.7] text-l space-y-2 mt-5">
           <div className="flex items-start gap-2">
-            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">아이디</div>
+            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
+              아이디
+            </div>
             <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate">
               {user.userId}
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">닉네임</div>
+            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
+              닉네임
+            </div>
             <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate font-semibold">
+              {/* <NicknameWithRank
+                nickname={user.nickname}
+                rankLevel={rankLevel}
+                badgeSize={16}
+              /> */}
               {user.nickname}
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 하단: 랭크 진행도 영역 */}
+      <div className="mt-8">
+        <RankProgress
+          rankLevel={rankLevel}
+          roomCreateCount={user.userRank?.roomCreateCount ?? 0}
+        />
       </div>
     </div>
   );

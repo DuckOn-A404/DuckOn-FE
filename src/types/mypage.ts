@@ -1,4 +1,5 @@
 import type { RoomHistory } from "./room";
+import type { UserRank } from "./rank";
 
 export type MyUser = {
   userId: string;
@@ -13,5 +14,6 @@ export type MyUser = {
   imgUrl?: string;
   roomList?: RoomHistory[];   // 내가 만든 방 히스토리
   penaltyList: any[];
-  socialLogin?: boolean
+  socialLogin?: boolean;
+  userRank?: UserRank;  // 랭크
 };

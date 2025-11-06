@@ -1,6 +1,7 @@
 import { type MyUser } from "../../../types/mypage";
 import { MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import RankProgress from "../../common/RankProgress";
 
 type MyProfileCardProps = {
   user: MyUser;
@@ -22,6 +23,7 @@ const MyProfileCard = ({
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const rankLevel = user.userRank?.rankLevel ?? "GREEN";
 
   useEffect(() => {
     if (!open) return;
@@ -148,7 +150,7 @@ const MyProfileCard = ({
         </div>
 
         {/* 오른쪽: 라벨 옆 값(항상 가로 배치) */}
-        <div className="min-w-0 flex-1 text-sm space-y-2">
+        <div className="min-w-0 flex-1 text-l space-y-2">
           {/* 이메일 */}
           <div className="flex items-start gap-2">
             <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
@@ -179,6 +181,13 @@ const MyProfileCard = ({
             </div>
           </div>
         </div>
+      </div>
+      {/* ✅ 하단: 랭크 진행도 영역 */}
+      <div className="mt-8">
+        <RankProgress
+          rankLevel={rankLevel}
+          roomCreateCount={user.userRank?.roomCreateCount ?? 0}
+        />
       </div>
     </div>
   );

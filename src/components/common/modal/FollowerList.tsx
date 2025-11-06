@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"; // 추가
 import type { FollowUser } from "../../../types/follow";
 import { fetchFollowList } from "../../../api/follow/followFollowingList";
 import { followUser, unfollowUser } from "../../../api/follow/followService";
+import NicknameWithRank from "../NicknameWithRank";
 
 type FollowerListProps = {
   onClose: () => void;
@@ -80,9 +81,18 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
                   alt="profile"
                   className="w-10 h-10 rounded-full object-cover"
                 />
-                <span className="text-sm font-medium text-gray-700">
-                  {user.nickname}
-                </span>
+                <div className="flex-1 min-w-0 flex items-center gap-1">
+                  {/* 닉네임 앞 6글자만 표시 */}
+                  <NicknameWithRank
+                    nickname={
+                      user.nickname.length > 10
+                        ? `${user.nickname.slice(0, 10)}...`
+                        : user.nickname
+                    }
+                    rankLevel={user.userRank?.rankLevel ?? "GREEN"}
+                    badgeSize={18}
+                  />
+                </div>
               </div>
               <button
                 onClick={(e) => {

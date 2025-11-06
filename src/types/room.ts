@@ -1,3 +1,5 @@
+import type { UserRank } from "./rank";
+
 export type room = {
   roomId: number;
   title: string;
@@ -6,6 +8,8 @@ export type room = {
   hostProfileImgUrl: string;
   imgUrl: string | null;
   participantCount: number;
+
+  hostRank?: UserRank;
 };
 
 // 내가 만든 과거 방(입장 불가 히스토리). BE RoomDTO와 1:1 매칭
@@ -57,6 +61,8 @@ export type trendingRoom = {
   hostProfileImgUrl: string | null;
   imgUrl: string | null;
   participantCount: number;
+
+  hostRank?: UserRank;
 }
 
 export type TrendingRoomsResponse = {
