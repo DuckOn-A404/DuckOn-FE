@@ -1,0 +1,25 @@
+# 의존성/빌드/커버리지
+node_modules/
+dist/
+build/
+coverage/
+
+# IDE/OS, 로그 등
+.vscode/
+.idea/
+.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 퍼블릭 바이너리만 제외 (HTML/JSON/SVG 등은 포맷 유지)
+public/**/*.png
+public/**/*.jpg
+public/**/*.jpeg
+public/**/*.gif
+public/**/*.ico
+public/**/*.webp
+public/**/*.mp4
+public/**/*.mp3
+public/**/*.zip
