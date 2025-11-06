@@ -156,8 +156,13 @@ const RankProgress: React.FC<RankProgressProps> = ({
                 >
                 {/* 헤더: sticky 삭제 + 흰색 배경 + 검정 텍스트 */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-                    <h2 className="text-base font-semibold text-gray-800">
-                    🏆 덕온 랭킹 안내
+                    <h2 className="flex items-center gap-2 text-base font-semibold text-gray-800">
+                        <img
+                            src="/public/duck.svg"
+                            alt="DuckOn Logo"
+                            className="w-5 h-5 object-contain"
+                        />
+                        덕온 랭킹 안내
                     </h2>
                     <button
                     onClick={() => setOpen(false)}
