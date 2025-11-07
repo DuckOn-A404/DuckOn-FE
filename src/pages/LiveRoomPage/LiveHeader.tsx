@@ -1,5 +1,6 @@
 import { User, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import NicknameWithRank from "../../components/common/NicknameWithRank";
 
 type LiveHeaderProps = {
   isHost: boolean;
@@ -10,6 +11,8 @@ type LiveHeaderProps = {
   onExit: () => void;
   onDelete?: () => void;
   onSaveTitle: (nextTitle: string) => Promise<void> | void;
+
+  hostRankLevel?: "VIP" | "GOLD" | "PURPLE" | "YELLOW" | "GREEN";
 };
 
 const LiveHeader = ({
@@ -20,6 +23,7 @@ const LiveHeader = ({
   onExit,
   onDelete,
   onSaveTitle,
+  hostRankLevel
 }: LiveHeaderProps) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -106,12 +110,30 @@ const LiveHeader = ({
 
         {/* 제목 아래 보조 정보 */}
         <div className="text-sm text-gray-400 mt-1.5 flex items-center gap-x-4">
-          <span>호스트: {hostNickname || "알 수 없음"}</span>
+          <div className="flex items-center gap-x-1">
+            <span>호스트:</span>
+            <NicknameWithRank
+              nickname={hostNickname || "알 수 없음"}
+              rankLevel={hostRankLevel ?? "GREEN"}  // 기본 GREEN 처리
+              badgeSize={14}
+            />
+          </div>
+
           <div className="flex items-center gap-x-1.5">
             <User size={15} className="text-gray-500" />
             <span>{participantCount}</span>
           </div>
         </div>
+        
+        {/* <div className="text-sm text-gray-400 mt-1.5 flex items-center gap-x-4">
+          <span>호스트: {hostNickname || "알 수 없음"}</span>
+          <div className="flex items-center gap-x-1.5">
+            <User size={15} className="text-gray-500" />
+            <span>{participantCount}</span>
+          </div>
+        </div> */}
+
+
       </div>
 
       {/* 오른쪽 버튼들 */}

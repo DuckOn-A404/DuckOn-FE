@@ -1438,6 +1438,7 @@ import { Popover, Transition } from "@headlessui/react";
 import { useUserStore } from "../../store/useUserStore";
 import type { ChatMessage } from "../../types/chat";
 import { blockUser } from "../../api/userService";
+import GifModal from "../../components/domain/GifModal";
 
 type ChatPanelProps = {
   messages: ChatMessage[];
@@ -1562,6 +1563,9 @@ const ChatPanel = ({
   const footerRef = useRef<HTMLDivElement | null>(null);
   const [footerH, setFooterH] = useState(0);
   const [isMultiline, setIsMultiline] = useState(false);
+
+  // ✅ GIF 모달 상태
+  const [isGifModalOpen, setIsGifModalOpen] = useState(false);
 
   // ✅ 도배 감지용
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
@@ -1792,6 +1796,12 @@ const ChatPanel = ({
     setEjectConfirm({ isOpen: false, user: null });
   };
 
+  // ✅ GIF 선택 핸들러
+  const handleSelectGif = (gifUrl: string) => {
+    sendMessage(gifUrl);
+    setIsGifModalOpen(false);
+  };
+
   const charCount = countGraphemes(newMessage);
   const overLimit = charCount > MAX_LEN;
 
@@ -1822,6 +1832,13 @@ const ChatPanel = ({
         onCancel={() => setEjectConfirm({ isOpen: false, user: null })}
         nickname={ejectConfirm.user?.nickname ?? ""}
         variant="eject"
+      />
+
+      {/* ✅ GIF 모달 */}
+      <GifModal
+        isOpen={isGifModalOpen}
+        onClose={() => setIsGifModalOpen(false)}
+        onSelectGif={handleSelectGif}
       />
 
       <div className="relative flex flex-col h-full bg-gray-800 text-white">
@@ -2115,6 +2132,24 @@ const ChatPanel = ({
                 disabled={isRateLimitedNow}
               />
 
+              {/* GIF 버튼 */}
+              <button
+                type="button"
+                onClick={() => setIsGifModalOpen(!isGifModalOpen)}
+                disabled={isRateLimitedNow}
+                className="w-9 h-9 rounded-lg flex items-center justify-center
+                          bg-gray-600 hover:bg-gray-500 transition-colors
+                          disabled:bg-gray-700 disabled:cursor-not-allowed
+                          shrink-0 text-xs font-medium text-white leading-tight"
+                aria-label="GIF 선택"
+              >
+                <div className="text-center">
+                  <div>me</div>
+                  <div>me</div>
+                </div>
+              </button>
+
+              {/* 전송 버튼 */}
               <button
                 type="button"
                 tabIndex={-1}

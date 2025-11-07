@@ -6,6 +6,7 @@ import { type RecommendedUser } from "../../types";
 import { useUserStore } from "../../store/useUserStore";
 import { useNavigate } from "react-router-dom";
 import ConnectionErrorModal from "../../components/common/modal/ConnectionErrorModal";
+import NicknameWithRank from "../../components/common/NicknameWithRank";
 
 const RecommendTab = ({ artistId }: { artistId: number }) => {
   const [users, setUsers] = useState<RecommendedUser[] | null>(null);
@@ -147,20 +148,25 @@ const RecommendTab = ({ artistId }: { artistId: number }) => {
             >
               <div className="flex items-center justify-between p-2 hover:bg-gray-50">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <img
-                    src={user.imgUrl || "/default_image.png"}
-                    alt={`${user.nickname}의 프로필`}
-                    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <span
-                      className="font-medium text-gray-800 block truncate"
-                      title={user.nickname}
-                    >
-                      {user.nickname}
-                    </span>
-                  </div>
-                </div>
+  <img
+    src={user.imgUrl || "/default_image.png"}
+    alt={`${user.nickname}의 프로필`}
+    className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+  />
+  <div className="flex-1 min-w-0 flex items-center gap-1">
+    {/* 닉네임 앞 6글자만 표시 */}
+    <NicknameWithRank
+      nickname={
+        user.nickname.length > 6
+          ? `${user.nickname.slice(0, 6)}...`
+          : user.nickname
+      }
+      rankLevel={user.userRank?.rankLevel ?? "GREEN"}
+      badgeSize={18}
+    />
+  </div>
+</div>
+
                 <button
                   onClick={(e) => handleToggleFollow(e, user.userId)}
                   className={`w-20 flex-shrink-0 px-2 py-1.5 rounded-full text-sm font-semibold transition-colors ${

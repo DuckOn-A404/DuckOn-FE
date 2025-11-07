@@ -1,6 +1,9 @@
+import type { UserRank } from "./rank";
+
 /*
   일반 User 타입
 */
+
 export type User = {
   email: string;
   userId: string;
@@ -10,6 +13,8 @@ export type User = {
   bannedTill?: string;
   imgUrl?: string;
   language: string;
+
+  userRank?: UserRank;
 };
 
 /**
@@ -23,4 +28,6 @@ export interface RecommendedUser {
   mutualFollows: number;
   reasons: string[];
   following: boolean;
+
+  userRank?: UserRank;
 }

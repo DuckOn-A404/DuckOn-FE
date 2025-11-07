@@ -1,4 +1,5 @@
 import type { RoomHistory, trendingRoom } from "./room";
+import type { UserRank } from "./rank";
 
 export type OtherUser = {
   userId: string;
@@ -10,4 +11,6 @@ export type OtherUser = {
 
   roomList?: RoomHistory[];          // BE에서 내려줌
   activeRoom?: trendingRoom | null;  // BE에서 내려줌
+
+  userRank?: UserRank;
 };
