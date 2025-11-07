@@ -82,7 +82,7 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div className="flex-1 min-w-0 flex items-center gap-1">
-                  {/* 닉네임 앞 6글자만 표시 */}
+                  {/* 닉네임 앞 10글자만 표시 */}
                   <NicknameWithRank
                     nickname={
                       user.nickname.length > 10

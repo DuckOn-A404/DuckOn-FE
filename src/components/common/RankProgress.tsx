@@ -158,7 +158,7 @@ const RankProgress: React.FC<RankProgressProps> = ({
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
                     <h2 className="flex items-center gap-2 text-base font-semibold text-gray-800">
                         <img
-                            src="/public/duck.svg"
+                            src="/duck.svg"
                             alt="DuckOn Logo"
                             className="w-5 h-5 object-contain"
                         />

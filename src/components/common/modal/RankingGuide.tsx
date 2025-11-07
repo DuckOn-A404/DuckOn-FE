@@ -24,7 +24,7 @@ const RankingGuide = ({ message }: RankingGuideProps) => {
       <section className="text-center space-y-3">
         <h1 className="flex items-center justify-center gap-2 text-3xl font-bold tracking-tight">
             <img
-                src="/public/duck.svg" 
+                src="/duck.svg" 
                 alt="DuckOn Logo"
                 className="w-8 h-8 object-contain"
             />
@@ -125,13 +125,13 @@ const RankingGuide = ({ message }: RankingGuideProps) => {
       {/* PURPLE */}
       <div className="flex items-center gap-3">
         <img src="/badge/purple_badge.png" alt="Purple Badge" className="w-10.5 h-10.5 object-contain" />
-        <p className="text-sm text-gray-700"><b>꾸준히 활동하고</b> 있는 팬이에요.</p>
+        <p className="text-sm text-gray-700"><b>꾸준히 활동</b>하고 있는 팬이에요.</p>
       </div>
 
       {/* YELLOW */}
       <div className="flex items-center gap-3">
         <img src="/badge/yellow_badge.png" alt="Yellow Badge" className="w-10.5 h-10.5 object-contain" />
-        <p className="text-sm text-gray-700"><b>덕질을 즐겁게</b> 시작한 팬이에요.</p>
+        <p className="text-sm text-gray-700"><b>덕질을 즐겁게 시작</b>한 팬이에요.</p>
       </div>
 
       {/* GREEN */}

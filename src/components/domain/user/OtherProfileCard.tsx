@@ -1,5 +1,6 @@
 import type { OtherUser } from "../../../types/otherUser";
 import RankProgress from "../../common/RankProgress"; // ✅ 추가
+import TruncatedTitle from "../../common/TruncatedTitle";
 
 type OtherProfileCardProps = {
   user: OtherUser;
@@ -72,13 +73,11 @@ const OtherProfileCard = ({
             <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
               닉네임
             </div>
-            <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate font-semibold">
-              {/* <NicknameWithRank
-                nickname={user.nickname}
-                rankLevel={rankLevel}
-                badgeSize={16}
-              /> */}
-              {user.nickname}
+            <div className="min-w-0 flex-1">
+              <TruncatedTitle
+                title={user.nickname}
+                className="text-sm sm:text-base"
+              />
             </div>
           </div>
         </div>

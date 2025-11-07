@@ -2,6 +2,7 @@ import { type MyUser } from "../../../types/mypage";
 import { MoreVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import RankProgress from "../../common/RankProgress";
+import TruncatedTitle from "../../common/TruncatedTitle";
 
 type MyProfileCardProps = {
   user: MyUser;
@@ -176,8 +177,11 @@ const MyProfileCard = ({
             <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
               닉네임
             </div>
-            <div className="min-w-0 flex-1 break-all sm:whitespace-nowrap sm:truncate">
-              {user.nickname}
+            <div className="min-w-0 flex-1">
+              <TruncatedTitle
+                title={user.nickname}
+                className="text-sm sm:text-base"
+              />
             </div>
           </div>
         </div>
