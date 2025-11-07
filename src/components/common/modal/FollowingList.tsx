@@ -69,7 +69,7 @@ const FollowingList = ({ onClose }: FollowingListProps) => {
             >
               <div className="flex items-center gap-3">
                 <img
-                  src={user.profileImg || "/default_image.png"}
+                  src={user.profileImgUrl || user.profileImg || "/default_image.png"}
                   alt="profile"
                   className="w-10 h-10 rounded-full object-cover"
                 />
@@ -81,7 +81,12 @@ const FollowingList = ({ onClose }: FollowingListProps) => {
                         ? `${user.nickname.slice(0, 10)}...`
                         : user.nickname
                     }
-                    rankLevel={user.userRank?.rankLevel ?? "GREEN"}
+                    // ✅ 혹시 이쪽도 나중에 DTO로 바뀌어도 됨
+                    rankLevel={
+                      user.userRank?.rankLevel ??
+                      user.userRankDTO?.rankLevel ??
+                      "GREEN"
+                    }
                     badgeSize={18}
                   />
                 </div>

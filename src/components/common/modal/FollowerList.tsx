@@ -77,7 +77,7 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
             >
               <div className="flex items-center gap-3">
                 <img
-                  src={user.profileImg || "/default_image.png"}
+                  src={user.profileImgUrl || user.profileImg || "/default_image.png"}
                   alt="profile"
                   className="w-10 h-10 rounded-full object-cover"
                 />
@@ -89,7 +89,12 @@ const FollowerList = ({ onClose }: FollowerListProps) => {
                         ? `${user.nickname.slice(0, 10)}...`
                         : user.nickname
                     }
-                    rankLevel={user.userRank?.rankLevel ?? "GREEN"}
+                    // ✅ 두 케이스 다 커버
+                    rankLevel={
+                      user.userRank?.rankLevel ??
+                      user.userRankDTO?.rankLevel ??
+                      "GREEN"
+                    }
                     badgeSize={18}
                   />
                 </div>

@@ -1,4 +1,3 @@
-// src/components/common/TruncatedTitle.tsx
 import { useState } from "react";
 
 type Props = {
