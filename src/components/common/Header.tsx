@@ -29,12 +29,6 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
 
         {/* 오른쪽: 사용자 인증 메뉴 */}
         <div className="flex items-center gap-x-4">
-          <button
-            onClick={() => navigate("/artist-list")}
-            className="text-sm font-semibold text-gray-600 transition-colors hover:text-purple-600"
-          >
-            아티스트
-          </button>
           {user ? (
             <Menu as="div" className="relative">
               <Menu.Button className="flex items-center gap-2 rounded-full p-1 pr-3 transition-colors hover:bg-gray-100">
