@@ -38,7 +38,7 @@ const HomePage = () => {
       {id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"},
       {id: 2, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg"},
       {id: 3, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg"},
-      {id: 8, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnpink_black_banner.jpeg"},
+      {id: 8, img: "https://dn9z1o6i8w44p.cloudfront.net/memes%2F2025%2F11%2Ff47c930a-44b8-488b-b30a-58cd45dc99b7.gif"},
       {id: 10, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg"},
       {id: 13, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg"},
       {id: 15, title: "지금 바로 시작하세요", subtitle: "방을 만들고 팬들과 함께 즐겨보세요", gradient: "from-fuchsia-500 via-rose-500 to-amber-500"},
