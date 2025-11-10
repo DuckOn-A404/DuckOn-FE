@@ -229,7 +229,7 @@ const CreateRoomModal = ({
             <div className="flex gap-2 mb-2">
               <input
                 className="flex-1 border rounded px-3 py-2 text-sm"
-                placeholder="예: inkigayo babymonster"
+                placeholder="예: 블랙핑크"
                 value={ytQuery}
                 onChange={(e) => setYtQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleYouTubeSearch()}
@@ -293,7 +293,7 @@ const CreateRoomModal = ({
               onChange={(e) => setVideoUrl(e.target.value)}
             />
             <p className="text-[10px] text-gray-400 mt-1">
-              위에서 검색해서 하나를 선택하면 이 칸에 자동으로 채워집니다.
+              유튜브 링크를 직접 입력하거나 위의 검색창에서 검색 후 동영상을 선택하면 이 칸에 자동으로 채워집니다.
             </p>
           </div>
 
