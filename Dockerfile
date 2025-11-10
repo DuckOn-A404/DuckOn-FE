@@ -11,13 +11,17 @@ RUN npm ci
 # --- Vite 환경변수 (빌드타임 인자)
 ARG VITE_API_BASE_URL=/api
 ARG VITE_OAUTH2_BASE_URL
+# 추가: YouTube 키
+ARG VITE_YOUTUBE_API_KEY
+
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_OAUTH2_BASE_URL=$VITE_OAUTH2_BASE_URL
+# 추가: YouTube 키를 빌드 환경으로 노출
+ENV VITE_YOUTUBE_API_KEY=$VITE_YOUTUBE_API_KEY
 
 # 앱 코드 복사 후 빌드
 COPY . .
 RUN npm run build
-
 
 # ==========================
 # 2) Runtime Stage (Nginx serve)
