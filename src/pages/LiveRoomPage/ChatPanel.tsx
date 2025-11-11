@@ -681,7 +681,6 @@
 
 // export default ChatPanel;
 
-
 // import { useState, useEffect, useRef } from "react";
 // import { Send, MoreVertical, UserX, LogOut } from "lucide-react";
 // import { Popover, Transition } from "@headlessui/react";
@@ -695,8 +694,7 @@
 //   messages: ChatMessage[];
 //   sendMessage: (content: string) => Promise<void> | void;
 //   onBlockUser: (userId: string) => void;
-//   isHost?: boolean; // 방장 여부만 추가
-//   /** 추가: 실제 강퇴 API 호출을 부모에 위임 */
+//   isHost?: boolean;
 //   onEjectUser?: (user: { id: string; nickname: string }) => void;
 // };
 
@@ -1076,7 +1074,7 @@
 //         variant="block"
 //       />
 
-//       {/* 강퇴 모달 - 같은 컴포넌트, variant만 다름 */}
+//       {/* 강퇴 모달 */}
 //       <ConfirmModal
 //         isOpen={ejectConfirm.isOpen}
 //         onConfirm={confirmEject}
@@ -1135,6 +1133,14 @@
 //             const isMyMessage =
 //               String(msg.senderId ?? "") === String(myUser?.userId ?? "");
 
+//             // ✅ 게스트 판별: senderId 없으면 게스트로 간주
+//             const hasUserId = !!msg.senderId;
+//             // ✅ rankLevel 추출 (백에서 어떤 키로 내려줄지 대비)
+//             const msgRankLevel =
+//               (msg as any).rankLevel ||
+//               (msg as any).userRank?.rankLevel ||
+//               "GREEN";
+
 //             return (
 //               <div
 //                 key={uniqueKey}
@@ -1142,8 +1148,17 @@
 //                   isMyMessage ? "items-end" : "items-start"
 //                 }`}
 //               >
-//                 <span className="text-xs text-gray-500 mb-1">
-//                   {msg.senderNickName}
+//                 {/* 닉네임 + (로그인 유저만 뱃지) */}
+//                 <span className="text-xs text-gray-200 mb-1">
+//                   {hasUserId ? (
+//                     <NicknameWithRank
+//                       nickname={msg.senderNickName}
+//                       rankLevel={msgRankLevel}
+//                       badgeSize={18}
+//                     />
+//                   ) : (
+//                     msg.senderNickName
+//                   )}
 //                 </span>
 
 //                 <div
@@ -1923,13 +1938,14 @@ const ChatPanel = ({
             const isMyMessage =
               String(msg.senderId ?? "") === String(myUser?.userId ?? "");
 
-            // ✅ 게스트 판별: senderId 없으면 게스트로 간주
+            // ✅ 게스트 판별
             const hasUserId = !!msg.senderId;
-            // ✅ rankLevel 추출 (백에서 어떤 키로 내려줄지 대비)
-            const msgRankLevel =
-              (msg as any).rankLevel ||
-              (msg as any).userRank?.rankLevel ||
-              "GREEN";
+            // ✅ 로그인한 사람일 때만 기본 GREEN 사용
+            const msgRankLevel = hasUserId
+              ? (msg as any).rankLevel ||
+                (msg as any).userRank?.rankLevel ||
+                "GREEN"
+              : undefined;
 
             return (
               <div
@@ -1940,7 +1956,7 @@ const ChatPanel = ({
               >
                 {/* 닉네임 + (로그인 유저만 뱃지) */}
                 <span className="text-xs text-gray-200 mb-1">
-                  {hasUserId ? (
+                  {hasUserId && msgRankLevel ? (
                     <NicknameWithRank
                       nickname={msg.senderNickName}
                       rankLevel={msgRankLevel}
