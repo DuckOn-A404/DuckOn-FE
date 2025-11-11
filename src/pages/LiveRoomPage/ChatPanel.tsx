@@ -1133,13 +1133,14 @@
 //             const isMyMessage =
 //               String(msg.senderId ?? "") === String(myUser?.userId ?? "");
 
-//             // ✅ 게스트 판별: senderId 없으면 게스트로 간주
+//             // ✅ 게스트 판별
 //             const hasUserId = !!msg.senderId;
-//             // ✅ rankLevel 추출 (백에서 어떤 키로 내려줄지 대비)
-//             const msgRankLevel =
-//               (msg as any).rankLevel ||
-//               (msg as any).userRank?.rankLevel ||
-//               "GREEN";
+//             // ✅ 로그인한 사람일 때만 기본 GREEN 사용
+//             const msgRankLevel = hasUserId
+//               ? (msg as any).rankLevel ||
+//                 (msg as any).userRank?.rankLevel ||
+//                 "GREEN"
+//               : undefined;
 
 //             return (
 //               <div
@@ -1150,7 +1151,7 @@
 //               >
 //                 {/* 닉네임 + (로그인 유저만 뱃지) */}
 //                 <span className="text-xs text-gray-200 mb-1">
-//                   {hasUserId ? (
+//                   {hasUserId && msgRankLevel ? (
 //                     <NicknameWithRank
 //                       nickname={msg.senderNickName}
 //                       rankLevel={msgRankLevel}
@@ -1938,14 +1939,10 @@ const ChatPanel = ({
             const isMyMessage =
               String(msg.senderId ?? "") === String(myUser?.userId ?? "");
 
-            // ✅ 게스트 판별
-            const hasUserId = !!msg.senderId;
-            // ✅ 로그인한 사람일 때만 기본 GREEN 사용
-            const msgRankLevel = hasUserId
-              ? (msg as any).rankLevel ||
-                (msg as any).userRank?.rankLevel ||
-                "GREEN"
-              : undefined;
+            // 실제로 랭크가 내려왔는지만 본다
+            const rawRankLevel =
+              (msg as any).rankLevel || (msg as any).userRank?.rankLevel;
+            const hasRank = !!rawRankLevel;
 
             return (
               <div
@@ -1954,12 +1951,12 @@ const ChatPanel = ({
                   isMyMessage ? "items-end" : "items-start"
                 }`}
               >
-                {/* 닉네임 + (로그인 유저만 뱃지) */}
+                {/* 닉네임 + (랭크가 실제로 왔을 때만 뱃지) */}
                 <span className="text-xs text-gray-200 mb-1">
-                  {hasUserId && msgRankLevel ? (
+                  {hasRank ? (
                     <NicknameWithRank
                       nickname={msg.senderNickName}
-                      rankLevel={msgRankLevel}
+                      rankLevel={rawRankLevel}
                       badgeSize={18}
                     />
                   ) : (
