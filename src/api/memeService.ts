@@ -1,4 +1,3 @@
-// src/api/memeService.ts
 import { api } from "./axiosInstance";
 
 export type Meme = {
