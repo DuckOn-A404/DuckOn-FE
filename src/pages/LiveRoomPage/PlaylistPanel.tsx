@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Youtube, MoreVertical, Trash2 } from "lucide-react";
 import { fetchYouTubeMeta } from "../../utils/youtubeMeta";
+import YouTubeSearchModal from "../../components/common/modal/YouTubeSearchModal";
 
 type Meta = { title?: string; author?: string; thumbnail?: string };
 
@@ -27,6 +28,8 @@ const PlaylistPanel = ({
   const [error, setError] = useState<string | null>(null);
   const [metaMap, setMetaMap] = useState<Record<string, Meta>>({});
   const [openMenu, setOpenMenu] = useState<number | null>(null);
+
+  const [ytModalOpen, setYtModalOpen] = useState(false);
 
   const dragFrom = useRef<number | null>(null);
 
@@ -207,24 +210,46 @@ const PlaylistPanel = ({
       {/* 방장 전용 추가 UI */}
       {isHost && (
         <div className="mt-4 border-t border-gray-700 flex-shrink-0">
-          <div className="flex items-center gap-x-2 p-3">
-            <input
-              value={inputId}
-              onChange={(e) => setInputId(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="YouTube URL 또는 영상 ID"
-              className="flex-1 w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-purple-500 transition-colors"
-            />
-            <button
-              onClick={handleAdd}
-              className="flex-shrink-0 bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg text-sm"
-            >
-              추가
-            </button>
+          <div className="flex gap-3 p-3 items-stretch">
+            <div className="flex-1 flex">
+              <input
+                value={inputId}
+                onChange={(e) => setInputId(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                placeholder="YouTube URL 입력"
+                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 text-m outline-none focus:border-purple-500 transition-colors h-full"
+              />
+            </div>
+
+            {/* 오른쪽 버튼 묶음 */}
+            <div className="flex flex-col justify-between gap-1">
+              <button
+                onClick={handleAdd}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-2 py-2 rounded-lg text-sm"
+              >
+                추가
+              </button>
+              <button
+                type="button"
+                onClick={() => setYtModalOpen(true)}
+                className="bg-gray-600 hover:bg-gray-500 text-white text-sm px-2 py-2 rounded-lg"
+              >
+                영상 검색
+              </button>
+            </div>
           </div>
+
           {error && <p className="mt-2 text-xs text-red-400 px-3">{error}</p>}
         </div>
       )}
+      <YouTubeSearchModal
+        open={ytModalOpen}
+        onClose={() => setYtModalOpen(false)}
+        onSelect={(info) => {
+          setInputId(info.url);
+          setYtModalOpen(false);
+        }}
+      />
     </div>
   );
 };
