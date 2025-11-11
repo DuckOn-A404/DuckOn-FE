@@ -2144,8 +2144,7 @@ const ChatPanel = ({
                 aria-label="GIF 선택"
               >
                 <div className="text-center">
-                  <div>me</div>
-                  <div>me</div>
+                  <div>GIF</div>
                 </div>
               </button>
 

@@ -1,5 +1,311 @@
+// import { useState, useEffect, useRef } from "react";
+// import { X, Search, Sparkles, TrendingUp } from "lucide-react";
+// import {
+//   fetchRandomMemes,
+//   fetchFavoriteMemes,
+//   searchMemes,
+//   toggleFavoriteMeme,
+//   logMemeUsage,
+//   type Meme,
+// } from "../../api/memeService"
+
+// type GifModalProps = {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   onSelectGif: (gifUrl: string) => void;
+// };
+
+// // // 더미 GIF 데이터
+// // const DUMMY_GIFS = [
+// //       'https://d23breqm38jov9.cloudfront.net/memes/kpop_6.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/aespa_giselle_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/aespa_karina_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/aespa_ningning_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/aespa_ningning_2.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/aespa_winter_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_2.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_3.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_4.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_5.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie.jpg',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jisoo.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/bts_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/bts_suga_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/ive_leeseo_1.jpg',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/kpop_1.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/kpop_2.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/kpop_3.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/kpop_4.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/kpop_5.gif',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/lesserafim_hyj_1.jpg',
+// //     'https://d23breqm38jov9.cloudfront.net/memes/produce.gif',
+// // ];
+
+// const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [displayedGifs, setDisplayedGifs] = useState<string[]>([]);
+//   const [activeTab, setActiveTab] = useState<"trending" | "favorites">("trending");
+//   const [memes, setMemes] = useState<Meme[]>([]);
+//   const [loading, setLoading] = useState(false)
+//   const modalRef = useRef<HTMLDivElement>(null);
+//   const searchInputRef = useRef<HTMLInputElement>(null);
+
+//   // 모달이 열릴 때 GIF 로드 및 검색창 포커스
+//   useEffect(() => {
+//     if (isOpen) {
+//       setDisplayedGifs(DUMMY_GIFS);
+//       setTimeout(() => searchInputRef.current?.focus(), 100);
+//     } else {
+//       setSearchQuery("");
+//       setActiveTab("trending");
+//     }
+//   }, [isOpen]);
+
+//   // 검색 처리
+//   useEffect(() => {
+//     if (searchQuery.trim()) {
+//       setDisplayedGifs(DUMMY_GIFS);
+//     } else {
+//       setDisplayedGifs(DUMMY_GIFS);
+//     }
+//   }, [searchQuery]);
+
+//   // ESC 키로 닫기
+//   useEffect(() => {
+//     const handleEsc = (e: KeyboardEvent) => {
+//       if (e.key === "Escape" && isOpen) {
+//         onClose();
+//       }
+//     };
+//     window.addEventListener("keydown", handleEsc);
+//     return () => window.removeEventListener("keydown", handleEsc);
+//   }, [isOpen, onClose]);
+
+//   if (!isOpen) return null;
+
+//   const handleGifClick = (gifUrl: string) => {
+//     onSelectGif(gifUrl);
+//     onClose();
+//   };
+
+//   // 메이슨리 레이아웃을 위한 컬럼 분배
+//   const getColumns = () => {
+//     const columns: string[][] = [[], []];
+//     const heights = [0, 0];
+
+//     displayedGifs.forEach((gif) => {
+//       const shortestColumnIndex = heights[0] <= heights[1] ? 0 : 1;
+//       columns[shortestColumnIndex].push(gif);
+//       heights[shortestColumnIndex] += Math.random() * 50 + 85;
+//     });
+
+//     return columns;
+//   };
+
+//   const columns = getColumns();
+
+//   return (
+//     <>
+      
+//       {/* 모달 - 반응형: 모바일은 채팅창 전체, 데스크탑은 채팅창 내부 좌측 */}
+//       <div
+//         ref={modalRef}
+//         className="fixed z-[500]
+//                    bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900
+//                    shadow-2xl border border-gray-700/50
+//                    flex flex-col overflow-hidden
+//                    animate-in slide-in-from-bottom-4 fade-in duration-300
+                   
+//                    /* 모바일: 채팅창 너비에 맞춤, 입력창 바로 위 */
+//                    left-0 right-0 bottom-[88px]
+//                    w-full h-[calc(100vh-250px)] max-h-[500px]
+//                    rounded-t-2xl rounded-b-none
+                   
+//                    /* 데스크탑: 채팅창 내부 우측, Figma 위치 */
+//                    md:left-auto md:right-[5px] md:bottom-[90px]
+//                    md:w-[338px] md:h-[540px] md:max-h-[540px]
+//                    md:rounded-2xl"
+//         onClick={(e) => e.stopPropagation()}
+//       >
+//         {/* 헤더 */}
+//         <div className="relative px-4 pt-4 pb-3 bg-gradient-to-b from-gray-800/80 to-transparent">
+//           <div className="flex items-center justify-between mb-3">
+//             <h3 className="text-lg font-bold text-white flex items-center gap-2">
+//               <Sparkles size={20} className="text-purple-400" />
+//               MEMES
+//             </h3>
+//             <button
+//               onClick={onClose}
+//               className="p-1.5 rounded-lg bg-gray-700/50 hover:bg-gray-600/50
+//                        transition-all duration-200 group"
+//               aria-label="닫기"
+//             >
+//               <X size={18} className="text-gray-400 group-hover:text-white transition-colors" />
+//             </button>
+//           </div>
+
+//           {/* 검색창 */}
+//           <div className="relative">
+//             <Search
+//               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+//               size={18}
+//             />
+//             <input
+//               ref={searchInputRef}
+//               type="text"
+//               value={searchQuery}
+//               onChange={(e) => setSearchQuery(e.target.value)}
+//               placeholder="GIF 검색..."
+//               className="w-full bg-gray-700/50 border border-gray-600/50 rounded-xl
+//                        pl-10 pr-4 py-2.5 text-sm text-white
+//                        placeholder:text-gray-500
+//                        outline-none focus:border-purple-500/50 focus:bg-gray-700
+//                        transition-all duration-200"
+//             />
+//           </div>
+//         </div>
+
+//         {/* 탭 버튼 (검색 중이 아닐 때만) */}
+//         {!searchQuery && (
+//           <div className="px-4 pb-3">
+//             <div className="flex gap-2">
+//               <button
+//                 onClick={() => setActiveTab("trending")}
+//                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+//                           text-sm font-medium transition-all duration-200
+//                           ${activeTab === "trending"
+//                             ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+//                             : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+//                           }`}
+//               >
+//                 <TrendingUp size={16} />
+//                 인기
+//               </button>
+//               <button
+//                 onClick={() => setActiveTab("favorites")}
+//                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+//                           text-sm font-medium transition-all duration-200
+//                           ${activeTab === "favorites"
+//                             ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+//                             : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+//                           }`}
+//               >
+//                 <Sparkles size={16} />
+//                 즐겨찾기
+//               </button>
+//             </div>
+//           </div>
+//         )}
+
+//         {/* GIF 그리드 - 메이슨리 레이아웃 */}
+//         <div className="flex-1 overflow-y-auto px-4 pb-4 gif-scroll">
+//           <div className="flex gap-2.5">
+//             {columns.map((column, columnIndex) => (
+//               <div key={columnIndex} className="flex-1 flex flex-col gap-2.5">
+//                 {column.map((gif, index) => (
+//                   <div
+//                     key={`${columnIndex}-${index}`}
+//                     onClick={() => handleGifClick(gif)}
+//                     className="relative rounded-xl overflow-hidden cursor-pointer
+//                              bg-gray-700/30 group
+//                              transform transition-all duration-200
+//                              hover:scale-[1.03] hover:shadow-xl hover:shadow-purple-500/20
+//                              active:scale-[0.97]"
+//                   >
+//                     {/* 호버 오버레이 */}
+//                     <div className="absolute inset-0 bg-gradient-to-t from-purple-600/40 to-transparent
+//                                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
+                    
+//                     <img
+//                       src={gif}
+//                       alt={`gif-${index}`}
+//                       className="w-full h-auto object-cover"
+//                       loading="lazy"
+//                       style={{
+//                         minHeight: "85px",
+//                         maxHeight: "200px",
+//                       }}
+//                     />
+//                   </div>
+//                 ))}
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+
+//         {/* 하단 그라데이션 페이드 */}
+//         <div className="absolute bottom-0 left-0 right-0 h-8 
+//                       bg-gradient-to-t from-gray-900 to-transparent pointer-events-none" />
+//       </div>
+
+//       <style>{`
+//         .gif-scroll {
+//           scrollbar-width: thin;
+//           scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+//         }
+//         .gif-scroll::-webkit-scrollbar {
+//           width: 6px;
+//         }
+//         .gif-scroll::-webkit-scrollbar-track {
+//           background: transparent;
+//         }
+//         .gif-scroll::-webkit-scrollbar-thumb {
+//           background: rgba(139, 92, 246, 0.3);
+//           border-radius: 10px;
+//         }
+//         .gif-scroll::-webkit-scrollbar-thumb:hover {
+//           background: rgba(139, 92, 246, 0.5);
+//         }
+        
+//         @keyframes slide-in-from-bottom-4 {
+//           from {
+//             transform: translateY(1rem);
+//           }
+//           to {
+//             transform: translateY(0);
+//           }
+//         }
+        
+//         .animate-in {
+//           animation-fill-mode: both;
+//         }
+        
+//         .slide-in-from-bottom-4 {
+//           animation-name: slide-in-from-bottom-4;
+//         }
+        
+//         .fade-in {
+//           animation-name: fade-in;
+//         }
+        
+//         @keyframes fade-in {
+//           from {
+//             opacity: 0;
+//           }
+//           to {
+//             opacity: 1;
+//           }
+//         }
+//       `}</style>
+//     </>
+//   );
+// };
+
+// export default GifModal;
+
+
+// src/components/common/modal/GifModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { X, Search, Sparkles, TrendingUp } from "lucide-react";
+import {
+  fetchTopMemes,
+  fetchFavoriteMemes,
+  searchMemes,
+  logMemeUsage,
+  type Meme,
+} from "../../api/memeService"; // ← 위치 다르면 여기만 고쳐
 
 type GifModalProps = {
   isOpen: boolean;
@@ -7,67 +313,111 @@ type GifModalProps = {
   onSelectGif: (gifUrl: string) => void;
 };
 
-// 더미 GIF 데이터
-const DUMMY_GIFS = [
-      'https://d23breqm38jov9.cloudfront.net/memes/kpop_6.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/aespa_giselle_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/aespa_karina_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/aespa_ningning_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/aespa_ningning_2.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/aespa_winter_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_2.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_3.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_4.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie_5.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie.jpg',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jennie1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/blackpink_jisoo.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/bts_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/bts_suga_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/ive_leeseo_1.jpg',
-    'https://d23breqm38jov9.cloudfront.net/memes/kpop_1.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/kpop_2.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/kpop_3.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/kpop_4.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/kpop_5.gif',
-    'https://d23breqm38jov9.cloudfront.net/memes/lesserafim_hyj_1.jpg',
-    'https://d23breqm38jov9.cloudfront.net/memes/produce.gif',
-];
-
 const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [displayedGifs, setDisplayedGifs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"trending" | "favorites">("trending");
+  const [memes, setMemes] = useState<Meme[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const modalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // 모달이 열릴 때 GIF 로드 및 검색창 포커스
+  // 모달 열릴 때 기본 데이터(랜덤 추천) 가져오기
   useEffect(() => {
-    if (isOpen) {
-      setDisplayedGifs(DUMMY_GIFS);
-      setTimeout(() => searchInputRef.current?.focus(), 100);
-    } else {
+    if (!isOpen) {
       setSearchQuery("");
       setActiveTab("trending");
+      setMemes([]);
+      return;
     }
+
+    // 검색창 포커스
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+
+    (async () => {
+      setLoading(true);
+      try {
+        const data = await fetchTopMemes();
+        setMemes(data);
+      } catch (e) {
+        console.error("failed to load memes:", e);
+        setMemes([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [isOpen]);
 
-  // 검색 처리
-  useEffect(() => {
-    if (searchQuery.trim()) {
-      setDisplayedGifs(DUMMY_GIFS);
-    } else {
-      setDisplayedGifs(DUMMY_GIFS);
-    }
-  }, [searchQuery]);
+  // 탭 바뀔 때
+useEffect(() => {
+  if (!isOpen) return;
+  if (searchQuery.trim()) return;
 
-  // ESC 키로 닫기
+  (async () => {
+    setLoading(true);
+    try {
+      if (activeTab === "trending") {
+        const data = await fetchTopMemes();
+        setMemes(data);
+      } else {
+        const data = await fetchFavoriteMemes();
+        setMemes(data);
+      }
+    } catch (e) {
+      console.error("[GifModal] favorite fetch error:", e);
+      setMemes([]);
+    } finally {
+      setLoading(false);
+    }
+  })();
+}, [activeTab, isOpen, searchQuery]);
+
+  // 검색
+  useEffect(() => {
+    if (!isOpen) return;
+    const q = searchQuery.trim();
+
+    // 검색어 없으면 탭 데이터 다시
+    if (!q) {
+      (async () => {
+        setLoading(true);
+        try {
+          if (activeTab === "trending") {
+            setMemes(await fetchTopMemes());
+          } else {
+            setMemes(await fetchFavoriteMemes());
+          }
+        } catch (e) {
+          console.error(e);
+          setMemes([]);
+        } finally {
+          setLoading(false);
+        }
+      })();
+      return;
+    }
+
+    // 검색어 있으면 검색 API
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const data = await searchMemes(q);
+        setMemes(data);
+      } catch (e) {
+        console.error(e);
+        setMemes([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 250); // 디바운스
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeTab, isOpen]);
+
+  // ESC로 닫기
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        onClose();
-      }
+      if (e.key === "Escape" && isOpen) onClose();
     };
     window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
@@ -75,19 +425,26 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
 
   if (!isOpen) return null;
 
-  const handleGifClick = (gifUrl: string) => {
-    onSelectGif(gifUrl);
+  // 밈 클릭 → 채팅으로 전송 + 사용 로그
+  const handleGifClick = (m: Meme) => {
+    onSelectGif(m.imageUrl);
+
+    // 집계 로그
+    logMemeUsage(m.id, "USE").catch((err) => {
+      console.warn("meme usage log failed", err);
+    });
+
     onClose();
   };
 
-  // 메이슨리 레이아웃을 위한 컬럼 분배
+  // 메이슨리용 컬럼 나누기 (기존 너 코드 그대로, string → Meme만 바꿈)
   const getColumns = () => {
-    const columns: string[][] = [[], []];
+    const columns: Meme[][] = [[], []];
     const heights = [0, 0];
 
-    displayedGifs.forEach((gif) => {
+    memes.forEach((meme) => {
       const shortestColumnIndex = heights[0] <= heights[1] ? 0 : 1;
-      columns[shortestColumnIndex].push(gif);
+      columns[shortestColumnIndex].push(meme);
       heights[shortestColumnIndex] += Math.random() * 50 + 85;
     });
 
@@ -98,8 +455,6 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
 
   return (
     <>
-      
-      {/* 모달 - 반응형: 모바일은 채팅창 전체, 데스크탑은 채팅창 내부 좌측 */}
       <div
         ref={modalRef}
         className="fixed z-[500]
@@ -107,13 +462,9 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
                    shadow-2xl border border-gray-700/50
                    flex flex-col overflow-hidden
                    animate-in slide-in-from-bottom-4 fade-in duration-300
-                   
-                   /* 모바일: 채팅창 너비에 맞춤, 입력창 바로 위 */
                    left-0 right-0 bottom-[88px]
                    w-full h-[calc(100vh-250px)] max-h-[500px]
                    rounded-t-2xl rounded-b-none
-                   
-                   /* 데스크탑: 채팅창 내부 우측, Figma 위치 */
                    md:left-auto md:right-[5px] md:bottom-[90px]
                    md:w-[338px] md:h-[540px] md:max-h-[540px]
                    md:rounded-2xl"
@@ -157,7 +508,7 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
           </div>
         </div>
 
-        {/* 탭 버튼 (검색 중이 아닐 때만) */}
+        {/* 탭 (검색 중이 아닐 때만) */}
         {!searchQuery && (
           <div className="px-4 pb-3">
             <div className="flex gap-2">
@@ -165,9 +516,10 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
                 onClick={() => setActiveTab("trending")}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
                           text-sm font-medium transition-all duration-200
-                          ${activeTab === "trending"
-                            ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                            : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+                          ${
+                            activeTab === "trending"
+                              ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                              : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
                           }`}
               >
                 <TrendingUp size={16} />
@@ -177,9 +529,10 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
                 onClick={() => setActiveTab("favorites")}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
                           text-sm font-medium transition-all duration-200
-                          ${activeTab === "favorites"
-                            ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                            : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
+                          ${
+                            activeTab === "favorites"
+                              ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                              : "bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-300"
                           }`}
               >
                 <Sparkles size={16} />
@@ -189,47 +542,59 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
           </div>
         )}
 
-        {/* GIF 그리드 - 메이슨리 레이아웃 */}
+        {/* 내용 */}
         <div className="flex-1 overflow-y-auto px-4 pb-4 gif-scroll">
-          <div className="flex gap-2.5">
-            {columns.map((column, columnIndex) => (
-              <div key={columnIndex} className="flex-1 flex flex-col gap-2.5">
-                {column.map((gif, index) => (
-                  <div
-                    key={`${columnIndex}-${index}`}
-                    onClick={() => handleGifClick(gif)}
-                    className="relative rounded-xl overflow-hidden cursor-pointer
-                             bg-gray-700/30 group
-                             transform transition-all duration-200
-                             hover:scale-[1.03] hover:shadow-xl hover:shadow-purple-500/20
-                             active:scale-[0.97]"
-                  >
-                    {/* 호버 오버레이 */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-purple-600/40 to-transparent
-                                  opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
-                    
-                    <img
-                      src={gif}
-                      alt={`gif-${index}`}
-                      className="w-full h-auto object-cover"
-                      loading="lazy"
-                      style={{
-                        minHeight: "85px",
-                        maxHeight: "200px",
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
+              불러오는 중...
+            </div>
+          ) : memes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-gray-500 text-sm">
+              표시할 밈이 없어요.
+            </div>
+          ) : (
+            <div className="flex gap-2.5">
+              {columns.map((column, columnIndex) => (
+                <div key={columnIndex} className="flex-1 flex flex-col gap-2.5">
+                  {column.map((meme) => (
+                    <div
+                      key={meme.id}
+                      onClick={() => handleGifClick(meme)}
+                      className="relative rounded-xl overflow-hidden cursor-pointer
+                                 bg-gray-700/30 group
+                                 transform transition-all duration-200
+                                 hover:scale-[1.03] hover:shadow-xl hover:shadow-purple-500/20
+                                 active:scale-[0.97]"
+                    >
+
+                      {/* 호버 오버레이 */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-purple-600/40 to-transparent
+                                      opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
+
+                      <img
+                        src={meme.imageUrl}
+                        alt={meme.tags?.[0] ?? "meme"}
+                        className="w-full h-auto object-cover"
+                        loading="lazy"
+                        style={{
+                          minHeight: "85px",
+                          maxHeight: "200px",
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* 하단 그라데이션 페이드 */}
+        {/* 하단 그라데이션 */}
         <div className="absolute bottom-0 left-0 right-0 h-8 
                       bg-gradient-to-t from-gray-900 to-transparent pointer-events-none" />
       </div>
 
+      {/* 스크롤바 스타일 & 애니메이션 */}
       <style>{`
         .gif-scroll {
           scrollbar-width: thin;
@@ -248,35 +613,22 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
         .gif-scroll::-webkit-scrollbar-thumb:hover {
           background: rgba(139, 92, 246, 0.5);
         }
-        
         @keyframes slide-in-from-bottom-4 {
-          from {
-            transform: translateY(1rem);
-          }
-          to {
-            transform: translateY(0);
-          }
+          from { transform: translateY(1rem); }
+          to { transform: translateY(0); }
         }
-        
         .animate-in {
           animation-fill-mode: both;
         }
-        
         .slide-in-from-bottom-4 {
           animation-name: slide-in-from-bottom-4;
         }
-        
         .fade-in {
           animation-name: fade-in;
         }
-        
         @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
       `}</style>
     </>
