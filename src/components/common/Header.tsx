@@ -22,18 +22,36 @@ const Header = ({user, onLogin, onSignup, onLogout}: HeaderProps) => {
       <div className="bg-white/60 backdrop-blur-md border-b border-white/60 shadow-[0_10px_30px_rgba(0,0,0,.04)]">
         <nav className="max-w-7xl h-16 mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
           {/* 로고 */}
-          <button
-            className="group flex items-center gap-2 outline-none"
-            onClick={() => navigate("/")}
-            aria-label="DuckOn 홈으로 이동"
-          >
-            <img className="h-7 w-7" src="/duck.svg" alt="" />
-            <span className="font-extrabold tracking-tight text-lg">
-              DuckOn
-            </span>
-            {/* 로고 옆 보조 포인트 */}
-            <span className="ml-1 h-2 w-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 opacity-70 group-hover:opacity-100 transition" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              className="group flex items-center gap-2 outline-none"
+              onClick={() => navigate("/")}
+              aria-label="DuckOn 홈으로 이동"
+            >
+              <img className="h-7 w-7" src="/duck.svg" alt="" />
+              <span className="font-extrabold tracking-tight text-lg">
+                DuckOn
+              </span>
+              {/* 로고 옆 보조 포인트 */}
+              <span className="ml-1 h-2 w-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 opacity-70 group-hover:opacity-100 transition" />
+            </button>
+            
+            {/* MemeDuck 링크 버튼 */}
+            <a
+              href="https://memeduck.site"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                px-3 py-1.5 rounded-lg text-sm font-semibold
+                text-purple-600 bg-purple-50
+                hover:bg-purple-100 hover:text-purple-700
+                transition-all duration-200
+                border border-purple-200
+              "
+            >
+              MemeDuck
+            </a>
+          </div>
 
           {/* 우측 영역 */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
