@@ -82,22 +82,48 @@ export const updateUserProfile = async (
  * 차단한 사용자 목록을 가져오는 API 함수
  * @returns 차단된 사용자 목록 배열
  */
+// export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
+//   const token = getAccessToken();
+
+//   if (!token) return [];
+
+//   try {
+//     const response = await api.get("/block");
+//     return response.data.blockedList || [];
+//   } catch {
+//     return [];
+//   }
+// };
+
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
   const token = getAccessToken();
-
   if (!token) return [];
 
   try {
-    const response = await api.get("/block");
-    return response.data.blockedList || [];
+    const res = await api.get("/block");
+    const raw = res.data;
+    const list =
+      raw?.blockedList ??
+      raw?.data?.blockedList ??
+      raw ?? [];
+    return (list as any[]).map((d) => ({
+      userId: String(d.userId),
+      nickname: d.nickname ?? "",
+      imgUrl: d.imgUrl ?? null,
+    }));
   } catch {
     return [];
   }
 };
 
 /** 차단 해제 */
+// export const unblockUser = async (userId: string): Promise<string> => {
+//   const { data } = await api.delete(`/block/${userId}`);
+//   return data?.message ?? "사용자를 차단 해제하였습니다.";
+// };
+
 export const unblockUser = async (userId: string): Promise<string> => {
-  const { data } = await api.delete(`/block/${userId}`);
+  const { data } = await api.delete(`/block/${encodeURIComponent(String(userId))}`);
   return data?.message ?? "사용자를 차단 해제하였습니다.";
 };
 
@@ -106,12 +132,24 @@ export const unblockUser = async (userId: string): Promise<string> => {
  * @param userId - 차단할 사용자의 ID
  * @returns 성공 메시지
  */
+// export const blockUser = async (
+//   userId: string
+// ): Promise<{ message: string }> => {
+//   try {
+//     const response = await api.post(`/block/${userId}`);
+
+//     return response.data;
+//   } catch (error) {
+//     console.error("사용자 차단 API 호출에 실패했습니다:", error);
+//     throw error;
+//   }
+// };
+
 export const blockUser = async (
   userId: string
 ): Promise<{ message: string }> => {
   try {
-    const response = await api.post(`/block/${userId}`);
-
+    const response = await api.post(`/block/${encodeURIComponent(String(userId))}`, {}); // {} 중요
     return response.data;
   } catch (error) {
     console.error("사용자 차단 API 호출에 실패했습니다:", error);
