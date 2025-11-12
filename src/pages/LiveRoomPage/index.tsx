@@ -2637,7 +2637,10 @@ const LiveRoomPage = () => {
     blockLocal(userId);
   };
 
-  const visibleMessages = messages.filter((m) => !blockedSet.has(m.senderId));
+  // const visibleMessages = messages.filter((m) => !blockedSet.has(m.senderId));
+  const visibleMessages = messages.filter(
+    (m) => !blockedSet.has(String((m as any).senderId ?? (m as any).userId ?? ""))
+  );
 
   const parseId = (raw: string | null) => {
     if (!raw) return undefined;
