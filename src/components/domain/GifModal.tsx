@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search, Sparkles, TrendingUp, Star } from "lucide-react";
 import {
-  fetchTopMemes,
+  fetchRandomMemes,
   fetchFavoriteMemes,
   searchMemes,
   logMemeUsage,
@@ -48,7 +48,7 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
     (async () => {
       setLoading(true);
       try {
-        const response = await fetchTopMemes(1, 30);
+        const response = await fetchRandomMemes(1, 30);
         setMemes(response.items);
         setCurrentPage(1);
         setHasMore(response.items.length >= 30);
@@ -70,7 +70,7 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
       setLoading(true);
       try {
         if (activeTab === "trending") {
-          const response = await fetchTopMemes(1, 30);
+          const response = await fetchRandomMemes(1, 30);
           setMemes(response.items);
           setCurrentPage(1);
           setHasMore(response.items.length >= 30);
@@ -138,7 +138,7 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
     setIsLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
-      const response = await fetchTopMemes(nextPage, 30);
+      const response = await fetchRandomMemes(nextPage, 30);
       
       setMemes(prev => [...prev, ...response.items]);
       setCurrentPage(nextPage);

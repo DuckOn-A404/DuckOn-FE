@@ -14,6 +14,26 @@ export type MemeResponse = {
   size: number;
 };
 
+// 랜덤 밈 가져오기 - 페이지네이션 지원
+export const fetchRandomMemes = async (page: number = 1, size: number = 30): Promise<MemeResponse> => {
+  const res = await api.get("/memes/random", {
+    params: { page, size }
+  });
+  const data = res.data?.data;
+  const items = data?.items ?? [];
+
+  return {
+    items: items.map((it: any) => ({
+      id: it.memeId,
+      imageUrl: it.memeUrl,
+      tags: it.tags,
+    })),
+    total: data?.total ?? 0,
+    page: data?.page ?? page,
+    size: data?.size ?? size,
+  };
+};
+
 // 인기(top10) 가져오기 - 페이지네이션 지원
 export const fetchTopMemes = async (page: number = 1, size: number = 30): Promise<MemeResponse> => {
   // /api/memes/top/total
