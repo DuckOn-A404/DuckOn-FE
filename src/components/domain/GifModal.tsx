@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Search, Sparkles, TrendingUp } from "lucide-react";
 import {
   fetchTopMemes,
@@ -19,9 +19,13 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
   const [activeTab, setActiveTab] = useState<"trending" | "favorites">("trending");
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 모달 열릴 때 기본 데이터(랜덤 추천) 가져오기
   useEffect(() => {
@@ -29,6 +33,8 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
       setSearchQuery("");
       setActiveTab("trending");
       setMemes([]);
+      setCurrentPage(1);
+      setHasMore(true);
       return;
     }
 
@@ -38,8 +44,10 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
     (async () => {
       setLoading(true);
       try {
-        const data = await fetchTopMemes();
-        setMemes(data);
+        const response = await fetchTopMemes(1, 30);
+        setMemes(response.items);
+        setCurrentPage(1);
+        setHasMore(response.items.length >= 30);
       } catch (e) {
         console.error("failed to load memes:", e);
         setMemes([]);
@@ -50,28 +58,32 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
   }, [isOpen]);
 
   // 탭 바뀔 때
-useEffect(() => {
-  if (!isOpen) return;
-  if (searchQuery.trim()) return;
+  useEffect(() => {
+    if (!isOpen) return;
+    if (searchQuery.trim()) return;
 
-  (async () => {
-    setLoading(true);
-    try {
-      if (activeTab === "trending") {
-        const data = await fetchTopMemes();
-        setMemes(data);
-      } else {
-        const data = await fetchFavoriteMemes();
-        setMemes(data);
+    (async () => {
+      setLoading(true);
+      try {
+        if (activeTab === "trending") {
+          const response = await fetchTopMemes(1, 30);
+          setMemes(response.items);
+          setCurrentPage(1);
+          setHasMore(response.items.length >= 30);
+        } else {
+          const data = await fetchFavoriteMemes();
+          setMemes(data);
+          setCurrentPage(1);
+          setHasMore(false); // 즐겨찾기는 무한 스크롤 없음
+        }
+      } catch (e) {
+        console.error("[GifModal] favorite fetch error:", e);
+        setMemes([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      console.error("[GifModal] favorite fetch error:", e);
-      setMemes([]);
-    } finally {
-      setLoading(false);
-    }
-  })();
-}, [activeTab, isOpen, searchQuery]);
+    })();
+  }, [activeTab, isOpen, searchQuery]);
 
   // 검색
   useEffect(() => {
@@ -80,21 +92,6 @@ useEffect(() => {
 
     // 검색어 없으면 탭 데이터 다시
     if (!q) {
-      (async () => {
-        setLoading(true);
-        try {
-          if (activeTab === "trending") {
-            setMemes(await fetchTopMemes());
-          } else {
-            setMemes(await fetchFavoriteMemes());
-          }
-        } catch (e) {
-          console.error(e);
-          setMemes([]);
-        } finally {
-          setLoading(false);
-        }
-      })();
       return;
     }
 
@@ -102,8 +99,10 @@ useEffect(() => {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
-        const data = await searchMemes(q);
-        setMemes(data);
+        const response = await searchMemes(q, 1, 30);
+        setMemes(response.items);
+        setCurrentPage(1);
+        setHasMore(response.items.length >= 30);
       } catch (e) {
         console.error(e);
         setMemes([]);
@@ -113,7 +112,43 @@ useEffect(() => {
     }, 250); // 디바운스
 
     return () => clearTimeout(timer);
-  }, [searchQuery, activeTab, isOpen]);
+  }, [searchQuery, isOpen]);
+
+  // 무한 스크롤 - 더 많은 데이터 로드
+  const loadMoreMemes = useCallback(async () => {
+    if (isLoadingMore || !hasMore || searchQuery.trim() || activeTab === "favorites") return;
+
+    setIsLoadingMore(true);
+    try {
+      const nextPage = currentPage + 1;
+      const response = await fetchTopMemes(nextPage, 30);
+      
+      setMemes(prev => [...prev, ...response.items]);
+      setCurrentPage(nextPage);
+      setHasMore(response.items.length >= 30);
+    } catch (e) {
+      console.error("추가 밈 로드 실패:", e);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [currentPage, hasMore, isLoadingMore, searchQuery, activeTab]);
+
+  // 스크롤 이벤트 감지
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // 스크롤이 하단에서 200px 이내일 때 로드
+      if (scrollHeight - scrollTop - clientHeight < 200) {
+        loadMoreMemes();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [loadMoreMemes]);
 
   // ESC로 닫기
   useEffect(() => {
@@ -244,7 +279,7 @@ useEffect(() => {
         )}
 
         {/* 내용 */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4 gif-scroll">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 pb-4 gif-scroll">
           {loading ? (
             <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
               불러오는 중...
@@ -254,39 +289,48 @@ useEffect(() => {
               표시할 밈이 없어요.
             </div>
           ) : (
-            <div className="flex gap-2.5">
-              {columns.map((column, columnIndex) => (
-                <div key={columnIndex} className="flex-1 flex flex-col gap-2.5">
-                  {column.map((meme) => (
-                    <div
-                      key={meme.id}
-                      onClick={() => handleGifClick(meme)}
-                      className="relative rounded-xl overflow-hidden cursor-pointer
-                                 bg-gray-700/30 group
-                                 transform transition-all duration-200
-                                 hover:scale-[1.03] hover:shadow-xl hover:shadow-purple-500/20
-                                 active:scale-[0.97]"
-                    >
+            <>
+              <div className="flex gap-2.5">
+                {columns.map((column, columnIndex) => (
+                  <div key={columnIndex} className="flex-1 flex flex-col gap-2.5">
+                    {column.map((meme) => (
+                      <div
+                        key={meme.id}
+                        onClick={() => handleGifClick(meme)}
+                        className="relative rounded-xl overflow-hidden cursor-pointer
+                                   bg-gray-700/30 group
+                                   transform transition-all duration-200
+                                   hover:scale-[1.03] hover:shadow-xl hover:shadow-purple-500/20
+                                   active:scale-[0.97]"
+                      >
 
-                      {/* 호버 오버레이 */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-purple-600/40 to-transparent
-                                      opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
+                        {/* 호버 오버레이 */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-purple-600/40 to-transparent
+                                        opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
 
-                      <img
-                        src={meme.imageUrl}
-                        alt={meme.tags?.[0] ?? "meme"}
-                        className="w-full h-auto object-cover"
-                        loading="lazy"
-                        style={{
-                          minHeight: "85px",
-                          maxHeight: "200px",
-                        }}
-                      />
-                    </div>
-                  ))}
+                        <img
+                          src={meme.imageUrl}
+                          alt={meme.tags?.[0] ?? "meme"}
+                          className="w-full h-auto object-cover"
+                          loading="lazy"
+                          style={{
+                            minHeight: "85px",
+                            maxHeight: "200px",
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              
+              {/* 무한 스크롤 로딩 표시 */}
+              {isLoadingMore && (
+                <div className="flex items-center justify-center py-4 text-gray-400 text-xs">
+                  더 불러오는 중...
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
 
