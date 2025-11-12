@@ -18,6 +18,7 @@ import {useEffect} from "react";
 import {sendPageView} from "./analytics";
 import RoomListPage from "./pages/RoomListPage";
 import TitleManager from "./TitleManager";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -41,6 +42,7 @@ function App() {
             <Route path="/artist/:nameEn" element={<ArtistDetailPage />} />
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
+            <Route path="/leaderboard" element={<LeaderboardPage />} />
           </Route>
 
           {/* 푸터가 없는 페이지들 */}

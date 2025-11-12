@@ -151,3 +151,32 @@ export const getRecommendedUsers = async (
   );
   return response.data.users ?? [];
 };
+
+// 리더보드 유저 타입
+export interface LeaderboardUser {
+  nickname: string;
+  userId: string;
+  profileImgUrl: string;
+  userRank: {
+    roomCreateCount: number;
+    rankLevel: "VIP" | "GOLD" | "PURPLE" | "YELLOW" | "GREEN";
+  };
+}
+
+// 리더보드 응답 타입
+export interface LeaderboardResponse {
+  status: number;
+  message: string;
+  data: LeaderboardUser[];
+}
+
+// 유저 리더보드 조회
+export const getUserLeaderboard = async (
+  page: number = 0,
+  size: number = 50
+): Promise<LeaderboardResponse> => {
+  const response = await api.get<LeaderboardResponse>("/users/leaderboard", {
+    params: { page, size },
+  });
+  return response.data;
+};

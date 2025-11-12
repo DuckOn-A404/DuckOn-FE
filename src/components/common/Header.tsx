@@ -1,7 +1,7 @@
 import {type User} from "../../types";
 import {useNavigate} from "react-router-dom";
 import {Menu} from "@headlessui/react";
-import {ChevronDown} from "lucide-react";
+import {ChevronDown, Trophy} from "lucide-react";
 import NicknameWithRank from "./NicknameWithRank";
 
 type HeaderProps = {
@@ -37,6 +37,24 @@ const Header = ({user, onLogin, onSignup, onLogout}: HeaderProps) => {
 
           {/* 우측 영역 */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
+            {/* 랭킹 버튼 */}
+            <button
+              onClick={() => navigate("/leaderboard")}
+              className="
+                inline-flex items-center justify-center gap-1.5
+                px-3 py-2 rounded-lg
+                text-sm font-semibold text-gray-700
+                bg-gradient-to-r from-purple-100 to-pink-100
+                hover:from-purple-200 hover:to-pink-200
+                transition-all duration-300
+                hover:shadow-[0_8px_20px_rgba(168,85,247,.15)]
+                hover:-translate-y-0.5
+              "
+            >
+              <Trophy size={16} className="text-purple-600" />
+              <span className="hidden sm:inline text-purple-600">랭킹</span>
+            </button>
+
             {user ? (
               <Menu as="div" className="relative">
                 <Menu.Button className="group flex items-center gap-2 rounded-full pl-1 pr-2 py-1 transition-all hover:bg-black/5 focus-visible:outline-none">
