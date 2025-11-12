@@ -73,6 +73,17 @@ export const searchMemes = async (q: string, page: number = 1, size: number = 30
   };
 };
 
+// 즐겨찾기 추가
+export const addFavoriteMeme = async (memeId: number): Promise<void> => {
+  await api.post(`/memes/${memeId}/favorite`);
+};
+
+// 즐겨찾기 취소
+export const removeFavoriteMeme = async (memeId: number): Promise<void> => {
+  await api.delete(`/memes/${memeId}/favorite`);
+};
+
+// 즐겨찾기 토글 (기존 함수 유지)
 export const toggleFavoriteMeme = async (memeId: number): Promise<void> => {
   await api.post(`/memes/${memeId}/favorite`);
 };
@@ -82,4 +93,9 @@ export const logMemeUsage = async (
   usageType: "USE" | "DOWNLOAD" = "USE"
 ): Promise<void> => {
   await api.post("/memes/usage", { memeId, usageType });
+};
+
+// 태그 검색 키워드 로그 기록
+export const logSearchKeyword = async (keyword: string): Promise<void> => {
+  await api.post("/tags/search/log", { keyword });
 };

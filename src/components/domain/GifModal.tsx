@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Search, Sparkles, TrendingUp } from "lucide-react";
+import { X, Search, Sparkles, TrendingUp, Star } from "lucide-react";
 import {
   fetchTopMemes,
   fetchFavoriteMemes,
   searchMemes,
   logMemeUsage,
+  logSearchKeyword,
+  addFavoriteMeme,
+  removeFavoriteMeme,
   type Meme,
 } from "../../api/memeService";
 
@@ -22,6 +25,7 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [favoriteMemeIds, setFavoriteMemeIds] = useState<Set<number>>(new Set());
 
   const modalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +77,8 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
         } else {
           const data = await fetchFavoriteMemes();
           setMemes(data);
+          // 즐겨찾기 탭의 밈 ID들을 Set에 저장
+          setFavoriteMemeIds(new Set(data.map(m => m.id)));
           setCurrentPage(1);
           setHasMore(false); // 즐겨찾기는 무한 스크롤 없음
         }
@@ -95,10 +101,21 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
       return;
     }
 
-    // 검색어 있으면 검색 API
+    // 검색어가 너무 짧으면 로그 기록 안 함 (최소 2글자)
+    const shouldLog = q.length >= 2;
+
+    // 검색어 있으면 검색 API (디바운스)
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
+        // 1. 의미 있는 검색어만 로그 기록 (비동기, 실패해도 검색은 진행)
+        if (shouldLog) {
+          logSearchKeyword(q).catch((err) => {
+            console.warn('검색 로그 기록 실패:', err);
+          });
+        }
+
+        // 2. 검색 API 호출
         const response = await searchMemes(q, 1, 30);
         setMemes(response.items);
         setCurrentPage(1);
@@ -171,6 +188,34 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
     });
 
     onClose();
+  };
+
+  // 즐겨찾기 토글
+  const handleToggleFavorite = async (e: React.MouseEvent, memeId: number) => {
+    e.stopPropagation();
+    
+    const isFavorited = favoriteMemeIds.has(memeId);
+    
+    try {
+      if (isFavorited) {
+        await removeFavoriteMeme(memeId);
+        setFavoriteMemeIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(memeId);
+          return newSet;
+        });
+        
+        // 즐겨찾기 탭에서 제거한 경우 목록에서도 제거
+        if (activeTab === "favorites") {
+          setMemes(prev => prev.filter(m => m.id !== memeId));
+        }
+      } else {
+        await addFavoriteMeme(memeId);
+        setFavoriteMemeIds(prev => new Set(prev).add(memeId));
+      }
+    } catch (error) {
+      console.error("즐겨찾기 토글 실패:", error);
+    }
   };
 
   // 메이슨리용 컬럼 나누기
@@ -307,6 +352,25 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
                         {/* 호버 오버레이 */}
                         <div className="absolute inset-0 bg-gradient-to-t from-purple-600/40 to-transparent
                                         opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10" />
+
+                        {/* 즐겨찾기 버튼 */}
+                        <button
+                          onClick={(e) => handleToggleFavorite(e, meme.id)}
+                          className="absolute top-2 right-2 z-20
+                                     p-1.5 rounded-lg bg-black/35 backdrop-blur-sm
+                                     opacity-0 group-hover:opacity-100
+                                     transition-all duration-200
+                                     hover:bg-black/60 hover:scale-110"
+                          aria-label="즐겨찾기"
+                        >
+                          <Star
+                            size={16}
+                            strokeWidth={2.5}
+                            className={favoriteMemeIds.has(meme.id) 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-white"}
+                          />
+                        </button>
 
                         <img
                           src={meme.imageUrl}
