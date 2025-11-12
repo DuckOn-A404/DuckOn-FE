@@ -7,17 +7,32 @@ export type Meme = {
   favorite?: boolean;
 };
 
-// 인기(top10) 가져오기
-export const fetchTopMemes = async (): Promise<Meme[]> => {
-  // /api/memes/top/total
-  const res = await api.get("/memes/top/total");
-  const items = res.data?.data?.items ?? [];
+export type MemeResponse = {
+  items: Meme[];
+  total: number;
+  page: number;
+  size: number;
+};
 
-  return items.map((it: any) => ({
-    id: it.memeId,
-    imageUrl: it.memeUrl,
-    tags: it.tags,
-  }));
+// 인기(top10) 가져오기 - 페이지네이션 지원
+export const fetchTopMemes = async (page: number = 1, size: number = 30): Promise<MemeResponse> => {
+  // /api/memes/top/total
+  const res = await api.get("/memes/top/total", {
+    params: { page, size }
+  });
+  const data = res.data?.data;
+  const items = data?.items ?? [];
+
+  return {
+    items: items.map((it: any) => ({
+      id: it.memeId,
+      imageUrl: it.memeUrl,
+      tags: it.tags,
+    })),
+    total: data?.total ?? 0,
+    page: data?.page ?? page,
+    size: data?.size ?? size,
+  };
 };
 
 // 즐겨찾기 목록 (배열 그대로 오는 버전)
@@ -34,18 +49,28 @@ export const fetchFavoriteMemes = async (): Promise<Meme[]> => {
   }));
 };
 
-// 검색은 일단 top 기준이 없으니까 예전 random 방식 그대로 두거나
-// BE에 검색 엔드포인트 생기면 교체하면 됨
-export const searchMemes = async (q: string): Promise<Meme[]> => {
-  const res = await api.get("/memes/top/total", {
-    params: { q }, // BE가 q 안 받으면 이 줄은 빼
+// 태그 기반 밈 검색 API - 페이지네이션 지원
+export const searchMemes = async (q: string, page: number = 1, size: number = 30): Promise<MemeResponse> => {
+  const res = await api.get("/memes/search-basic", {
+    params: { 
+      tag: q,
+      page,
+      size
+    },
   });
-  const items = res.data?.data?.items ?? [];
-  return items.map((it: any) => ({
-    id: it.memeId,
-    imageUrl: it.memeUrl,
-    tags: it.tags,
-  }));
+  const data = res.data?.data;
+  const items = data?.items ?? [];
+  
+  return {
+    items: items.map((it: any) => ({
+      id: it.memeId,
+      imageUrl: it.memeUrl,
+      tags: it.tags,
+    })),
+    total: data?.total ?? 0,
+    page: data?.page ?? page,
+    size: data?.size ?? size,
+  };
 };
 
 export const toggleFavoriteMeme = async (memeId: number): Promise<void> => {
