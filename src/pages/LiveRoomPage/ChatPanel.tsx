@@ -786,6 +786,17 @@ const ChatPanel = ({
 }: ChatPanelProps) => {
   const { myUser } = useUserStore();
   const [newMessage, setNewMessage] = useState("");
+  const [guestId, setGuestId] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem("duckon_guest_id");
+  });
+
+  useEffect(() => {
+    if (myUser?.userId && myUser.userId.startsWith("guest:")) {
+      sessionStorage.setItem("duckon_guest_id", myUser.userId);
+      setGuestId(myUser.userId);
+    }
+  }, [myUser?.userId]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -1130,8 +1141,12 @@ const ChatPanel = ({
             }
 
             const uniqueKey = `${msg.senderId}-${(msg as any).sentAt || index}`;
-            const isMyMessage =
-              String(msg.senderId ?? "") === String(myUser?.userId ?? "");
+            const myId = myUser?.userId ?? guestId;
+            const isMyMessage = 
+              String(msg.senderId ?? "") === String(myId ?? "");
+            
+            // const isMyMessage =
+            //   String(msg.senderId ?? "") === String(myUser?.userId ?? "");
 
             // 실제로 랭크가 내려왔는지만 본다
             const rawRankLevel =
