@@ -185,7 +185,7 @@ export const getFollowedArtists = async (
   size = 10
 ): Promise<FollowedArtistsResponse> => {
   if (!getAccessToken()) throw new Error("로그인이 필요합니다.");
-  const res = await api.get("/artists/me", { params: { page, size } });
+  const res = await api.get("/me/artists", { params: { page, size } });
   return res.data as FollowedArtistsResponse;
 };
 

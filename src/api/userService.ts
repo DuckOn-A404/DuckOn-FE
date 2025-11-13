@@ -14,7 +14,7 @@ type ApiMessage = { message: string };
 
 // 현재 사용자 정보 조회
 export const fetchMyProfile = async (): Promise<MyUser> => {
-  const response = await api.get<MyUser>("/users/me");
+  const response = await api.get<MyUser>("/me");
   return response.data;
 };
 
@@ -29,7 +29,7 @@ export const fetchOtherUserProfile = async (
 /** 비밀번호 확인 API */
 export const verifyPassword = async (password: string): Promise<boolean> => {
   try {
-    const response = await api.post("/users/me/verify-password", { password });
+    const response = await api.post("/me/verify-password", { password });
     return response.data.valid === true;
   } catch (error) {
     console.error("비밀번호 검증 실패", error);
@@ -54,7 +54,7 @@ export const updateUserProfile = async (
     }
     fd.append(key, value as any);
   }
-  const res = await api.patch<MyUser>("/users/me", fd);
+  const res = await api.patch<MyUser>("/me", fd);
   return res.data;
 };
 
@@ -125,7 +125,7 @@ export const deleteMyAccount = async (
   if (!refresh)
     throw new Error("리프레시 토큰이 없어 회원탈퇴 요청을 보낼 수 없습니다.");
 
-  const res = await api.delete<ApiMessage>("/users/me", {
+  const res = await api.delete<ApiMessage>("/me", {
     headers: { "X-Refresh-Token": refresh },
   });
   return res.data;

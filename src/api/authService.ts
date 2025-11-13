@@ -93,7 +93,7 @@ export const logIn = async (
  * (헤더 기반이라면 인터셉터가 Authorization을 붙여줍니다)
  */
 export const getMyProfileAfterOAuth = async () => {
-  const response = await api.get("/users/me");
+  const response = await api.get("/me");
   return response.data;
 };
 

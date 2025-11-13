@@ -9,7 +9,7 @@ import { api } from "../axiosInstance";
 // 팔로우 요청(post)
 export const followUser = async (userId: string): Promise<string> => {
   const { data } = await api.post<{ message: string }>(
-    `/users/${userId}/follow`
+    `/me/following/${userId}`
   );
   return data.message;
 };
@@ -17,7 +17,7 @@ export const followUser = async (userId: string): Promise<string> => {
 // 언팔로우 요청(delete)
 export const unfollowUser = async (userId: string): Promise<string> => {
   const { data } = await api.delete<{ message: string }>(
-    `/users/${userId}/follow`
+    `/me/following/${userId}`
   );
   return data.message;
 };
