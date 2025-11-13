@@ -1053,17 +1053,20 @@ const ChatPanel = ({
       }
     });
 
-    setTimeout(() => {
-      const pendingNow = pendingSendRef.current;
-      if (!pendingNow) return;
-      if (
-        pendingNow.at === sentAt &&
-        lastMsgCountRef.current === pendingNow.msgCount
-      ) {
-        triggerRateLimited();
-        pendingSendRef.current = null;
-      }
-    }, 200);
+    // 🔥 로그인 유저에게만 백업 타이머 적용 (게스트는 guestId 학습까지 pending 유지)
+    if (isLoggedIn) {
+      setTimeout(() => {
+        const pendingNow = pendingSendRef.current;
+        if (!pendingNow) return;
+        if (
+          pendingNow.at === sentAt &&
+          lastMsgCountRef.current === pendingNow.msgCount
+        ) {
+          triggerRateLimited();
+          pendingSendRef.current = null;
+        }
+      }, 200);
+    }
   };
 
   // ---- 차단 필터 ----
@@ -1183,7 +1186,7 @@ const ChatPanel = ({
       />
 
       <div className="relative flex flex-col h-full bg-gray-800 text-white">
-        {/* 도배 안내 말풍선 */}
+        {/* 도배 안내 말풍선 (기존 코드 그대로) */}
         {isRateLimitedNow && (
           <div
             className="absolute left-1/2 -translate-x-1/2 z-[300] transition-opacity"
@@ -1201,7 +1204,7 @@ const ChatPanel = ({
         {/* 게스트 GIF 사용 제한 안내 말풍선 */}
         {showGifGuestModal && (
           <div
-            className="absolute left-1/2 -translate-x-1/2 z-[320] transition-opacity"
+            className="absolute left-1/2 -translate-x-1/2 z-[300] transition-opacity"
             style={{
               bottom: (footerH || 88) + 12,
               maxWidth: "92%",
@@ -1209,20 +1212,20 @@ const ChatPanel = ({
           >
             <div
               className="
-                flex items-center gap-2 px-5 py-2 
-                rounded-2xl shadow-xl border border-purple-300/40
-                bg-gradient-to-r from-purple-600/95 via-purple-500/90 to-fuchsia-500/90
-                text-white font-medium text-sm md:text-base
-                backdrop-blur-sm
-              "
+              inline-flex items-center justify-center
+              px-6 py-3
+              rounded-full
+              bg-gradient-to-r from-purple-600 via-purple-500 to-fuchsia-500
+              text-white text-sm md:text-base font-semibold tracking-tight
+              shadow-[0_10px_25px_rgba(0,0,0,0.35)]
+              border border-purple-300/40
+              whitespace-nowrap
+            "
             >
-              <span className="whitespace-nowrap">
-                로그인한 유저만 밈을 사용할 수 있습니다!
-              </span>
+              로그인한 유저만 밈을 사용할 수 있습니다!
             </div>
           </div>
         )}
-
 
         {/* 메시지 목록 */}
         <div
@@ -1279,7 +1282,7 @@ const ChatPanel = ({
                 </span>
 
                 <div
-                  className={`group relative flex items-end gap-2 max-w-[85%] ${
+                  className={`group relative flex items-end gap-1 max-w-[90%] ${
                     isMyMessage ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
@@ -1360,7 +1363,7 @@ const ChatPanel = ({
                         isMyMessage ? "bg-purple-600" : "bg-gray-700"
                       } break-all`}
                     >
-                      <span className={!isMyMessage ? "pr-2" : ""}>
+                      <span className={!isMyMessage ? "pr-1" : ""}>
                         {msg.content}
                       </span>
 
@@ -1452,7 +1455,8 @@ const ChatPanel = ({
           >
             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
               <div className="flex items-center gap-2 max-w-[280px]">
-                <span className="text-gray-900 text-sm font-semibold shrink-0">
+                <span className="text-gray-9
+00 text-sm font-semibold shrink-0">
                   {previewGraphemes(lastUnread.senderNickName ?? "", 7)}
                 </span>
                 <span className="text-gray-800 text-sm truncate">
