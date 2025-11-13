@@ -880,6 +880,20 @@ const ChatPanel = ({
     }
   };
 
+  // ✅ DEBUG: 마지막 메시지 senderId / userId 찍기
+  useEffect(() => {
+    if (!messages.length) return;
+    const last = messages[messages.length - 1];
+    const rawSender = (last as any).senderId;
+    const rawUserId = (last as any).userId;
+
+    console.log("[CHAT DEBUG] last message", {
+      senderId: rawSender,
+      userId: rawUserId,
+      content: last.content,
+    });
+  }, [messages]);
+
   // 메시지 들어올 때 처리 (unread + guest id 학습)
   useEffect(() => {
     const addedCount = messages.length - prevLenRef.current;
@@ -983,10 +997,13 @@ const ChatPanel = ({
         ) === String(myUser.userId) &&
         last.content === pending.content
       ) {
+        // 내가 보낸 메시지가 서버에서 돌아온 걸 확인 → pending 해제
         pendingSendRef.current = null;
-      } else if (messages.length > pending.msgCount) {
+      } else if (pending.self && messages.length > pending.msgCount) {
+        // ✅ 로그인 유저일 때만 백업 제거 로직 사용
         pendingSendRef.current = null;
       }
+      // ✅ 게스트(pending.self === false)는 pending 유지해서 위쪽 useEffect에서 guestId 학습
     }
 
     lastMsgCountRef.current = messages.length;
@@ -1211,13 +1228,13 @@ const ChatPanel = ({
             }}
           >
             <div
-              className="
-              inline-flex items-center justify-center
-              px-6 py-3
-              rounded-full
+              className=" 
+              flex items-center gap-2 justify-center
+              px-5 py-2
+              rounded-2xl
               bg-gradient-to-r from-purple-600 via-purple-500 to-fuchsia-500
               text-white text-sm md:text-base font-semibold tracking-tight
-              shadow-[0_10px_25px_rgba(0,0,0,0.35)]
+              shadow-lg
               border border-purple-300/40
               whitespace-nowrap
             "
@@ -1455,8 +1472,7 @@ const ChatPanel = ({
           >
             <div className="bg-white border border-gray-200 rounded-2xl shadow-xl px-3 py-2">
               <div className="flex items-center gap-2 max-w-[280px]">
-                <span className="text-gray-9
-00 text-sm font-semibold shrink-0">
+                <span className="text-gray-900 text-sm font-semibold shrink-0">
                   {previewGraphemes(lastUnread.senderNickName ?? "", 7)}
                 </span>
                 <span className="text-gray-800 text-sm truncate">
@@ -1602,3 +1618,4 @@ const ChatPanel = ({
 };
 
 export default ChatPanel;
+
