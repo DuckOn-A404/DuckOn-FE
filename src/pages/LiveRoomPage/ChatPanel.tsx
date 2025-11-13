@@ -1207,20 +1207,22 @@ const ChatPanel = ({
               maxWidth: "92%",
             }}
           >
-            {/* <div className="bg-gray-800 text-white text-sm md:text-base px-5 py-2 rounded-2xl shadow-lg border border-gray-600 flex items-center gap-2 whitespace-nowrap justify-center">
-              로그인한 유저만 밈을 사용할 수 있습니다.
-            </div> */}
-            <div className="
-              flex items-center gap-2 px-5 py-2 
-              rounded-2xl shadow-xl border border-purple-300/40
-              bg-gradient-to-r from-purple-600/95 via-purple-500/90 to-fuchsia-500/90
-              text-white font-medium text-sm md:text-base
-              backdrop-blur-sm
-            ">
-              <span>로그인한 유저만 밈을 사용할 수 있습니다!</span>
+            <div
+              className="
+                flex items-center gap-2 px-5 py-2 
+                rounded-2xl shadow-xl border border-purple-300/40
+                bg-gradient-to-r from-purple-600/95 via-purple-500/90 to-fuchsia-500/90
+                text-white font-medium text-sm md:text-base
+                backdrop-blur-sm
+              "
+            >
+              <span className="whitespace-nowrap">
+                로그인한 유저만 밈을 사용할 수 있습니다!
+              </span>
             </div>
           </div>
         )}
+
 
         {/* 메시지 목록 */}
         <div
@@ -1596,4 +1598,3 @@ const ChatPanel = ({
 };
 
 export default ChatPanel;
-
