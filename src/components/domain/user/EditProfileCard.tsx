@@ -3,6 +3,7 @@ import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
 import { Camera } from "lucide-react";
 import { useUserStore } from "../../../store/useUserStore";
+import { Dialog } from "@headlessui/react";
 
 export type EditProfileCardProps = {
   user: MyUser;
@@ -20,7 +21,12 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl ?? DEFAULT_IMG);
   const [showImageOptions, setShowImageOptions] = useState(false);
-  const [, setDidPickNewImage] = useState(false);
+  const [shouldResetToDefault, setShouldResetToDefault] = useState(false);
+  const [errorDialog, setErrorDialog] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({ open: false, title: '', message: '' });
 
   // 소셜 로그인 여부 (true면 소셜)
   const isSocial = !!(user as any).socialLogin;
@@ -40,12 +46,14 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 8MB = 8 * 1024 * 1024 bytes
-      const MAX_SIZE = 8 * 1024 * 1024;
+      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
       
       if (file.size > MAX_SIZE) {
-        alert("이미지 용량이 너무 큽니다. 8MB 이하의 이미지를 선택해주세요.");
-        // 파일 입력 초기화
+        setErrorDialog({
+          open: true,
+          title: '파일 용량 초과',
+          message: `이미지 용량이 너무 큽니다.\n\n파일 크기: ${(file.size / 1024 / 1024).toFixed(2)}MB\n최대 허용: 5MB\n\n더 작은 이미지를 선택해주세요.`,
+        });
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -55,17 +63,15 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       setProfileImage(file);
       setPreviewUrl(URL.createObjectURL(file));
       setShowImageOptions(false);
-      setDidPickNewImage(true);
+      setShouldResetToDefault(false);
     }
   };
 
   const handleResetToDefaultImage = () => {
     setPreviewUrl(DEFAULT_IMG);
-    setProfileImage(null); // 파일 선택 취소
+    setProfileImage(null);
     setShowImageOptions(false);
-    setDidPickNewImage(false);
-    // ⚠️ 서버에 실제 삭제 플래그를 보내려면 백엔드 스펙 필요.
-    // 현재는 로컬 미리보기만 기본으로 전환.
+    setShouldResetToDefault(true);
   };
 
   const handleCameraClick = () => {
@@ -112,11 +118,20 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       fd.append("newPassword", newPassword);
     }
 
-    if (profileImage && profileImage.size > 0) {
+    // 기본 이미지로 변경하는 경우: 실제 default_image.png 파일 전송
+    if (shouldResetToDefault) {
+      try {
+        const response = await fetch('/default_image.png');
+        const blob = await response.blob();
+        fd.append("profileImg", blob, "default_image.png");
+      } catch (error) {
+        console.error('기본 이미지 로드 실패:', error);
+        // 기본 이미지 로드 실패 시 빈 Blob 전송
+        fd.append("profileImg", new Blob([]), "default.png");
+      }
+    } else if (profileImage && profileImage.size > 0) {
       fd.append("profileImg", profileImage);
     }
-    // ⚠️ 파일을 고르지 않았다면 profileImg는 절대 append하지 않음
-    //    (서버가 기본이미지로 리셋하는 문제 방지)
 
     try {
       await updateUserProfile(fd);
@@ -145,8 +160,11 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      console.error(err);
-      alert("프로필 수정 중 오류가 발생했습니다.");
+      setErrorDialog({
+        open: true,
+        title: '프로필 수정 실패',
+        message: '프로필 수정 중 오류가 발생했습니다.\n다시 시도해주세요.',
+      });
     }
   };
 
@@ -178,7 +196,12 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
     }
   };
 
+  const handleCloseErrorDialog = () => {
+    setErrorDialog({ open: false, title: '', message: '' });
+  };
+
   return (
+    <>
     <div className="bg-white rounded-xl px-4 sm:px-8 py-6 mb-10 w-full max-w-[880px] mx-auto shadow-sm">
       {/* 헤더 */}
       <div className="flex justify-between items-center mb-6">
@@ -339,6 +362,39 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
         </div>
       </div>
     </div>
+
+    {/* 에러 알림 Dialog */}
+    <Dialog
+      open={errorDialog.open}
+      onClose={handleCloseErrorDialog}
+      className="relative z-50"
+    >
+      <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+      
+      <div className="fixed inset-0 flex items-center justify-center p-4">
+        <Dialog.Panel className="mx-auto max-w-sm w-full bg-white rounded-2xl shadow-xl">
+          <div className="p-6">
+            <Dialog.Title className="text-lg font-bold text-center text-red-600 mb-4">
+              {errorDialog.title}
+            </Dialog.Title>
+            
+            <p className="text-sm text-gray-600 text-center whitespace-pre-line leading-relaxed mb-6">
+              {errorDialog.message}
+            </p>
+            
+            <div className="flex justify-center">
+              <button
+                onClick={handleCloseErrorDialog}
+                className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition min-w-[100px]"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </Dialog.Panel>
+      </div>
+    </Dialog>
+    </>
   );
 };
 
