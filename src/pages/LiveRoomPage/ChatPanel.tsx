@@ -1672,6 +1672,9 @@ const ChatPanel = ({
   // GIF 모달 상태
   const [isGifModalOpen, setIsGifModalOpen] = useState(false);
 
+  // 게스트가 GIF 클릭 시 띄울 안내 말풍선
+  const [showGifGuestModal, setShowGifGuestModal] = useState(false);
+
   // 도배 감지용
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const pendingSendRef = useRef<{
@@ -1683,6 +1686,7 @@ const ChatPanel = ({
   const lastMsgCountRef = useRef<number>(messages.length);
 
   const isLoggedIn = !!myUser?.userId;
+  const isGuest = !myUser;
 
   // footer 높이 추적
   useEffect(() => {
@@ -1716,7 +1720,7 @@ const ChatPanel = ({
     }
   };
 
-  // 메시지 들어올 때 처리 (원본 messages 기준으로 unread 처리 유지)
+  // 메시지 들어올 때 처리 (unread + guest id 학습)
   useEffect(() => {
     const addedCount = messages.length - prevLenRef.current;
 
@@ -1728,11 +1732,33 @@ const ChatPanel = ({
         return;
       }
 
-      const myId = String(myUser?.userId ?? guestId ?? "");
+      const myIdNow = String(myUser?.userId ?? guestId ?? "");
       const lastSenderId = String(
         (last as any).senderId ?? (last as any).userId ?? ""
       );
-      const fromMe = myId !== "" && lastSenderId !== "" && myId === lastSenderId;
+
+      let fromMe = false;
+
+      if (myIdNow && lastSenderId && myIdNow === lastSenderId) {
+        fromMe = true;
+      } else if (
+        !myIdNow &&
+        lastSenderId &&
+        pendingSendRef.current &&
+        pendingSendRef.current.content === last.content
+      ) {
+        // 아직 내 id를 모르는 guest인데,
+        // 내가 방금 보낸 메시지와 내용이 같다면 이건 내 메시지라고 보고 id를 학습
+        fromMe = true;
+        setGuestId(lastSenderId);
+        try {
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("duckon_guest_id", lastSenderId);
+          }
+        } catch {
+          // 세션 접근 불가시 무시
+        }
+      }
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -1754,7 +1780,7 @@ const ChatPanel = ({
     }
 
     prevLenRef.current = messages.length;
-  }, [messages.length, myUser?.userId, guestId]);
+  }, [messages.length, myUser?.userId, guestId, messages]);
 
   // 첫 로드시 맨 아래로
   useEffect(() => {
@@ -1806,16 +1832,24 @@ const ChatPanel = ({
     lastMsgCountRef.current = messages.length;
   }, [messages, myUser?.userId]);
 
-  // 배너 띄우는 공통 함수
+  // 도배 배너용
   const triggerRateLimited = (ms = 5000) => {
     const now = Date.now();
     setRateLimitedUntil(now + ms);
   };
 
+  const URL_REGEX = /^https?:\/\//i;
+  const GIF_URL_REGEX = /\.gif(\?|#|$)/i;
+
   const handleSendMessage = () => {
     const v = newMessage.trim();
     if (!v) return;
     if (countGraphemes(newMessage) > MAX_LEN) return;
+
+    // 익명 사용자는 URL / GIF URL 전송 금지
+    if (isGuest && (URL_REGEX.test(v) || GIF_URL_REGEX.test(v))) {
+      return;
+    }
 
     const now = Date.now();
     const isRateLimitedNow =
@@ -1872,7 +1906,7 @@ const ChatPanel = ({
     }, 200);
   };
 
-  // ---- 차단 필터: 렌더 직전에 숨김 처리 (ID 문자열화로 유형 불일치 방지) ----
+  // ---- 차단 필터 ----
   const visibleMessages = useMemo(
     () =>
       (Array.isArray(messages) ? messages : []).filter((m) => {
@@ -1884,7 +1918,7 @@ const ChatPanel = ({
     [messages, blockedSet]
   );
 
-  // 차단/해제 직후 UX 보강: 맨 아래로 붙이고 배지/상태 초기화
+  // 차단/해제 직후 UX 보강
   useEffect(() => {
     requestAnimationFrame(() => {
       scrollToBottom("auto");
@@ -1899,15 +1933,15 @@ const ChatPanel = ({
     setBlockConfirm({ isOpen: true, user });
   };
 
-  // 차단 확정: 서버 반영 → 부모콜백(로컬 반영) → 재동기화
+  // 차단 확정
   const confirmBlock = async () => {
     if (!blockConfirm.user) return;
     const id = String(blockConfirm.user.id);
 
     try {
-      const res = await blockUser(id); // 1) 서버 반영
-      onBlockUser(id); // 2) 로컬 즉시 반영 (부모 콜백이 blockLocal 호출)
-      refreshBlockedList().catch(() => {}); // 3) 서버 목록 재동기화 (fire-and-forget)
+      const res = await blockUser(id);
+      onBlockUser(id);
+      refreshBlockedList().catch(() => {});
       console.log(res.message);
     } catch (err) {
       console.error("차단 실패:", err);
@@ -1921,7 +1955,7 @@ const ChatPanel = ({
     setEjectConfirm({ isOpen: true, user });
   };
 
-  // 강퇴 확인 → 부모 콜백 호출
+  // 강퇴 확정
   const confirmEject = () => {
     if (ejectConfirm.user && onEjectUser) {
       onEjectUser(ejectConfirm.user);
@@ -1929,8 +1963,20 @@ const ChatPanel = ({
     setEjectConfirm({ isOpen: false, user: null });
   };
 
+  // 게스트 GIF 안내 말풍선 3초 뒤 자동 닫힘
+  useEffect(() => {
+    if (!showGifGuestModal) return;
+    const timer = setTimeout(() => setShowGifGuestModal(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showGifGuestModal]);
+
   // GIF 선택 핸들러
   const handleSelectGif = (gifUrl: string) => {
+    if (isGuest) {
+      setIsGifModalOpen(false);
+      setShowGifGuestModal(true);
+      return;
+    }
     sendMessage(gifUrl);
     setIsGifModalOpen(false);
   };
@@ -1992,6 +2038,21 @@ const ChatPanel = ({
           </div>
         )}
 
+        {/* 게스트 GIF 사용 제한 안내 말풍선 */}
+        {showGifGuestModal && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 z-[320] transition-opacity"
+            style={{
+              bottom: (footerH || 88) + 12,
+              maxWidth: "92%",
+            }}
+          >
+            <div className="bg-gray-800 text-white text-sm md:text-base px-5 py-2 rounded-2xl shadow-lg border border-gray-600 flex items-center gap-2 whitespace-nowrap justify-center">
+              로그인한 유저만 밈을 사용할 수 있습니다.
+            </div>
+          </div>
+        )}
+
         {/* 메시지 목록 */}
         <div
           ref={listRef}
@@ -2015,7 +2076,6 @@ const ChatPanel = ({
               );
             }
 
-            // --- 여기서 senderId/userId를 통합해서 사용 ---
             const senderId = String(
               (msg as any).senderId ?? (msg as any).userId ?? ""
             );
@@ -2023,7 +2083,6 @@ const ChatPanel = ({
             const isMyMessage =
               senderId !== "" && myId !== "" && senderId === myId;
 
-            // 실제로 랭크가 내려왔는지만 본다
             const rawRankLevel =
               (msg as any).rankLevel || (msg as any).userRank?.rankLevel;
             const hasRank = !!rawRankLevel;
@@ -2035,7 +2094,7 @@ const ChatPanel = ({
                   isMyMessage ? "items-end" : "items-start"
                 }`}
               >
-                {/* 닉네임 + (랭크가 실제로 왔을 때만 뱃지) */}
+                {/* 닉네임 + 랭크 */}
                 <span className="text-xs text-gray-200 mb-1">
                   {hasRank ? (
                     <NicknameWithRank
@@ -2087,7 +2146,6 @@ const ChatPanel = ({
                           >
                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
                               <div className="flex flex-col p-1">
-                                {/* 방장일 때만 강퇴 노출 */}
                                 {isHost && (
                                   <button
                                     onClick={() =>
@@ -2105,7 +2163,6 @@ const ChatPanel = ({
                                   </button>
                                 )}
 
-                                {/* 공통: 차단하기 */}
                                 <button
                                   onClick={() =>
                                     openBlockConfirm({
@@ -2151,7 +2208,6 @@ const ChatPanel = ({
                           >
                             <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
                               <div className="flex flex-col p-1">
-                                {/* 방장일 때만 강퇴 노출 */}
                                 {isHost && (
                                   <button
                                     onClick={() =>
@@ -2169,7 +2225,6 @@ const ChatPanel = ({
                                   </button>
                                 )}
 
-                                {/* 공통: 차단하기 */}
                                 <button
                                   onClick={() =>
                                     openBlockConfirm({
@@ -2285,7 +2340,7 @@ const ChatPanel = ({
                 disabled={isRateLimitedNow}
               />
 
-              {/* GIF 버튼 */}
+              {/* GIF 버튼 (게스트도 모달은 열 수 있음) */}
               <button
                 type="button"
                 onClick={() => setIsGifModalOpen(!isGifModalOpen)}
@@ -2372,3 +2427,4 @@ const ChatPanel = ({
 };
 
 export default ChatPanel;
+
