@@ -5,7 +5,7 @@ const token = localStorage.getItem("accessToken") || "";
 
 // 팔로워 목록 조회
 export const fetchFollowList = async (): Promise<FollowUser[]> => {
-  const res = await api.get("/users/me/followers", {
+  const res = await api.get("/me/followers", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -27,7 +27,7 @@ export const fetchFollowList = async (): Promise<FollowUser[]> => {
 
 // 팔로잉 목록 조회
 export const fetchFollowingList = async (): Promise<FollowUser[]> => {
-  const res = await api.get("/users/me/following", {
+  const res = await api.get("/me/following", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
