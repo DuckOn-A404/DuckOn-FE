@@ -523,6 +523,11 @@ const MyPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (!myUser) return;
+    syncGlobal(myUser);
+  }, [myUser]);
+
   // ✅ 최초 로드: 서버 imgUrl이 비면 userId별 보관 값으로 복구
   useEffect(() => {
     const loadUser = async () => {
@@ -536,9 +541,7 @@ const MyPage = () => {
           const chosenImg = !isEmptyImg(incomingImg) ? incomingImg : storedImg;
 
           const next: MyUser = { ...(prev ?? {}), ...data, imgUrl: chosenImg } as MyUser;
-          // 마지막으로 확인된 유효 이미지 저장(다음 로그인 대비)
           saveLastImg(uid, next.imgUrl as any);
-          syncGlobal(next);
           return next;
         });
       } finally {
@@ -556,8 +559,6 @@ const MyPage = () => {
           const updated = await fetchMyProfile();
           setMyUser((prev) => {
             if (!prev) {
-              syncGlobal(updated);
-              // userId가 있으면 저장
               saveLastImg((updated as any)?.userId, (updated as any)?.imgUrl);
               return updated;
             }
@@ -566,9 +567,7 @@ const MyPage = () => {
               : prev.imgUrl;
 
             const next: MyUser = { ...prev, ...updated, imgUrl: nextImgUrl };
-            // 유효 이미지면 보관
             saveLastImg((next as any)?.userId, nextImgUrl as any);
-            syncGlobal(next);
             return next;
           });
         } catch {}
@@ -607,8 +606,6 @@ const MyPage = () => {
           onUpdate={(updatedUser) => {
             setMyUser((prev) => {
               if (!prev) {
-                syncGlobal(updatedUser as any);
-                // 업데이트된 이미지가 유효하면 보관
                 saveLastImg((updatedUser as any)?.userId, (updatedUser as any)?.imgUrl);
                 return updatedUser;
               }
@@ -619,9 +616,7 @@ const MyPage = () => {
                   : prev.imgUrl;
 
               const next: MyUser = { ...prev, ...updatedUser, imgUrl: nextImgUrl };
-              // 유효 이미지면 보관
               saveLastImg((next as any)?.userId, nextImgUrl as any);
-              syncGlobal(next);
               return next;
             });
             setIsEditing(false);
