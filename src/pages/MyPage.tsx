@@ -447,6 +447,7 @@ import FollowingList from "../components/common/modal/FollowingList";
 import MyProfileCard from "../components/domain/user/MyProfileCard";
 import MyCreatedRoomsPanel from "../components/domain/room/MyCreatedRoomsPanel";
 import BlockListModal from "../components/common/modal/BlockListModal";
+import ChangePasswordModal from "../components/common/modal/ChangePasswordModal";
 
 const isEmptyImg = (v: unknown): boolean =>
   v === undefined || v === null || (typeof v === "string" && v.trim() === "");
@@ -478,6 +479,7 @@ const MyPage = () => {
     null
   );
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   const syncGlobal = (u: MyUser) => {
     useUserStore.getState().setMyUser({
@@ -598,6 +600,7 @@ const MyPage = () => {
           onFollowingClick={() => setOpenList("following")}
           onDeleteClick={handleOpenDeleteModal}
           onBlockListClick={() => setIsBlockModalOpen(true)}
+          onChangePasswordClick={() => setIsChangePasswordModalOpen(true)}
         />
       ) : (
         <EditProfileCard
@@ -647,6 +650,12 @@ const MyPage = () => {
       />
 
       {isBlockModalOpen && <BlockListModal onClose={() => setIsBlockModalOpen(false)} />}
+
+      {/* 비밀번호 변경 모달 */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+      />
     </div>
   );
 };
