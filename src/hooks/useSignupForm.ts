@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { type SignupData } from "../types/auth";
 import {
@@ -48,6 +48,8 @@ export const useSignupForm = () => {
   const [codeSuccess, setCodeSuccess] = useState("");
   const [sendingCode, setSendingCode] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
+  const [codeSentAt, setCodeSentAt] = useState<number | null>(null); // ms 기준 타임스탬프
+  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +107,8 @@ export const useSignupForm = () => {
       setVerificationCode("");
       setCodeError("");
       setCodeSuccess("");
+      setCodeSentAt(null);
+      setRemainingSeconds(null);
       if (value && !isValidEmail(value)) {
         setEmailError("유효한 이메일 형식이 아닙니다.");
       }
@@ -238,6 +242,7 @@ export const useSignupForm = () => {
       const result = await sendEmailVerificationCode(formData.email);
       if (result.sent) {
         setIsCodeSent(true);
+        setCodeSentAt(Date.now());
         setCodeSuccess("인증번호가 발송되었습니다.");
         setEmailSuccess("인증번호를 확인해주세요.");
       } else {
@@ -262,6 +267,18 @@ export const useSignupForm = () => {
       return;
     }
 
+    // 3분(180,000ms) 유효기간 체크
+    if (codeSentAt && Date.now() - codeSentAt > 3 * 60 * 1000) {
+      setCodeError("인증번호가 만료되었습니다. 다시 요청해주세요.");
+      setIsCodeSent(false);
+      setIsCodeVerified(false);
+      setVerificationCode("");
+      setCodeSentAt(null);
+      setEmailChecked(false);
+      setRemainingSeconds(null);
+      return;
+    }
+
     setVerifyingCode(true);
     try {
       const result = await verifyEmailCode(formData.email, verificationCode);
@@ -281,6 +298,28 @@ export const useSignupForm = () => {
       setVerifyingCode(false);
     }
   };
+
+  // 인증번호 남은 시간 카운트다운
+  useEffect(() => {
+    if (!isCodeSent || isCodeVerified || !codeSentAt) {
+      setRemainingSeconds(null);
+      return;
+    }
+
+    const updateRemaining = () => {
+      const elapsed = Date.now() - codeSentAt;
+      const diffMs = 3 * 60 * 1000 - elapsed;
+      if (diffMs <= 0) {
+        setRemainingSeconds(0);
+      } else {
+        setRemainingSeconds(Math.ceil(diffMs / 1000));
+      }
+    };
+
+    updateRemaining();
+    const timer = window.setInterval(updateRemaining, 1000);
+    return () => window.clearInterval(timer);
+  }, [isCodeSent, isCodeVerified, codeSentAt]);
 
   const handleCheckEmail = async () => {
     setEmailError("");
@@ -353,5 +392,6 @@ export const useSignupForm = () => {
     verifyingCode,
     handleSendVerificationCode,
     handleVerifyCode,
+    remainingSeconds,
   };
 };

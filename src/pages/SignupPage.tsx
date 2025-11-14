@@ -47,6 +47,7 @@ const SignupPage = () => {
     verifyingCode,
     handleSendVerificationCode,
     handleVerifyCode,
+    remainingSeconds,
   } = useSignupForm();
 
   // const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
@@ -134,6 +135,12 @@ const SignupPage = () => {
               {sendingCode ? "발송 중..." : isCodeVerified ? "인증 완료" : "인증번호 발송"}
             </button>
           </div>
+          {isCodeSent && !isCodeVerified && remainingSeconds !== null && (
+            <p className="text-xs text-gray-500 pl-1 -mt-2">
+              남은 시간 {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
+              {String(remainingSeconds % 60).padStart(2, "0")} 내에 인증을 완료해주세요.
+            </p>
+          )}
           {isCodeSent && !isCodeVerified && (
             <div className="flex gap-2 items-start">
               <div className="flex-grow">
