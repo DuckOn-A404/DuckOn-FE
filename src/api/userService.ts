@@ -58,6 +58,18 @@ export const updateUserProfile = async (
   return res.data;
 };
 
+/** 비밀번호 변경 API */
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<{ status: number; message: string }> => {
+  const response = await api.patch("/me/password", {
+    currentPassword,
+    newPassword,
+  });
+  return response.data;
+};
+
 /** 차단된 사용자 목록 조회 */
 export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
   const token = getAccessToken();
