@@ -19,3 +19,11 @@ body {
     line-height: 1.25;
   }
 }
+
+
+/* 앱일 때는 루트를 꽉 차게 쓰기 */
+body.is-native-app #root {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}

@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'DuckOn',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'http',
     allowNavigation: ['duckon.site', '*.duckon.site']
   }
 };

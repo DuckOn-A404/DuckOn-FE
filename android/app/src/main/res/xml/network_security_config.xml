@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 이 도메인에 한해서 HTTP(클리어텍스트) 허용 -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain>ec2-43-202-159-100.ap-northeast-2.compute.amazonaws.com</domain>
+    </domain-config>
+</network-security-config>
