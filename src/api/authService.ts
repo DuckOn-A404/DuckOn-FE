@@ -111,3 +111,50 @@ export const logoutUser = async (): Promise<ApiMessage> => {
   );
   return res.data;
 };
+
+/**
+ * 이메일 인증번호 발송 API 요청
+ * @param email - 인증번호를 받을 이메일 주소
+ * @returns - { sent: boolean, message: string } 형식의 응답 데이터
+ */
+export const sendEmailVerificationCode = async (
+  email: string
+): Promise<{ sent: boolean; message: string }> => {
+  const response = await api.post(
+    "/auth/code",
+    {
+      email,
+      emailPurpose: "SIGN_UP",
+    },
+    {
+      skipAuth: true,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  return response.data;
+};
+
+/**
+ * 이메일 인증번호 검증 API 요청
+ * @param email - 인증할 이메일 주소
+ * @param code - 인증번호
+ * @returns - { verified: boolean, message: string } 형식의 응답 데이터
+ */
+export const verifyEmailCode = async (
+  email: string,
+  code: string
+): Promise<{ verified: boolean; message: string }> => {
+  const response = await api.post(
+    "/auth/verify",
+    {
+      email,
+      code,
+      emailPurpose: "SIGN_UP",
+    },
+    {
+      skipAuth: true,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  return response.data;
+};

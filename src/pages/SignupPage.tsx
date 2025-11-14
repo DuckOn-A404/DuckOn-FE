@@ -32,11 +32,21 @@ const SignupPage = () => {
     userIdError,
     emailSuccess,
     userIdSuccess,
-    handleCheckEmail,
     handleCheckUserId,
     passwordConfirmError,
     passwordError,
     nicknameError,
+    // 이메일 인증 관련
+    verificationCode,
+    setVerificationCode,
+    isCodeSent,
+    isCodeVerified,
+    codeError,
+    codeSuccess,
+    sendingCode,
+    verifyingCode,
+    handleSendVerificationCode,
+    handleVerifyCode,
   } = useSignupForm();
 
   // const [languageOptions, setLanguageOptions] = useState<SelectOption[]>([]);
@@ -62,10 +72,17 @@ const SignupPage = () => {
     const target = e.target as HTMLInputElement | HTMLSelectElement | null;
     const targetId = target?.id;
 
-    // 이메일 입력창에서 Enter를 누르면 이메일 중복 확인 실행
+    // 이메일 입력창에서 Enter를 누르면 인증번호 발송
     if (targetId === "email") {
       e.preventDefault();
-      handleCheckEmail();
+      if (!isCodeSent) {
+        handleSendVerificationCode();
+      }
+    }
+    // 인증번호 입력창에서 Enter를 누르면 인증 확인
+    else if (targetId === "verificationCode") {
+      e.preventDefault();
+      handleVerifyCode();
     }
     // 아이디 입력창에서 Enter를 누르면 아이디 중복 확인 실행
     else if (targetId === "userId") {
@@ -105,16 +122,43 @@ const SignupPage = () => {
                 onChange={handleChange}
                 error={emailError}
                 success={emailSuccess}
+                disabled={isCodeVerified}
               />
             </div>
             <button
               type="button"
-              onClick={handleCheckEmail}
-              className="h-11 mt-[30px] px-4 text-sm font-medium bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap"
+              onClick={handleSendVerificationCode}
+              disabled={sendingCode || isCodeVerified}
+              className="h-11 mt-[30px] px-4 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap"
             >
-              중복 확인
+              {sendingCode ? "발송 중..." : isCodeVerified ? "인증 완료" : "인증번호 발송"}
             </button>
           </div>
+          {isCodeSent && !isCodeVerified && (
+            <div className="flex gap-2 items-start">
+              <div className="flex-grow">
+                <InputField
+                  id="verificationCode"
+                  label="인증번호*"
+                  type="text"
+                  placeholder="인증번호를 입력하세요"
+                  icon={<Mail className={iconStyle} />}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  error={codeError}
+                  success={codeSuccess}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleVerifyCode}
+                disabled={verifyingCode}
+                className="h-11 mt-[30px] px-4 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap"
+              >
+                {verifyingCode ? "확인 중..." : "인증 확인"}
+              </button>
+            </div>
+          )}
           <div className="flex gap-2 items-start">
             <div className="flex-grow">
               <InputField

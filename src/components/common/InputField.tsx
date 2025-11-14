@@ -11,6 +11,7 @@ type InputFieldProps = {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   success?: string;
+  disabled?: boolean;
 };
 
 const InputField = ({
@@ -24,6 +25,7 @@ const InputField = ({
   onChange,
   error,
   success,
+  disabled = false,
 }: InputFieldProps) => {
   return (
     <div>
@@ -49,7 +51,8 @@ const InputField = ({
           name={id}
           value={value}
           onChange={onChange}
-          className="w-full h-12 pl-12 pr-4 py-3 bg-white rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          disabled={disabled}
+          className="w-full h-12 pl-12 pr-4 py-3 bg-white rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           placeholder={placeholder}
         />
       </div>
