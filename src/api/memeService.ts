@@ -3,7 +3,6 @@ import { api } from "./axiosInstance";
 export type Meme = {
   id: number;
   imageUrl: string;
-  tags?: string[];
   favorite?: boolean;
 };
 
@@ -26,7 +25,6 @@ export const fetchRandomMemes = async (page: number = 1, size: number = 30): Pro
     items: items.map((it: any) => ({
       id: it.memeId,
       imageUrl: it.memeUrl,
-      tags: it.tags,
     })),
     total: data?.total ?? 0,
     page: data?.page ?? page,
@@ -64,7 +62,6 @@ export const fetchFavoriteMemes = async (): Promise<Meme[]> => {
   return raw.slice(0, 10).map((it: any) => ({
     id: it.memeId,
     imageUrl: it.memeUrl,
-    tags: it.tags,
     favorite: true,
   }));
 };
@@ -85,7 +82,6 @@ export const searchMemes = async (q: string, page: number = 1, size: number = 30
     items: items.map((it: any) => ({
       id: it.memeId,
       imageUrl: it.memeUrl,
-      tags: it.tags,
     })),
     total: data?.total ?? 0,
     page: data?.page ?? page,
