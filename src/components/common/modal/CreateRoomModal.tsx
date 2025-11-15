@@ -43,6 +43,7 @@ const CreateRoomModal = ({
   const [ytResults, setYtResults] = useState<any[]>([]);
   const [ytLoading, setYtLoading] = useState(false);
   const [ytError, setYtError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const YT_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
   const navigate = useNavigate();
@@ -124,6 +125,8 @@ const CreateRoomModal = ({
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (
       !title ||
       !videoUrl ||
@@ -133,6 +136,8 @@ const CreateRoomModal = ({
       setErrors("모든 필수 항목을 입력해주세요.");
       return;
     }
+
+    setIsSubmitting(true);
 
     const formData = new FormData();
     formData.append("artistId", artistId.toString());
@@ -178,6 +183,8 @@ const CreateRoomModal = ({
       });
     } catch {
       alert("방 생성에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -378,10 +385,11 @@ const CreateRoomModal = ({
             취소
           </button>
           <button
-            className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition"
+            className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
             onClick={handleSubmit}
+            disabled={isSubmitting}
           >
-            방 만들기
+            {isSubmitting ? "방 만드는 중..." : "방 만들기"}
           </button>
         </div>
       </div>
