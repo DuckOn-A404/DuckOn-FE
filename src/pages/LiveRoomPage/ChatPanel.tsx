@@ -1929,8 +1929,8 @@ const ChatPanel = ({
                       className={`
                         px-1.5 py-0.5 text-xs rounded flex items-center gap-0.5
                         ${translatedText
-                          ? "bg-purple-700 text-white opacity-100"
-                          : "bg-gray-600 text-gray-300 opacity-0 group-hover:opacity-100"
+                          ? "bg-purple-700 text-white"
+                          : "bg-gray-600 text-gray-300"
                         }
                         hover:bg-purple-600 transition-all duration-200
                       `}
@@ -1966,7 +1966,6 @@ const ChatPanel = ({
                       text-sm text-gray-100
                     `}
                   >
-                    <div className="text-xs text-purple-300 mb-1">번역:</div>
                     <div className="break-all">{translatedText}</div>
                   </div>
                 )}
