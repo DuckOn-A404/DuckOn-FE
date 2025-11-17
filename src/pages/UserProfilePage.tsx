@@ -1,75 +1,62 @@
-import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import type { OtherUser } from "../types/otherUser";
 import type { RoomHistory } from "../types/room";
-import { fetchOtherUserProfile, fetchUserRooms } from "../api/userService";
-import { followUser, unfollowUser } from "../api/follow/followService";
+import {
+  fetchOtherUserProfile,
+  fetchUserRooms,
+} from "../api/userService";
 import OtherProfileCard from "../components/domain/user/OtherProfileCard";
 import MyCreatedRoomsPanel from "../components/domain/room/MyCreatedRoomsPanel";
-import { LoaderCircle, AlertTriangle } from "lucide-react";
 import { useUserStore } from "../store/useUserStore";
+import { followUser, unfollowUser } from "../api/follow/followService";
 
-const OtherUserPage = () => {
+const UserProfilePage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const myUser = useUserStore((state) => state.myUser);
-
+  
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
   const [rooms, setRooms] = useState<RoomHistory[]>([]);
   const [roomsPage, setRoomsPage] = useState(1);
   const [roomsTotal, setRoomsTotal] = useState(0);
   const [roomsLoading, setRoomsLoading] = useState(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [isFollowLoading, setIsFollowLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [followLoading, setFollowLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  // 사용자 정보 및 방 목록 로드
   useEffect(() => {
     if (!userId) {
-      setIsLoading(false);
+      navigate("/");
       return;
     }
 
-    const getUserData = async () => {
-      setIsLoading(true);
-      setError(null);
+    const loadUserProfile = async () => {
+      setLoading(true);
       try {
-        // 타 유저 정보 조회 (비로그인 사용자도 가능)
+        // 타 유저 정보 조회
         const myUserId = myUser?.userId || null;
-        const data = await fetchOtherUserProfile(userId, myUserId);
-        setOtherUser(data);
+        const userData = await fetchOtherUserProfile(userId, myUserId);
+        setOtherUser(userData);
 
         // 방 목록 조회
         const roomsData = await fetchUserRooms(userId, 1, 12);
         setRooms(roomsData.roomList);
         setRoomsPage(1);
         setRoomsTotal(roomsData.total);
-      } catch (err) {
-        setError(err as Error);
+      } catch (error) {
+        console.error("프로필 로드 실패:", error);
+        // 에러 처리 - 404 페이지로 이동하거나 에러 메시지 표시
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-    getUserData();
-  }, [userId, myUser?.userId]);
 
-  // // 팔로우만 가능하도록 처리
-  // const handleFollow = async () => {
-  //   if (!otherUser || otherUser.following === true) return; // 이미 팔로우한 경우는 무시
-  //   try {
-  //     await followUser(otherUser.userId); // POST /api/follow/{userId}
-  //     setOtherUser((prev) =>
-  //       prev
-  //         ? {
-  //             ...prev,
-  //             following: true,
-  //             followerCount: prev.followerCount + 1,
-  //           }
-  //         : prev
-  //     );
-  //   } catch {}
-  // };
+    loadUserProfile();
+  }, [userId, myUser?.userId, navigate]);
 
+  // 팔로우 토글
   const handleToggleFollow = async () => {
     // 비로그인 사용자면 로그인 모달 표시
     if (!myUser) {
@@ -77,40 +64,21 @@ const OtherUserPage = () => {
       return;
     }
 
-    if (!otherUser || isFollowLoading) return;
+    if (!otherUser || followLoading) return;
 
-    setIsFollowLoading(true);
-
+    setFollowLoading(true);
     try {
       if (otherUser.following) {
-        // --- 언팔로우 로직 ---
         await unfollowUser(otherUser.userId);
-        setOtherUser((prev) =>
-          prev
-            ? {
-                ...prev,
-                following: false,
-                followerCount: prev.followerCount - 1,
-              }
-            : null
-        );
+        setOtherUser((prev) => prev ? { ...prev, following: false, followerCount: prev.followerCount - 1 } : null);
       } else {
-        // --- 팔로우 로직 ---
         await followUser(otherUser.userId);
-        setOtherUser((prev) =>
-          prev
-            ? {
-                ...prev,
-                following: true,
-                followerCount: prev.followerCount + 1,
-              }
-            : null
-        );
+        setOtherUser((prev) => prev ? { ...prev, following: true, followerCount: prev.followerCount + 1 } : null);
       }
-    } catch (err) {
-      console.error("Follow/Unfollow failed", err);
+    } catch (error) {
+      console.error("팔로우 처리 실패:", error);
     } finally {
-      setIsFollowLoading(false);
+      setFollowLoading(false);
     }
   };
 
@@ -132,42 +100,22 @@ const OtherUserPage = () => {
     }
   };
 
-  if (isLoading && !otherUser) {
-    // 첫 로딩 시
-    return (
-      <div className="text-center mt-20 flex flex-col items-center justify-center">
-        <LoaderCircle className="w-10 h-10 animate-spin text-gray-300" />
-        <p className="mt-2">유저 정보를 불러오는 중입니다...</p>
-      </div>
-    );
+  if (loading) {
+    return <div className="p-6">불러오는 중...</div>;
   }
 
-  if (error) {
-    // 에러 발생 시
-    return (
-      <div className="text-center mt-20 flex flex-col items-center justify-center">
-        <AlertTriangle className="w-10 h-10 text-red-400" />
-        <p className="mt-2 text-red-500">
-          유저 정보를 불러오는 데 실패했습니다.
-        </p>
-      </div>
-    );
-  }
-
-  // 로딩이 끝났는데 유저 데이터가 없는 경우
   if (!otherUser) {
-    return <div className="text-center mt-20">존재하지 않는 유저입니다.</div>;
+    return <div className="p-6 text-red-500">사용자를 찾을 수 없습니다.</div>;
   }
 
   return (
-    <div key={userId} className="py-10">
+    <div className="px-8 py-6">
       <OtherProfileCard
         user={otherUser}
         onToggleFollow={handleToggleFollow}
-        isFollowLoading={isFollowLoading}
+        isFollowLoading={followLoading}
       />
 
-      {/* 방 생성 히스토리 */}
       <div className="mt-8">
         <MyCreatedRoomsPanel
           rooms={rooms}
@@ -207,4 +155,4 @@ const OtherUserPage = () => {
   );
 };
 
-export default OtherUserPage;
+export default UserProfilePage;

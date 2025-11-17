@@ -5,8 +5,6 @@ import TruncatedTitle from "../../common/TruncatedTitle";
 type Props = {
   rooms: RoomHistory[];
   title?: string;
-  liveRoomId?: number | null;
-  onEnterLive?: (roomId: number) => void;
   /** 제목 바로 아래에 꽂을 커스텀 필터/정렬 바 */
   filters?: ReactNode;
 };
@@ -16,8 +14,6 @@ const NO_IMAGE = "https://placehold.co/1280x720?text=No+Image";
 const MyCreatedRooms = ({
   rooms,
   title = "내가 만든 방",
-  liveRoomId,
-  onEnterLive,
   filters,
 }: Props) => {
   const list = (rooms ?? [])
@@ -67,7 +63,7 @@ const MyCreatedRooms = ({
       {list.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {list.map((r) => {
-            const isLive = liveRoomId != null && r.roomId === liveRoomId;
+            const isLive = r.active;
             return (
               <div
                 key={r.roomId}
@@ -102,15 +98,6 @@ const MyCreatedRooms = ({
                         `artistId: ${r.artistId}`}
                     </span>
                   </div>
-
-                  {isLive && (
-                    <button
-                      onClick={() => onEnterLive?.(r.roomId)}
-                      className="mt-3 w-full px-3 py-2 rounded-md text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700"
-                    >
-                      입장하기
-                    </button>
-                  )}
                 </div>
               </div>
             );

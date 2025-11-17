@@ -15,10 +15,11 @@ export type room = {
 // 내가 만든 과거 방(입장 불가 히스토리). BE RoomDTO와 1:1 매칭
 export type RoomHistory = {
   roomId: number;
+  active: boolean;     // 현재 활성화된 방인지 여부
   title: string;
   imgUrl: string | null;
   createdAt: string;   // LocalDateTime → ISO 문자열로 전달됨
-  creatorId: string;
+  creatorId: number;   // API 응답에서 number로 옴
   artistId: number;
   artistNameEn?: string | null;
   artistNameKr?: string | null;

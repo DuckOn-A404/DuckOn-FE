@@ -2,6 +2,7 @@ import { api, getRefreshToken, getAccessToken } from "./axiosInstance";
 import { type MyUser } from "../types/mypage";
 import { type RecommendedUser } from "../types";
 import type { OtherUser } from "../types/otherUser";
+import type { RoomHistory } from "../types/room";
 import { useUserStore } from "../store/useUserStore";
 
 export type BlockedUser = {
@@ -18,11 +19,38 @@ export const fetchMyProfile = async (): Promise<MyUser> => {
   return response.data;
 };
 
+// 특정 유저의 방 생성 목록 조회 (페이지네이션 지원)
+export type UserRoomsResponse = {
+  page: number;
+  size: number;
+  total: number;
+  roomList: RoomHistory[];
+};
+
+export const fetchUserRooms = async (
+  userId: string,
+  page: number = 1,
+  size: number = 10
+): Promise<UserRoomsResponse> => {
+  const response = await api.get(`/users/${userId}/rooms`, {
+    params: { page, size }
+  });
+  const data = response.data?.data;
+  return {
+    page: data?.page ?? page,
+    size: data?.size ?? size,
+    total: data?.total ?? 0,
+    roomList: data?.roomList ?? []
+  };
+};
+
 // 타 유저 정보 조회
 export const fetchOtherUserProfile = async (
-  userId: string
+  otherUserId: string,
+  myUserIdOrNull?: string | null
 ): Promise<OtherUser> => {
-  const response = await api.get<OtherUser>(`/users/${userId}`);
+  const params = myUserIdOrNull ? { myUserIdOrNull } : {};
+  const response = await api.get<OtherUser>(`/users/${otherUserId}`, { params });
   return response.data;
 };
 

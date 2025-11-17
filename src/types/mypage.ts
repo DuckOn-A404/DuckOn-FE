@@ -1,4 +1,3 @@
-import type { RoomHistory } from "./room";
 import type { UserRank } from "./rank";
 
 export type MyUser = {
@@ -12,7 +11,6 @@ export type MyUser = {
   followerCount: number;
   bannedTill?: string; // 제재 당한 사용자라면 언제까지인지 날짜
   imgUrl?: string;
-  roomList?: RoomHistory[];   // 내가 만든 방 히스토리
   penaltyList: any[];
   socialLogin?: boolean;
   userRank?: UserRank;  // 랭크

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import type { RoomHistory } from "../../../types/room";
 import MyCreatedRooms from "./MyCreatedRooms";
 import RangeCalendar from "../../common/RangeCalendar";
@@ -8,6 +8,9 @@ type QuickRange = "all" | "7d" | "30d" | "thisYear";
 type Props = {
   rooms: RoomHistory[];
   pageSize?: number;
+  total?: number;
+  loading?: boolean;
+  onLoadMore?: () => void;
 };
 
 function startOfThisYear() {
@@ -20,7 +23,7 @@ function addDays(base: Date, days: number) {
   return d;
 }
 
-const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
+const MyCreatedRoomsPanel = ({ rooms, pageSize = 12, total, loading, onLoadMore }: Props) => {
   // 필터 상태
   const [quick, setQuick] = useState<QuickRange>("all");
   const [from, setFrom] = useState("");
@@ -28,6 +31,9 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
   const [artistId, setArtistId] = useState<number | "all">("all");
   const [visible, setVisible] = useState(pageSize);
   const [openCalendar, setOpenCalendar] = useState(false);
+  
+  // 무한스크롤을 위한 ref
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // 아티스트 옵션
   const artistOptions = useMemo(() => {
@@ -87,8 +93,39 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
       );
   }, [rooms, from, to, artistId]);
 
-  const shown = filtered.slice(0, visible);
-  const hasMore = filtered.length > visible;
+  // 무한스크롤 모드(onLoadMore가 있을 때)는 서버에서 받은 rooms 전체 표시
+  // 로컬 필터링 모드는 filtered를 visible만큼만 표시
+  const shown = onLoadMore ? rooms : filtered.slice(0, visible);
+  
+  // 무한스크롤 모드일 때는 total 기준으로, 아닐 때는 filtered 기준으로
+  const hasMore = total !== undefined 
+    ? rooms.length < total 
+    : filtered.length > visible;
+  
+  // IntersectionObserver로 무한스크롤 구현
+  useEffect(() => {
+    if (!onLoadMore || !hasMore || loading) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+    
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [onLoadMore, hasMore, loading]);
 
   // 필터 여부 / 미래 여부
   const isDateFiltered = quick !== "all" || !!from || !!to;
@@ -219,7 +256,17 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12 }: Props) => {
         </div>
       )}
 
-      {hasMore && shown.length > 0 && (
+      {/* 무한스크롤 트리거 */}
+      {onLoadMore && hasMore && shown.length > 0 && (
+        <div ref={observerTarget} className="flex justify-center mt-4 py-4">
+          {loading && (
+            <div className="text-sm text-gray-500">로딩 중...</div>
+          )}
+        </div>
+      )}
+      
+      {/* 로컬 필터링 모드일 때만 더보기 버튼 표시 */}
+      {!onLoadMore && hasMore && shown.length > 0 && (
         <div className="flex justify-center mt-4">
           <button
             onClick={() => setVisible((v) => v + pageSize)}

@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import type { RoomHistory, trendingRoom } from "../../../types/room";
 import MyCreatedRooms from "./MyCreatedRooms";
-import { enterRoom } from "../../../api/roomService";
 import RangeCalendar from "../../common/RangeCalendar";
 import TruncatedTitle from "../../common/TruncatedTitle";
 
@@ -31,8 +29,6 @@ const OtherUserRoomsPanel = ({
   pageSize = 12,
   title = "만든 방",
 }: Props) => {
-  const navigate = useNavigate();
-
   const [quick, setQuick] = useState<QuickRange>("all");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -94,10 +90,11 @@ const OtherUserRoomsPanel = ({
 
     const injected: RoomHistory = {
       roomId: activeRoom.roomId,
+      active: true,  // activeRoom은 현재 활성화된 방
       title: activeRoom.title,
       imgUrl: activeRoom.imgUrl,
       createdAt: new Date().toISOString(),
-      creatorId: activeRoom.hostId,
+      creatorId: Number(activeRoom.hostId) || 0,  // string을 number로 변환
       artistId: activeRoom.artistId,
       artistNameEn: (activeRoom as any).artistNameEn,
       artistNameKr: (activeRoom as any).artistNameKr,
@@ -127,32 +124,6 @@ const OtherUserRoomsPanel = ({
 
   const shown = filtered.slice(0, visible);
   const hasMore = filtered.length > visible;
-
-  const liveRoomId = activeRoom?.roomId ?? null;
-
-  const handleEnterLive = async (roomId: number) => {
-    try {
-      await enterRoom(String(roomId), "");
-      navigate(`/live/${roomId}`);
-    } catch (err: any) {
-      const q =
-        err?.response?.data?.extra?.entryQuestion ||
-        err?.response?.data?.entryQuestion ||
-        err?.response?.data?.message;
-      if (q) {
-        const answer = window.prompt(q);
-        if (answer === null) return;
-        try {
-          await enterRoom(String(roomId), answer);
-          navigate(`/live/${roomId}`);
-        } catch {
-          alert("입장에 실패했습니다. 비밀번호/정답을 다시 확인해주세요.");
-        }
-      } else {
-        alert("입장에 실패했습니다.");
-      }
-    }
-  };
 
   // 필터 여부 / 미래 날짜 여부
   const now = new Date();
@@ -270,8 +241,6 @@ const OtherUserRoomsPanel = ({
         <MyCreatedRooms
           rooms={shown}
           title={title}
-          liveRoomId={liveRoomId}
-          onEnterLive={handleEnterLive}
           filters={Filters}
         />
       ) : (
