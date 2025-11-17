@@ -53,17 +53,24 @@ export const fetchTopMemes = async (page: number = 1, size: number = 30): Promis
   };
 };
 
-// 즐겨찾기 목록 (배열 그대로 오는 버전)
-export const fetchFavoriteMemes = async (): Promise<Meme[]> => {
-  const res = await api.get("/memes/favorites");
-  const raw = res.data?.data;
-  if (!Array.isArray(raw)) return [];
-  // 필요하면 여기서 slice(0, 10) 해도 됨
-  return raw.slice(0, 10).map((it: any) => ({
-    id: it.memeId,
-    imageUrl: it.memeUrl,
-    favorite: true,
-  }));
+// 즐겨찾기 목록 조회 (페이지네이션 지원)
+export const fetchFavoriteMemes = async (page: number = 1, size: number = 10): Promise<MemeResponse> => {
+  const res = await api.get("/me/favorite-memes", {
+    params: { page, size }
+  });
+  const data = res.data?.data;
+  const items = data?.items ?? [];
+
+  return {
+    items: items.map((it: any) => ({
+      id: it.memeId,
+      imageUrl: it.memeUrl,
+      favorite: true,
+    })),
+    total: data?.total ?? 0,
+    page: data?.page ?? page,
+    size: data?.size ?? size,
+  };
 };
 
 // 태그 기반 밈 검색 API - 페이지네이션 지원
@@ -99,7 +106,7 @@ export const removeFavoriteMeme = async (memeId: number): Promise<void> => {
   await api.delete(`/memes/${memeId}/favorite`);
 };
 
-// 즐겨찾기 토글 (기존 함수 유지)
+// 즐겨찾기 토글 (기존 함수 유지 - deprecated, addFavoriteMeme 사용 권장)
 export const toggleFavoriteMeme = async (memeId: number): Promise<void> => {
   await api.post(`/memes/${memeId}/favorite`);
 };

@@ -79,12 +79,12 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
           setCurrentPage(1);
           setHasMore(response.items.length >= 30);
         } else {
-          const data = await fetchFavoriteMemes();
-          setMemes(data);
+          const response = await fetchFavoriteMemes(1, 30);
+          setMemes(response.items);
           // 즐겨찾기 탭의 밈 ID들을 Set에 저장
-          setFavoriteMemeIds(new Set(data.map((m) => m.id)));
+          setFavoriteMemeIds(new Set(response.items.map((m) => m.id)));
           setCurrentPage(1);
-          setHasMore(false); // 즐겨찾기는 무한 스크롤 없음
+          setHasMore(response.items.length < response.total); // 페이지네이션 지원
         }
       } catch (e) {
         console.error("[GifModal] favorite fetch error:", e);
@@ -137,22 +137,31 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
 
   // 무한 스크롤 - 더 많은 데이터 로드
   const loadMoreMemes = useCallback(async () => {
-    if (
-      isLoadingMore ||
-      !hasMore ||
-      searchQuery.trim() ||
-      activeTab === "favorites"
-    )
-      return;
+    if (isLoadingMore || !hasMore || searchQuery.trim()) return;
 
     setIsLoadingMore(true);
     try {
       const nextPage = currentPage + 1;
-      const response = await fetchRandomMemes(nextPage, 30);
+      let response;
+
+      if (activeTab === "favorites") {
+        response = await fetchFavoriteMemes(nextPage, 30);
+      } else {
+        response = await fetchRandomMemes(nextPage, 30);
+      }
 
       setMemes((prev) => [...prev, ...response.items]);
       setCurrentPage(nextPage);
-      setHasMore(response.items.length >= 30);
+      setHasMore(response.items.length < response.total);
+
+      // 즐겨찾기 탭이면 새로 로드된 밈들도 Set에 추가
+      if (activeTab === "favorites") {
+        setFavoriteMemeIds((prev) => {
+          const newSet = new Set(prev);
+          response.items.forEach((m) => newSet.add(m.id));
+          return newSet;
+        });
+      }
     } catch (e) {
       console.error("추가 밈 로드 실패:", e);
     } finally {
