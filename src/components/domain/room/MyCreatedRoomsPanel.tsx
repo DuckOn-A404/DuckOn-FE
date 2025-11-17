@@ -136,115 +136,127 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12, total, loading, onLoadMore 
 
   // 필터 UI
   const Filters = (
-    <div className="mb-4">
-      <div className="flex flex-wrap md:flex-nowrap md:whitespace-nowrap items-center gap-3">
+    <div className="mb-4 space-y-3 md:space-y-0">
+      {/* 모바일: 세로 정렬, 웹: 기존 가로 정렬 */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-3">
         {/* 빠른 범위 버튼 */}
-        <div className="flex items-center gap-2 flex-wrap basis-full md:basis-auto shrink-0">
-          {[
-            { k: "all", label: "전체" },
-            { k: "7d", label: "최근 7일" },
-            { k: "30d", label: "최근 30일" },
-            { k: "thisYear", label: "올해" },
-          ].map(({ k, label }) => (
-            <button
-              key={k}
-              onClick={() => {
-                applyQuick(k as QuickRange);
-                setOpenCalendar(false);
-              }}
-              className={`px-3 py-1 rounded-full text-sm border transition ${
-                quick === k
-                  ? "bg-purple-600 text-white border-purple-600"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* 구분선 */}
-        <div className="h-5 w-px bg-gray-200 hidden md:block shrink-0" />
-
-        {/* 기간 선택 */}
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => setOpenCalendar((o) => !o)}
-            className="border rounded-md px-3 py-2 text-sm bg-white flex items-center gap-2 min-w-[190px]"
-          >
-            <span className="text-gray-500 text-xs">기간</span>
-            <span className="text-gray-800">
-              {from ? from : "시작일"}{" "}
-              <span className="text-gray-400 mx-1">~</span>{" "}
-              {to ? to : "종료일"}
-            </span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 text-gray-400 ml-auto"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-
-          {openCalendar && (
-            <div className="absolute z-50 mt-3">
-              <RangeCalendar
-                start={from}
-                end={to}
-                onChange={(s, e) => {
-                  setFrom(s);
-                  setTo(e);
-                  setQuick("all");
-                  setVisible(pageSize);
-                }}
-                onClose={() => setOpenCalendar(false)}
-              />
+        <div className="flex items-center gap-2 md:flex-wrap md:basis-auto md:shrink-0">
+          <div className="flex-1 md:flex-none">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {[
+                { k: "all", label: "전체" },
+                { k: "7d", label: "최근 7일" },
+                { k: "30d", label: "최근 30일" },
+                { k: "thisYear", label: "올해" },
+              ].map(({ k, label }) => (
+                <button
+                  key={k}
+                  onClick={() => {
+                    applyQuick(k as QuickRange);
+                    setOpenCalendar(false);
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs md:text-sm border whitespace-nowrap transition ${
+                    quick === k
+                      ? "bg-purple-600 text-white border-purple-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* 구분선 */}
-        <div className="h-5 w-px bg-gray-200 hidden md:block shrink-0" />
+        {/* 웹에서만 구분선 */}
+        <div className="hidden md:block h-5 w-px bg-gray-200 shrink-0" />
 
-        {/* 아티스트 선택 */}
-        <div className="flex items-center gap-2 shrink-0">
-          <div className="text-xs text-gray-500 shrink-0">아티스트</div>
-          <select
-            value={artistId}
-            onChange={(e) => {
-              const v = e.target.value;
-              setArtistId(v === "all" ? "all" : Number(v));
-              setVisible(pageSize);
-            }}
-            className="border rounded-md px-2 py-2 text-sm w-[160px] sm:w-auto shrink-0 bg-white"
-          >
-            <option value="all">전체</option>
-            {artistOptions.map(([id, label]) => (
-              <option key={id} value={id}>
-                {label}
-              </option>
-            ))}
-          </select>
+        {/* 기간 + 아티스트 선택 (모바일에서는 두 줄, 웹에서는 가로) */}
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+          {/* 기간 선택 */}
+          <div className="relative md:shrink-0">
+            <button
+              type="button"
+              onClick={() => setOpenCalendar((o) => !o)}
+              className="w-full md:w-auto border rounded-md px-3 py-2 text-xs md:text-sm bg-white flex items-center gap-2 min-w-[190px]"
+            >
+              <span className="text-gray-500 text-[11px] md:text-xs">
+                기간
+              </span>
+              <span className="text-gray-800 text-xs md:text-sm">
+                {from ? from : "시작일"}{" "}
+                <span className="text-gray-400 mx-1">~</span>{" "}
+                {to ? to : "종료일"}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 text-gray-400 ml-auto"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {openCalendar && (
+              <div className="absolute z-50 mt-3">
+                <RangeCalendar
+                  start={from}
+                  end={to}
+                  onChange={(s, e) => {
+                    setFrom(s);
+                    setTo(e);
+                    setQuick("all");
+                    setVisible(pageSize);
+                  }}
+                  onClose={() => setOpenCalendar(false)}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* 아티스트 선택 */}
+          <div className="flex items-center gap-2 md:shrink-0">
+            <div className="text-[11px] md:text-xs text-gray-500 shrink-0">
+              아티스트
+            </div>
+            <select
+              value={artistId}
+              onChange={(e) => {
+                const v = e.target.value;
+                setArtistId(v === "all" ? "all" : Number(v));
+                setVisible(pageSize);
+              }}
+              className="border rounded-md px-2 py-2 text-xs md:text-sm w-full md:w-[160px] bg-white"
+            >
+              <option value="all">전체</option>
+              {artistOptions.map(([id, label]) => (
+                <option key={id} value={id}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <div className="w-full max-w-[880px] mx-auto">
+    // 모바일: 폭 100%, 웹: 880px 중앙정렬 유지
+    <div className="w-full md:max-w-[880px] md:mx-auto">
       {shown.length > 0 ? (
         <MyCreatedRooms rooms={shown} title="내가 만든 방" filters={Filters} />
       ) : (
-        // 🔴 여기서도 제목을 찍어줘야 한다
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-lg font-bold mb-4">내가 만든 방</h2>
+        // 🔴 방이 없을 때도 동일 카드 스타일 유지
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 md:p-6">
+          <h2 className="text-base md:text-lg font-bold mb-3 md:mb-4">
+            내가 만든 방
+          </h2>
           {Filters}
           <div className="py-10 text-center text-gray-400 text-sm">
             {isFromInFuture
@@ -281,4 +293,3 @@ const MyCreatedRoomsPanel = ({ rooms, pageSize = 12, total, loading, onLoadMore 
 };
 
 export default MyCreatedRoomsPanel;
-
