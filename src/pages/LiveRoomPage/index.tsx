@@ -343,7 +343,7 @@ const LiveRoomPage = () => {
     if (!roomId || !resolvedArtistId) return;
     if (!isHostView) return;
     try {
-      await ejectUserFromRoom(roomId, resolvedArtistId, target.nickname);
+      await ejectUserFromRoom(roomId, resolvedArtistId, target.id);
     } catch (err) {
       console.error("강퇴 실패:", err);
     }
