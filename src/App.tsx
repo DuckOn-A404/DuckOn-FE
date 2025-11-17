@@ -21,6 +21,7 @@ import TitleManager from "./TitleManager";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import AppChatRecommandPage from "./pages/ArtistDetailPage/AppChatRecommandPage";
 import FollowedArtistsPage from "./pages/ArtistDetailPage/FollowedArtistsPage";
+import PrivacyPage from "./pages/PrivacyPage";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -61,6 +62,7 @@ function App() {
           <Route path="/live/:roomId" element={<LiveRoomPage />} />
           <Route path="/artist/:artistId/fan" element={<AppChatRecommandPage />} />
           <Route path="oauth2/success" element={<OAuth2RedirectHandler />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
 
           {/* 404 페이지 */}
           <Route path="*" element={<NotFoundPage />} />
