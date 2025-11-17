@@ -198,6 +198,7 @@ const MyPage = () => {
             onFollowingClick={() => setOpenList("following")}
             onDeleteClick={handleOpenDeleteModal}
             onBlockListClick={() => setIsBlockModalOpen(true)}
+            onChangePasswordClick={() => setIsChangePasswordModalOpen(true)}
           />
         ) : (
           <EditProfileCard
