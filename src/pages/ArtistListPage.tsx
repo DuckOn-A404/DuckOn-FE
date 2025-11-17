@@ -3,23 +3,23 @@ import SortSelect, {
   type SortOrder,
 } from "../components/common/SortSelect";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import { useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
-import { useArtistList } from "../hooks/useArtistList";
-import { useDebounce } from "../hooks/useDebounce";
-import { createSlug } from "../utils/slugUtils";
-import { Capacitor } from "@capacitor/core"; // 앱 여부 확인용
+import {useNavigate} from "react-router-dom";
+import {useState, useEffect, useRef} from "react";
+import {Search} from "lucide-react";
+import {useArtistList} from "../hooks/useArtistList";
+import {useDebounce} from "../hooks/useDebounce";
+import {createSlug} from "../utils/slugUtils";
+import {Capacitor} from "@capacitor/core"; // 앱 여부 확인용
 
-const sortOptions: { label: string; key: SortKey; order: SortOrder }[] = [
-  { label: "팔로워 많은순", key: "followers", order: "desc" },
-  { label: "이름 오름차순", key: "name", order: "asc" },
-  { label: "이름 내림차순", key: "name", order: "desc" },
-  { label: "데뷔 빠른순", key: "debut", order: "asc" },
-  { label: "데뷔 최신순", key: "debut", order: "desc" },
+const sortOptions: {label: string; key: SortKey; order: SortOrder}[] = [
+  {label: "팔로워 많은순", key: "followers", order: "desc"},
+  {label: "이름 오름차순", key: "name", order: "asc"},
+  {label: "이름 내림차순", key: "name", order: "desc"},
+  {label: "데뷔 빠른순", key: "debut", order: "asc"},
+  {label: "데뷔 최신순", key: "debut", order: "desc"},
 ];
 
-const isNativeApp = Capacitor.isNativePlatform(); // 웹/앱 분기 값
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // 웹/앱 분기 값
 
 const ArtistListPage = () => {
   const navigate = useNavigate();
@@ -48,7 +48,7 @@ const ArtistListPage = () => {
   }, []);
 
   // 목록 데이터: 검색/정렬/사이즈를 한 API로 처리
-  const { artists, totalCount, fetchMore, hasMore, loading } = useArtistList({
+  const {artists, totalCount, fetchMore, hasMore, loading} = useArtistList({
     q: debouncedSearchText || undefined,
     sort,
     order,
@@ -67,7 +67,7 @@ const ArtistListPage = () => {
           fetchMore();
         }
       },
-      { rootMargin: "0px 0px 600px 0px", threshold: 0 }
+      {rootMargin: "0px 0px 600px 0px", threshold: 0}
     );
 
     io.observe(el);
@@ -76,7 +76,7 @@ const ArtistListPage = () => {
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     const slug = createSlug(nameEn);
-    navigate(`/artist/${slug}`, { state: { artistId } });
+    navigate(`/artist/${slug}`, {state: {artistId}});
   };
 
   return (
@@ -123,7 +123,7 @@ const ArtistListPage = () => {
               ? "w-40 shrink-0 text-[11px] leading-none whitespace-nowrap"
               : "w-48 md:w-56"
           }
-          value={{ key: sort, order }}
+          value={{key: sort, order}}
           options={sortOptions}
           onChange={(v) => {
             setSort(v.key as SortKey);

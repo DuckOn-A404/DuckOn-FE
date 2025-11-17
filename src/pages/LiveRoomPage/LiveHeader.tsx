@@ -1,7 +1,7 @@
-import { User, Pencil } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { Capacitor } from "@capacitor/core";
-import { ScreenOrientation } from "@capacitor/screen-orientation";
+import {User, Pencil} from "lucide-react";
+import {useEffect, useRef, useState} from "react";
+import {Capacitor} from "@capacitor/core";
+import {ScreenOrientation} from "@capacitor/screen-orientation";
 import NicknameWithRank from "../../components/common/NicknameWithRank";
 
 type LiveHeaderProps = {
@@ -17,7 +17,7 @@ type LiveHeaderProps = {
   hostRankLevel?: "VIP" | "GOLD" | "PURPLE" | "YELLOW" | "GREEN";
 };
 
-const isNativeApp = Capacitor.isNativePlatform();
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 
 const LiveHeader = ({
   isHost,
@@ -80,7 +80,7 @@ const LiveHeader = ({
   const resetOrientationIfNative = async () => {
     if (!isNativeApp) return;
     try {
-      await ScreenOrientation.lock({ orientation: "portrait" });
+      await ScreenOrientation.lock({orientation: "portrait"});
     } catch (e) {
       console.warn("세로 모드 복원 실패", e);
     }

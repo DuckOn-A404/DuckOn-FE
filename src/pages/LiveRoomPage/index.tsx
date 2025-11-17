@@ -4,7 +4,7 @@ import {
   useSearchParams,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
+import {useEffect, useState, useRef, useCallback} from "react";
 import {
   enterRoom,
   exitRoom,
@@ -12,28 +12,28 @@ import {
   ejectUserFromRoom,
   updateRoomTitle,
 } from "../../api/roomService";
-import { useUserStore } from "../../store/useUserStore";
-import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
-import { createStompClient } from "../../socket";
+import {useUserStore} from "../../store/useUserStore";
+import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
+import {createStompClient} from "../../socket";
 
 import EntryQuizModal from "./EntryQuizModal";
 import LiveHeader from "./LiveHeader";
 import VideoPlayer from "./VideoPlayer";
 import RightSidebar from "./RightSidebar";
-import { useChatSubscription } from "../../hooks/useChatSubscription";
+import {useChatSubscription} from "../../hooks/useChatSubscription";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
-import { onTokenRefreshed, onRefreshState } from "../../api/axiosInstance";
-import { fireAndForget } from "../../utils/fireAndForget";
-import { blockUser, getBlockedUsers } from "../../api/userService";
-import type { LiveRoomSyncDTO } from "../../types/room";
+import {onTokenRefreshed, onRefreshState} from "../../api/axiosInstance";
+import {fireAndForget} from "../../utils/fireAndForget";
+import {blockUser, getBlockedUsers} from "../../api/userService";
+import type {LiveRoomSyncDTO} from "../../types/room";
 /** 추가: GIF/이미지 URL 전송 헬퍼 */
-import { sendGifMessage } from "../../socket";
+import {sendGifMessage} from "../../socket";
 /** 기존: 강퇴 알림 모달 (실시간 킥 수신용) */
 import EjectAlarmModal from "../../components/common/modal/EjectAlarmModal";
 /** 추가: 재입장 시 400 에러용 킥 안내 모달 */
 import KickedInfoModal from "../../components/common/modal/KickedInfoModal";
-import { Capacitor } from "@capacitor/core";
+import {Capacitor} from "@capacitor/core";
 
 const DEFAULT_QUIZ_PROMPT = "비밀번호(정답)를 입력하세요.";
 
@@ -84,10 +84,10 @@ type LiveRoomLocationState = {
 };
 
 const LiveRoomPage = () => {
-  const { roomId } = useParams();
+  const {roomId} = useParams();
   const [searchParams] = useSearchParams();
-  const location = useLocation() as { state?: LiveRoomLocationState };
-  const { myUser } = useUserStore();
+  const location = useLocation() as {state?: LiveRoomLocationState};
+  const {myUser} = useUserStore();
   const myUserId = myUser?.userId;
   const navigate = useNavigate();
 
@@ -105,7 +105,7 @@ const LiveRoomPage = () => {
 
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [entryQuestion, setEntryQuestion] = useState<string | null>(null);
-  const { messages, sendMessage } = useChatSubscription(stompClient, roomId);
+  const {messages, sendMessage} = useChatSubscription(stompClient, roomId);
 
   const [participantCount, setParticipantCount] = useState<number | null>(null);
   const [isPlaylistUpdating, setIsPlaylistUpdating] = useState(false);
@@ -134,7 +134,7 @@ const LiveRoomPage = () => {
   const isHostView = !!(room && myUser && room.hostId === myUser.userId);
 
   // 앱 여부 / 가로 모드 여부
-  const isNativeApp = Capacitor.isNativePlatform();
+  const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
   const [isLandscape, setIsLandscape] = useState(false);
 
   useEffect(() => {
@@ -226,7 +226,7 @@ const LiveRoomPage = () => {
     } finally {
       try {
         await stompClient?.deactivate();
-      } catch {}
+      } catch { }
     }
   }, [roomId, resolvedArtistId, stompClient]);
 
@@ -239,7 +239,7 @@ const LiveRoomPage = () => {
     } finally {
       try {
         await stompClient?.deactivate();
-      } catch {}
+      } catch { }
     }
   }, [roomId, resolvedArtistId, stompClient]);
 
@@ -324,12 +324,12 @@ const LiveRoomPage = () => {
     const prev = room.title;
     const now = Date.now();
 
-    setRoom({ ...room, title: nextTitle, lastUpdated: now });
+    setRoom({...room, title: nextTitle, lastUpdated: now});
 
     try {
       await updateRoomTitle(roomId, nextTitle);
     } catch (err) {
-      setRoom((r: any) => (r ? { ...r, title: prev } : r));
+      setRoom((r: any) => (r ? {...r, title: prev} : r));
     }
   };
 
@@ -339,7 +339,7 @@ const LiveRoomPage = () => {
   }, [room?.hostId, myUserId]);
 
   // 강퇴 실행 함수
-  const handleEjectUser = async (target: { id: string; nickname: string }) => {
+  const handleEjectUser = async (target: {id: string; nickname: string}) => {
     if (!roomId || !resolvedArtistId) return;
     if (!isHostView) return;
     try {
@@ -403,7 +403,7 @@ const LiveRoomPage = () => {
       lastUpdated: Date.now(),
     };
 
-    setRoom((prev: any) => (prev ? { ...prev, ...payload } : prev));
+    setRoom((prev: any) => (prev ? {...prev, ...payload} : prev));
 
     stompClient.publish({
       destination: "/app/room/update",
@@ -444,12 +444,12 @@ const LiveRoomPage = () => {
     setRoom((prev: any) =>
       prev
         ? {
-            ...prev,
-            playlist: cur,
-            currentVideoIndex: nextIndex,
-            currentTime: 0,
-            lastUpdated: payload.lastUpdated,
-          }
+          ...prev,
+          playlist: cur,
+          currentVideoIndex: nextIndex,
+          currentTime: 0,
+          lastUpdated: payload.lastUpdated,
+        }
         : prev
     );
 
@@ -494,13 +494,13 @@ const LiveRoomPage = () => {
     setRoom((prev: any) =>
       prev
         ? {
-            ...prev,
-            playlist: cur,
-            currentVideoIndex: nextIndex,
-            currentTime: 0,
-            playing: true,
-            lastUpdated: payload.lastUpdated,
-          }
+          ...prev,
+          playlist: cur,
+          currentVideoIndex: nextIndex,
+          currentTime: 0,
+          playing: true,
+          lastUpdated: payload.lastUpdated,
+        }
         : prev
     );
 
@@ -516,7 +516,7 @@ const LiveRoomPage = () => {
   const handleVideoEnd = () => {
     if (!isHost || !room || !room.playlist || !myUser) return;
 
-    const { currentVideoIndex, playlist } = room;
+    const {currentVideoIndex, playlist} = room;
     if (currentVideoIndex >= playlist.length - 1) return;
 
     const nextVideoIndex = currentVideoIndex + 1;
@@ -569,7 +569,7 @@ const LiveRoomPage = () => {
     return () => {
       try {
         presenceClient.deactivate();
-      } catch {}
+      } catch { }
       presenceRef.current = null;
     };
   }, [roomId]);
@@ -669,10 +669,10 @@ const LiveRoomPage = () => {
     return () => {
       try {
         sub?.unsubscribe();
-      } catch {}
+      } catch { }
       try {
         syncClient.deactivate();
-      } catch {}
+      } catch { }
       syncRef.current = null;
     };
   }, [myUserId, isQuizModalOpen, roomId, navigate]);
@@ -711,7 +711,7 @@ const LiveRoomPage = () => {
           (async () => {
             try {
               await oldClient?.deactivate();
-            } catch {}
+            } catch { }
             wsHandoverRef.current = false;
           })();
           resolve(next);
@@ -738,13 +738,13 @@ const LiveRoomPage = () => {
             if (typeof data?.participantCount === "number") {
               setParticipantCount(data.participantCount);
             }
-          } catch {}
+          } catch { }
         };
 
         if (!newToken) {
           try {
             await presenceRef.current?.deactivate();
-          } catch {}
+          } catch { }
           const p = createStompClient("");
           presenceRef.current = p;
           p.onConnect = () => {
@@ -826,13 +826,13 @@ const LiveRoomPage = () => {
             default:
               return;
           }
-        } catch {}
+        } catch { }
       };
 
       if (!newToken) {
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const s = createStompClient("");
         syncRef.current = s;
         setStompClient(s);
@@ -935,10 +935,10 @@ const LiveRoomPage = () => {
       if (!newToken) {
         try {
           await presenceRef.current?.deactivate();
-        } catch {}
+        } catch { }
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         presenceRef.current = null;
         syncRef.current = null;
         setStompClient(null);
@@ -948,7 +948,7 @@ const LiveRoomPage = () => {
       if (roomId) {
         try {
           await presenceRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const p = createStompClient(newToken);
         presenceRef.current = p;
         p.onConnect = () => {
@@ -969,7 +969,7 @@ const LiveRoomPage = () => {
       if (myUser && !isQuizModalOpen && roomId) {
         try {
           await syncRef.current?.deactivate();
-        } catch {}
+        } catch { }
         const s = createStompClient(newToken);
         syncRef.current = s;
         setStompClient(s);
@@ -992,10 +992,10 @@ const LiveRoomPage = () => {
                   setRoom((prev: any) =>
                     prev
                       ? {
-                          ...prev,
-                          title: evt.title ?? prev.title,
-                          hostNickname: evt.hostNickname ?? prev.hostNickname,
-                        }
+                        ...prev,
+                        title: evt.title ?? prev.title,
+                        hostNickname: evt.hostNickname ?? prev.hostNickname,
+                      }
                       : prev
                   );
                   return;
@@ -1003,28 +1003,28 @@ const LiveRoomPage = () => {
                   setRoom((prev: any) =>
                     prev
                       ? {
-                          ...prev,
-                          title: evt.title ?? prev.title,
-                          hostNickname: evt.hostNickname ?? prev.hostNickname,
-                          roomId: evt.roomId ?? prev.roomId,
-                          hostId: evt.hostId ?? prev.hostId,
-                          playlist: normalizePlaylist(
-                            evt.playlist ?? prev.playlist
-                          ),
-                          currentVideoIndex:
-                            typeof evt.currentVideoIndex === "number"
-                              ? evt.currentVideoIndex
-                              : prev.currentVideoIndex,
-                          currentTime:
-                            typeof evt.currentTime === "number"
-                              ? evt.currentTime
-                              : prev.currentTime,
-                          playing:
-                            typeof evt.playing === "boolean"
-                              ? evt.playing
-                              : prev.playing,
-                          lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                        }
+                        ...prev,
+                        title: evt.title ?? prev.title,
+                        hostNickname: evt.hostNickname ?? prev.hostNickname,
+                        roomId: evt.roomId ?? prev.roomId,
+                        hostId: evt.hostId ?? prev.hostId,
+                        playlist: normalizePlaylist(
+                          evt.playlist ?? prev.playlist
+                        ),
+                        currentVideoIndex:
+                          typeof evt.currentVideoIndex === "number"
+                            ? evt.currentVideoIndex
+                            : prev.currentVideoIndex,
+                        currentTime:
+                          typeof evt.currentTime === "number"
+                            ? evt.currentTime
+                            : prev.currentTime,
+                        playing:
+                          typeof evt.playing === "boolean"
+                            ? evt.playing
+                            : prev.playing,
+                        lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                      }
                       : prev
                   );
                   return;
@@ -1163,7 +1163,7 @@ const LiveRoomPage = () => {
           className="flex justify-center items-center h-screen bg-gray-900"
           style={
             isNativeApp
-              ? { paddingTop: "env(safe-area-inset-top)" }
+              ? {paddingTop: "env(safe-area-inset-top)"}
               : undefined
           }
         >
@@ -1263,21 +1263,19 @@ const LiveRoomPage = () => {
         <div className="flex flex-shrink-0 border-b border-t md:border-t-0 border-gray-700">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-              activeTab === "chat"
+            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "chat"
                 ? "text-white border-b-2 border-fuchsia-500"
                 : "text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             실시간 채팅
           </button>
           <button
             onClick={() => setActiveTab("playlist")}
-            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-              activeTab === "playlist"
+            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "playlist"
                 ? "text-white border-b-2 border-fuchsia-500"
                 : "text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             플레이리스트
           </button>
@@ -1319,21 +1317,19 @@ const LiveRoomPage = () => {
         <div className="flex flex-shrink-0 border-b border-gray-700">
           <button
             onClick={() => setActiveTab("chat")}
-            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-              activeTab === "chat"
+            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "chat"
                 ? "text-white border-b-2 border-fuchsia-500"
                 : "text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             실시간 채팅
           </button>
           <button
             onClick={() => setActiveTab("playlist")}
-            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${
-              activeTab === "playlist"
+            className={`flex-1 py-2 text-sm font-semibold text-center transition-colors ${activeTab === "playlist"
                 ? "text-white border-b-2 border-fuchsia-500"
                 : "text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             플레이리스트
           </button>
@@ -1365,7 +1361,7 @@ const LiveRoomPage = () => {
     <div
       className="flex flex-col h-[100svh] bg-gray-900 text-white"
       style={
-        isNativeApp ? { paddingTop: "env(safe-area-inset-top)" } : undefined
+        isNativeApp ? {paddingTop: "env(safe-area-inset-top)"} : undefined
       }
     >
       <RoomDeletedModal
@@ -1373,7 +1369,7 @@ const LiveRoomPage = () => {
         onConfirm={async () => {
           try {
             await stompClient?.deactivate();
-          } catch {}
+          } catch { }
           navigate(-1);
         }}
       />

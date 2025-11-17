@@ -1,22 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Tv } from "lucide-react";
-import { motion } from "framer-motion";
-import { Capacitor } from "@capacitor/core"; // 앱 여부 확인용
+import {useEffect, useMemo, useState} from "react";
+import {useNavigate, Link} from "react-router-dom";
+import {Tv} from "lucide-react";
+import {motion} from "framer-motion";
+import {Capacitor} from "@capacitor/core"; // 앱 여부 확인용
 
 import ArtistCard from "../components/domain/artist/ArtistCard";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
-import GuideModal, { type GuideStep } from "../components/common/modal/GuideModal";
+import GuideModal, {type GuideStep} from "../components/common/modal/GuideModal";
 import AuroraStreakBG from "../components/common/bg/AuroraStreakBG";
 import HeroBanner from "../components/home/HeroBanner";
 
-import { getRandomArtists } from "../api/artistService";
-import { type Artist } from "../types/artist";
-import { useTrendingRooms } from "../hooks/useTrendingRooms";
-import { createSlug } from "../utils/slugUtils";
+import {getRandomArtists} from "../api/artistService";
+import {type Artist} from "../types/artist";
+import {useTrendingRooms} from "../hooks/useTrendingRooms";
+import {createSlug} from "../utils/slugUtils";
 
 const BANNER_AUTOPLAY_MS = 4800;
-const isNativeApp = Capacitor.isNativePlatform(); // 웹/앱 분기 값
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // 웹/앱 분기 값
 
 const HomePage = () => {
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -36,16 +36,16 @@ const HomePage = () => {
   // 2560x1440 비율의 배너 이미지 + 마지막 가상 CTA
   const banners = useMemo(
     () => [
-      { id: 1, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blackpink_HYLT_banner.jpeg" },
-      { id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg" },
-      { id: 2, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg" },
-      { id: 3, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg" },
+      {id: 1, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blackpink_HYLT_banner.jpeg"},
+      {id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"},
+      {id: 2, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg"},
+      {id: 3, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg"},
       {
         id: 8,
         img: "https://dn9z1o6i8w44p.cloudfront.net/memes%2F2025%2F11%2Ff47c930a-44b8-488b-b30a-58cd45dc99b7.gif",
       },
-      { id: 10, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg" },
-      { id: 13, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg" },
+      {id: 10, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg"},
+      {id: 13, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg"},
       {
         id: 15,
         title: "지금 바로 시작하세요",
@@ -131,7 +131,7 @@ const HomePage = () => {
 
           {isLoadingTrending ? (
             <div className="flex flex-col md:flex-row gap-2 md:h-[432px]">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({length: 4}).map((_, i) => (
                 <div
                   key={i}
                   className="flex-1 h-[250px] md:h-auto bg-gray-200 rounded-2xl animate-pulse"
@@ -154,11 +154,9 @@ const HomePage = () => {
                   return (
                     <div
                       key={room.roomId}
-                      className={`relative overflow-hidden cursor-pointer transition-all duration-500 ease-out ${
-                        isExpanded ? "flex-[9]" : "flex-[2]"
-                      } ${isFirst ? "rounded-l-2xl" : ""} ${
-                        isLast ? "rounded-r-2xl" : ""
-                      }`}
+                      className={`relative overflow-hidden cursor-pointer transition-all duration-500 ease-out ${isExpanded ? "flex-[9]" : "flex-[2]"
+                        } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""
+                        }`}
                       onMouseEnter={() => setExpandedRoomIndex(index)}
                       onClick={() => navigate(`/live/${room.roomId}`)}
                     >
@@ -167,15 +165,14 @@ const HomePage = () => {
                           src={room.imgUrl || PLACEHOLDER_URL}
                           alt={room.title}
                           className="h-full min-w-full object-cover object-center"
-                          style={{ width: "auto" }}
+                          style={{width: "auto"}}
                         />
                       </div>
                       <div
-                        className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-500 ${
-                          isExpanded
+                        className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-500 ${isExpanded
                             ? "from-black/80 via-black/40 to-transparent opacity-100"
                             : "from-black/60 to-transparent opacity-80"
-                        }`}
+                          }`}
                       />
                       <div className="absolute top-4 left-4 z-10">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full text-white text-sm">
@@ -187,11 +184,10 @@ const HomePage = () => {
                       </div>
                       <div className="relative h-full flex flex-col justify-end p-6">
                         <h3
-                          className={`text-white font-bold mb-2 transition-all duration-500 ${
-                            isExpanded
+                          className={`text-white font-bold mb-2 transition-all duration-500 ${isExpanded
                               ? "text-2xl line-clamp-2"
                               : "text-lg line-clamp-3"
-                          }`}
+                            }`}
                         >
                           {room.title}
                         </h3>
@@ -199,25 +195,21 @@ const HomePage = () => {
                           <img
                             src={room.hostProfileImgUrl || "/default_image.png"}
                             alt={room.hostNickname}
-                            className={`rounded-full object-cover border-2 border-white/50 transition-all duration-500 ${
-                              isExpanded ? "w-10 h-10" : "w-8 h-8"
-                            }`}
+                            className={`rounded-full object-cover border-2 border-white/50 transition-all duration-500 ${isExpanded ? "w-10 h-10" : "w-8 h-8"
+                              }`}
                           />
                           <span
-                            className={`text-white/90 font-medium transition-all duration-500 ${
-                              isExpanded ? "text-base" : "text-sm"
-                            }`}
+                            className={`text-white/90 font-medium transition-all duration-500 ${isExpanded ? "text-base" : "text-sm"
+                              }`}
                           >
                             {room.hostNickname}
                           </span>
                         </div>
                       </div>
                       <div
-                        className={`absolute inset-0 border-4 border-purple-500 transition-opacity duration-300 ${
-                          isExpanded ? "opacity-100" : "opacity-0"
-                        } ${isFirst ? "rounded-l-2xl" : ""} ${
-                          isLast ? "rounded-r-2xl" : ""
-                        }`}
+                        className={`absolute inset-0 border-4 border-purple-500 transition-opacity duration-300 ${isExpanded ? "opacity-100" : "opacity-0"
+                          } ${isFirst ? "rounded-l-2xl" : ""} ${isLast ? "rounded-r-2xl" : ""
+                          }`}
                       />
                     </div>
                   );
@@ -239,9 +231,8 @@ const HomePage = () => {
                         <div
                           className="absolute inset-0 bg-cover bg-center"
                           style={{
-                            backgroundImage: `url('${
-                              room.imgUrl || PLACEHOLDER_URL
-                            }')`,
+                            backgroundImage: `url('${room.imgUrl || PLACEHOLDER_URL
+                              }')`,
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
@@ -365,28 +356,28 @@ const HomePage = () => {
           {!isNativeApp && (
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
               {isLoadingArtists
-                ? Array.from({ length: 5 }).map((_, i) => (
-                    <ArtistCardSkeleton key={i} />
-                  ))
+                ? Array.from({length: 5}).map((_, i) => (
+                  <ArtistCardSkeleton key={i} />
+                ))
                 : recommendedArtists.map((artist) => (
-                    <motion.div
-                      key={artist.artistId}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.2 }}
-                      transition={{ duration: 0.35, ease: "easeOut" }}
-                    >
-                      <ArtistCard
-                        {...artist}
-                        onClick={() => {
-                          const slug = createSlug(artist.nameEn);
-                          navigate(`/artist/${slug}`, {
-                            state: { artistId: artist.artistId },
-                          });
-                        }}
-                      />
-                    </motion.div>
-                  ))}
+                  <motion.div
+                    key={artist.artistId}
+                    initial={{opacity: 0, y: 10}}
+                    whileInView={{opacity: 1, y: 0}}
+                    viewport={{once: true, amount: 0.2}}
+                    transition={{duration: 0.35, ease: "easeOut"}}
+                  >
+                    <ArtistCard
+                      {...artist}
+                      onClick={() => {
+                        const slug = createSlug(artist.nameEn);
+                        navigate(`/artist/${slug}`, {
+                          state: {artistId: artist.artistId},
+                        });
+                      }}
+                    />
+                  </motion.div>
+                ))}
             </div>
           )}
 
@@ -396,44 +387,44 @@ const HomePage = () => {
               <div className="grid grid-cols-3 gap-4">
                 {isLoadingArtists
                   ? // 로딩 스켈레톤
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <div
-                        key={idx}
-                        className="flex flex-col items-center gap-2 animate-pulse"
-                      >
-                        <div className="w-20 h-20 rounded-full bg-slate-200/80" />
-                        <div className="w-16 h-3 rounded-full bg-slate-200/80" />
-                      </div>
-                    ))
+                  Array.from({length: 5}).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col items-center gap-2 animate-pulse"
+                    >
+                      <div className="w-20 h-20 rounded-full bg-slate-200/80" />
+                      <div className="w-16 h-3 rounded-full bg-slate-200/80" />
+                    </div>
+                  ))
                   : // 실제 아티스트 (최대 5명)
-                    recommendedArtists.slice(0, 5).map((artist) => (
-                      <button
-                        key={artist.artistId}
-                        type="button"
-                        className="flex flex-col items-center gap-2 active:scale-95 transition"
-                        onClick={() => {
-                          const slug = createSlug(artist.nameEn);
-                          navigate(`/artist/${slug}`, {
-                            state: { artistId: artist.artistId },
-                          });
-                        }}
-                      >
-                        {/* 그라데이션 링 + 둥근 썸네일 */}
-                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-500 to-sky-400 p-[2px]">
-                          <div className="w-full h-full rounded-full overflow-hidden bg-slate-200">
-                            <img
-                              src={artist.imgUrl || "/default_image.png"}
-                              alt={artist.nameKr || artist.nameEn}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                            />
-                          </div>
+                  recommendedArtists.slice(0, 5).map((artist) => (
+                    <button
+                      key={artist.artistId}
+                      type="button"
+                      className="flex flex-col items-center gap-2 active:scale-95 transition"
+                      onClick={() => {
+                        const slug = createSlug(artist.nameEn);
+                        navigate(`/artist/${slug}`, {
+                          state: {artistId: artist.artistId},
+                        });
+                      }}
+                    >
+                      {/* 그라데이션 링 + 둥근 썸네일 */}
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-500 to-sky-400 p-[2px]">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-slate-200">
+                          <img
+                            src={artist.imgUrl || "/default_image.png"}
+                            alt={artist.nameKr || artist.nameEn}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
-                          {artist.nameKr || artist.nameEn}
-                        </p>
-                      </button>
-                    ))}
+                      </div>
+                      <p className="mt-1 text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
+                        {artist.nameKr || artist.nameEn}
+                      </p>
+                    </button>
+                  ))}
 
                 {/* 전체 아티스트로 가는 '전체 보기' 동그라미 */}
                 <button
@@ -467,7 +458,7 @@ const HomePage = () => {
                     setGuideOpen(true);
                   }}
                   className="group relative overflow-hidden rounded-2xl bg-white/90 backdrop-blur-sm border border-white/60 shadow-sm hover:shadow-xl transition-all text-left hover:-translate-y-1 hover:[box-shadow:0_24px_60px_rgba(99,102,241,.18)]"
-                  whileHover={{ y: -2 }}
+                  whileHover={{y: -2}}
                 >
                   <div className="relative">
                     <img
@@ -506,7 +497,7 @@ const HomePage = () => {
                       setGuideOpen(true);
                     }}
                     className="snap-center shrink-0 w-[86%] last:mr-3 group relative overflow-hidden rounded-2xl bg-white/90 backdrop-blur-sm border border-white/60 shadow-sm text-left"
-                    whileTap={{ scale: 0.97 }}
+                    whileTap={{scale: 0.97}}
                   >
                     <div className="relative">
                       <img

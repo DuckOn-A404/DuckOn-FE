@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import {useEffect, useState, useRef} from "react";
 import {
   Trophy,
   Crown,
@@ -7,11 +7,11 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { Capacitor } from "@capacitor/core";
-import { getUserLeaderboard, type LeaderboardUser } from "../api/userService";
+import {Capacitor} from "@capacitor/core";
+import {getUserLeaderboard, type LeaderboardUser} from "../api/userService";
 import RankBadge from "../components/common/RankBadge";
 
-const isNativeApp = Capacitor.isNativePlatform();
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 
 const LeaderboardPage = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
@@ -149,9 +149,9 @@ const LeaderboardPage = () => {
       style={
         isNativeApp
           ? {
-              paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-            }
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+          }
           : undefined
       }
     >
@@ -176,7 +176,7 @@ const LeaderboardPage = () => {
                 <div
                   ref={sliderRef}
                   className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth -mx-4"
-                  style={{ scrollbarWidth: "none" }}
+                  style={{scrollbarWidth: "none"}}
                   onScroll={handleSliderScroll}
                 >
                   {top3.map((user, idx) => (
@@ -195,11 +195,10 @@ const LeaderboardPage = () => {
                     type="button"
                     onClick={() => scrollToIndex(activeTopIndex - 1)}
                     disabled={activeTopIndex === 0}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${
-                      activeTopIndex === 0
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${activeTopIndex === 0
                         ? "opacity-40 cursor-default"
                         : "active:scale-95"
-                    }`}
+                      }`}
                   >
                     <ChevronLeft className="w-5 h-5 text-gray-700" />
                   </button>
@@ -212,11 +211,10 @@ const LeaderboardPage = () => {
                     type="button"
                     onClick={() => scrollToIndex(activeTopIndex + 1)}
                     disabled={activeTopIndex === top3.length - 1}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${
-                      activeTopIndex === top3.length - 1
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${activeTopIndex === top3.length - 1
                         ? "opacity-40 cursor-default"
                         : "active:scale-95"
-                    }`}
+                      }`}
                   >
                     <ChevronRight className="w-5 h-5 text-gray-700" />
                   </button>
@@ -226,11 +224,10 @@ const LeaderboardPage = () => {
                   {top3.map((_, idx) => (
                     <span
                       key={idx}
-                      className={`w-2 h-2 rounded-full ${
-                        idx === activeTopIndex
+                      className={`w-2 h-2 rounded-full ${idx === activeTopIndex
                           ? "bg-purple-600"
                           : "bg-gray-300"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -371,9 +368,8 @@ const LeaderboardPage = () => {
                 const rank = index + 4;
 
                 // 앱/웹에 따라 사이즈/폰트/간격 다르게
-                const itemWrapperClass = `bg-white rounded-xl shadow-sm transition-all duration-300 ${
-                  isNativeApp ? "" : "hover:shadow-lg hover:-translate-y-1"
-                }`;
+                const itemWrapperClass = `bg-white rounded-xl shadow-sm transition-all duration-300 ${isNativeApp ? "" : "hover:shadow-lg hover:-translate-y-1"
+                  }`;
                 const itemInnerClass = isNativeApp
                   ? "p-3 flex items-center gap-3"
                   : "p-4 flex items-center gap-6";

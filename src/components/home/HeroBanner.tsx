@@ -154,11 +154,11 @@
 //     );
 // }
 
-import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, HelpCircle } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
+import {useEffect, useRef, useState} from "react";
+import {motion} from "framer-motion";
+import {ChevronLeft, ChevronRight, HelpCircle} from "lucide-react";
+import {Link} from "react-router-dom";
+import {Capacitor} from "@capacitor/core";
 
 type Banner = {
   id: number;
@@ -176,7 +176,7 @@ type Props = {
   onOpenGuide?: (startIndex?: number) => void;
 };
 
-const isNativeApp = Capacitor.isNativePlatform(); // ✅ 웹/앱 분기
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // ✅ 웹/앱 분기
 
 export default function HeroBanner({
   items,
@@ -230,9 +230,8 @@ export default function HeroBanner({
       {/* 고정 비율 컨테이너 (약 3.65:1) */}
       {/* ✅ 웹: 예전처럼 pt-[27.4%] 유지 / 앱: 고정 높이로 조금 더 크게 */}
       <div
-        className={`relative w-full overflow-hidden rounded-2xl ${
-          isNativeApp ? "h-[220px]" : "pt-[27.4%]"
-        }`}
+        className={`relative w-full overflow-hidden rounded-2xl ${isNativeApp ? "h-[220px]" : "pt-[27.4%]"
+          }`}
       >
         {/* 즉시 전환 (애니메이션 없음) */}
         <div
@@ -253,10 +252,9 @@ export default function HeroBanner({
             />
           ) : (
             <div
-              className={`absolute inset-0 bg-gradient-to-br ${
-                active.gradient ??
+              className={`absolute inset-0 bg-gradient-to-br ${active.gradient ??
                 "from-fuchsia-500 via-rose-500 to-amber-500"
-              }`}
+                }`}
             />
           )}
 
@@ -271,14 +269,14 @@ export default function HeroBanner({
               maskImage:
                 "radial-gradient(80% 80% at 50% 50%, #000 40%, transparent)",
             }}
-            animate={{ backgroundPosition: ["-200% 0%", "200% 0%"] }}
-            transition={{ duration: 8, repeat: Infinity }}
+            animate={{backgroundPosition: ["-200% 0%", "200% 0%"]}}
+            transition={{duration: 8, repeat: Infinity}}
           />
 
           {/* 세이프존(1546×423) 중앙 */}
           <div
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
-            style={{ width: SAFE_W, height: SAFE_H }}
+            style={{width: SAFE_W, height: SAFE_H}}
           >
             {active.title && (
               <div className="w-full h-full flex flex-col items-center justify-center text-center text-white px-3 md:px-4">
@@ -337,9 +335,8 @@ export default function HeroBanner({
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`h-1.5 rounded-full transition-all ${
-                i === current ? "w-8 bg-white" : "w-2 bg-white/60 hover:bg-white/80"
-              }`}
+              className={`h-1.5 rounded-full transition-all ${i === current ? "w-8 bg-white" : "w-2 bg-white/60 hover:bg-white/80"
+                }`}
               aria-label={`배너 ${i + 1}`}
             />
           ))}

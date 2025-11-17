@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {useEffect, useRef, useState} from "react";
 import YouTube from "react-youtube";
-import { Client } from "@stomp/stompjs";
-import { Capacitor } from "@capacitor/core";
-import { ScreenOrientation } from "@capacitor/screen-orientation"; // 앱 회전 제어
-import { RotateCw } from "lucide-react";
-import type { User } from "../../types";
-import type { LiveRoomSyncDTO } from "../../types/room";
+import {Client} from "@stomp/stompjs";
+import {Capacitor} from "@capacitor/core";
+import {ScreenOrientation} from "@capacitor/screen-orientation"; // 앱 회전 제어
+import {RotateCw} from "lucide-react";
+import type {User} from "../../types";
+import type {LiveRoomSyncDTO} from "../../types/room";
 
 type VideoPlayerProps = {
   videoId: string;
@@ -22,7 +22,7 @@ type VideoPlayerProps = {
 };
 
 // 드리프트 보정 파라미터
-const isNativeApp = Capacitor.isNativePlatform();
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 
 const DRIFT_TOLERANCE_HARD = 2.5;
 const DRIFT_TOLERANCE_SOFT = isNativeApp ? 0.2 : 0.4;
@@ -74,7 +74,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     );
 
     return () => {
-      sub.then((s) => s.remove()).catch(() => {});
+      sub.then((s) => s.remove()).catch(() => { });
     };
   }, []);
 
@@ -84,10 +84,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     try {
       if (orientation === "portrait") {
-        await ScreenOrientation.lock({ orientation: "landscape" });
+        await ScreenOrientation.lock({orientation: "landscape"});
         setOrientation("landscape");
       } else {
-        await ScreenOrientation.lock({ orientation: "portrait" });
+        await ScreenOrientation.lock({orientation: "portrait"});
         setOrientation("portrait");
       }
     } catch (e) {
@@ -124,7 +124,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (p.getPlaybackRate() !== 1) {
         p.setPlaybackRate(1);
       }
-    } catch {}
+    } catch { }
   };
 
   const endFiredRef = useRef(false);
@@ -187,7 +187,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       if (event.data === YT.PlayerState.PAUSED && canWatch) {
         try {
           player.playVideo();
-        } catch {}
+        } catch { }
         return;
       }
       if (event.data === YT.PlayerState.PLAYING) {
@@ -239,7 +239,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           if (player && canWatch) {
             try {
               player.getCurrentTime();
-            } catch {}
+            } catch { }
           }
         }
         animationFrameId = requestAnimationFrame(continuousDriftCheck);
@@ -263,7 +263,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             const expectedTime =
               typeof parsed.lastUpdated === "number"
                 ? (parsed.currentTime ?? 0) +
-                  (now - parsed.lastUpdated) / 1000
+                (now - parsed.lastUpdated) / 1000
                 : parsed.currentTime ?? 0;
 
             if (parsed.playing && muted) setShowUnmuteHint(true);
@@ -294,7 +294,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   if (player.getPlaybackRate() !== targetRate) {
                     player.setPlaybackRate(targetRate);
                   }
-                } catch {}
+                } catch { }
                 clearRateTimer();
                 rateTimerRef.current = setTimeout(() => {
                   restoreNormalRate();

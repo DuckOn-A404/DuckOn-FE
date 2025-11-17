@@ -1,16 +1,16 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import {useLocation, useNavigate} from "react-router-dom";
+import {ChevronLeft} from "lucide-react";
 import RightSidebar from "./RightSidebar";
-import { Capacitor } from "@capacitor/core";
+import {Capacitor} from "@capacitor/core";
 
-const isNativeApp = Capacitor.isNativePlatform();
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 
 const AppChatRecommandPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const artistId =
-    (location.state as { artistId?: number } | null)?.artistId ?? null;
+    (location.state as {artistId?: number} | null)?.artistId ?? null;
 
   if (!artistId) {
     return (
@@ -27,9 +27,9 @@ const AppChatRecommandPage = () => {
       style={
         isNativeApp
           ? {
-              paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
-            }
+            paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)",
+          }
           : undefined
       }
     >
