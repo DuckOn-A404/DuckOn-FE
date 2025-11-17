@@ -212,6 +212,7 @@ type MyProfileCardProps = {
   onFollowingClick?: () => void;
   onDeleteClick: () => void;
   onBlockListClick: () => void;
+  onChangePasswordClick?: () => void;
 };
 
 const MyProfileCard = ({
@@ -221,11 +222,13 @@ const MyProfileCard = ({
   onFollowingClick,
   onDeleteClick,
   onBlockListClick,
+  onChangePasswordClick,
 }: MyProfileCardProps) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const rankLevel = user.userRank?.rankLevel ?? "GREEN";
+  const isSocial = !!(user as any).socialLogin;
 
   useEffect(() => {
     if (!open) return;
@@ -273,6 +276,16 @@ const MyProfileCard = ({
           >
             프로필 수정
           </button>
+
+          {/* 일반 로그인 사용자만 비밀번호 변경 버튼 표시 */}
+          {!isSocial && onChangePasswordClick && (
+            <button
+              className="text-sm text-purple-600 font-medium hover:underline transition"
+              onClick={onChangePasswordClick}
+            >
+              비밀번호 변경
+            </button>
+          )}
 
           <button
             ref={btnRef}

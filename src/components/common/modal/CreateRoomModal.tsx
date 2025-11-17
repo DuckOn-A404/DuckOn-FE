@@ -43,6 +43,7 @@ const CreateRoomModal = ({
   const [ytResults, setYtResults] = useState<any[]>([]);
   const [ytLoading, setYtLoading] = useState(false);
   const [ytError, setYtError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const YT_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
   const navigate = useNavigate();
@@ -124,6 +125,8 @@ const CreateRoomModal = ({
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (
       !title ||
       !videoUrl ||
@@ -133,6 +136,8 @@ const CreateRoomModal = ({
       setErrors("모든 필수 항목을 입력해주세요.");
       return;
     }
+
+    setIsSubmitting(true);
 
     const formData = new FormData();
     formData.append("artistId", artistId.toString());
@@ -176,8 +181,15 @@ const CreateRoomModal = ({
           entryAnswer: locked ? entryAnswer : undefined
         }
       });
-    } catch {
-      alert("방 생성에 실패했습니다.");
+    } catch (err: any) {
+      const status = err?.response?.status;
+      if (status === 429) {
+        setErrors("이미 생성한 방이 있어요. 한 사용자는 동시에 하나의 방만 만들 수 있습니다.");
+      } else {
+        setErrors("방 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -205,10 +217,6 @@ const CreateRoomModal = ({
 
         {/* 본문 */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          {errors && (
-            <div className="text-red-500 text-sm text-center">{errors}</div>
-          )}
-
           <div>
             <label className="block text-sm font-medium mb-1">
               방 제목<span className="text-red-500">*</span>
@@ -370,19 +378,27 @@ const CreateRoomModal = ({
         </div>
 
         {/* 푸터 */}
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
-          <button
-            className="px-5 py-2.5 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold transition"
-            onClick={handleCancel}
-          >
-            취소
-          </button>
-          <button
-            className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition"
-            onClick={handleSubmit}
-          >
-            방 만들기
-          </button>
+        <div className="p-5 border-t border-gray-200 flex flex-col gap-3">
+          {errors && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium text-center">
+              {errors}
+            </div>
+          )}
+          <div className="flex justify-end gap-3">
+            <button
+              className="px-5 py-2.5 border rounded-lg text-gray-700 hover:bg-gray-100 font-semibold transition"
+              onClick={handleCancel}
+            >
+              취소
+            </button>
+            <button
+              className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition disabled:opacity-60 disabled:cursor-not-allowed"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "방 만드는 중..." : "방 만들기"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

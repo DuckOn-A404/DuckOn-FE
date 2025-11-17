@@ -872,7 +872,7 @@ const GifModal = ({ isOpen, onClose, onSelectGif }: GifModalProps) => {
 
                         <img
                           src={meme.imageUrl}
-                          alt={meme.tags?.[0] ?? "meme"}
+                          alt="meme"
                           className="w-full h-auto object-cover"
                           loading="lazy"
                           decoding="async"
