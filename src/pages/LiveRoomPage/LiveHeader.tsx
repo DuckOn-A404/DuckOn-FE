@@ -1,5 +1,7 @@
 import { User, Pencil } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { ScreenOrientation } from "@capacitor/screen-orientation";
 import NicknameWithRank from "../../components/common/NicknameWithRank";
 
 type LiveHeaderProps = {
@@ -15,6 +17,8 @@ type LiveHeaderProps = {
   hostRankLevel?: "VIP" | "GOLD" | "PURPLE" | "YELLOW" | "GREEN";
 };
 
+const isNativeApp = Capacitor.isNativePlatform();
+
 const LiveHeader = ({
   isHost,
   title,
@@ -23,7 +27,7 @@ const LiveHeader = ({
   onExit,
   onDelete,
   onSaveTitle,
-  hostRankLevel
+  hostRankLevel,
 }: LiveHeaderProps) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
@@ -72,6 +76,26 @@ const LiveHeader = ({
     }
   };
 
+  // 방 나갈 때 / 삭제할 때 세로 모드로 되돌리기 (앱에서만)
+  const resetOrientationIfNative = async () => {
+    if (!isNativeApp) return;
+    try {
+      await ScreenOrientation.lock({ orientation: "portrait" });
+    } catch (e) {
+      console.warn("세로 모드 복원 실패", e);
+    }
+  };
+
+  const handleExitClick = () => {
+    void resetOrientationIfNative();
+    onExit();
+  };
+
+  const handleDeleteClick = () => {
+    void resetOrientationIfNative();
+    onDelete?.();
+  };
+
   return (
     <div className="bg-black text-white px-6 py-3 flex justify-between items-center border-b border-gray-800">
       {/* 왼쪽: 제목(1행) + 부가정보(2행) */}
@@ -114,7 +138,7 @@ const LiveHeader = ({
             <span>호스트:</span>
             <NicknameWithRank
               nickname={hostNickname || "알 수 없음"}
-              rankLevel={hostRankLevel ?? "GREEN"}  // 기본 GREEN 처리
+              rankLevel={hostRankLevel ?? "GREEN"} // 기본 GREEN 처리
               badgeSize={14}
             />
           </div>
@@ -124,16 +148,6 @@ const LiveHeader = ({
             <span>{participantCount}</span>
           </div>
         </div>
-        
-        {/* <div className="text-sm text-gray-400 mt-1.5 flex items-center gap-x-4">
-          <span>호스트: {hostNickname || "알 수 없음"}</span>
-          <div className="flex items-center gap-x-1.5">
-            <User size={15} className="text-gray-500" />
-            <span>{participantCount}</span>
-          </div>
-        </div> */}
-
-
       </div>
 
       {/* 오른쪽 버튼들 */}
@@ -142,7 +156,7 @@ const LiveHeader = ({
           onDelete && (
             <button
               type="button"
-              onClick={onDelete}
+              onClick={handleDeleteClick}
               className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
             >
               방 삭제
@@ -151,7 +165,7 @@ const LiveHeader = ({
         ) : (
           <button
             type="button"
-            onClick={onExit}
+            onClick={handleExitClick}
             className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black"
           >
             나가기
