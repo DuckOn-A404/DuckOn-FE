@@ -1,6 +1,7 @@
 // src/api/translateService.ts
 import axios from "axios";
 import { api } from "./axiosInstance";
+import type {ChatTranslateRequestDTO, ChatTranslateResponseDTO} from "../types/translation";
 
 export type TranslateRequest = {
   message: string;
@@ -92,4 +93,26 @@ export async function translateMessage(
     // 3) 최후의 수단
     throw new TranslateError("UNKNOWN");
   }
+}
+
+
+/**
+ * 채팅 메시지 번역 API 호출
+ * 타임아웃: 50초 (axiosInstance에서 자동 설정됨)
+ */
+export async function translateChatMessage(
+  text: string,
+  targetLang?: string,
+  senderLang?: string
+): Promise<ChatTranslateResponseDTO> {
+  const { data } = await api.post<{ data: ChatTranslateResponseDTO }>(
+    "/translation/chat",
+    {
+      text,
+      targetLang,
+      senderLang
+    } satisfies ChatTranslateRequestDTO
+  );
+  
+  return data.data;  // ApiResponseDTO.success()의 data 필드
 }

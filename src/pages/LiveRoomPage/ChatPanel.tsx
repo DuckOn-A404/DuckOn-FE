@@ -1,18 +1,19 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { Send, MoreVertical, UserX, LogOut } from "lucide-react";
-import { Popover, Transition } from "@headlessui/react";
-import { useUserStore } from "../../store/useUserStore";
-import type { ChatMessage } from "../../types/chat";
-import { blockUser } from "../../api/userService";
+import {useState, useEffect, useRef, useMemo} from "react";
+import {Send, MoreVertical, UserX, LogOut} from "lucide-react";
+import {Popover, Transition} from "@headlessui/react";
+import {useUserStore} from "../../store/useUserStore";
+import type {ChatMessage} from "../../types/chat";
+import {blockUser} from "../../api/userService";
 import GifModal from "../../components/domain/GifModal";
 import NicknameWithRank from "../../components/common/NicknameWithRank";
+import {translateChatMessage} from "../../api/translateService";
 
 type ChatPanelProps = {
   messages: ChatMessage[];
   sendMessage: (content: string) => Promise<void> | void;
   onBlockUser: (userId: string) => void;
   isHost?: boolean;
-  onEjectUser?: (user: { id: string; nickname: string }) => void;
+  onEjectUser?: (user: {id: string; nickname: string}) => void;
 };
 
 // 최근 메시지/이름 미리보기
@@ -21,7 +22,7 @@ function previewGraphemes(s: string, limit: number): string {
   // @ts-ignore
   if (typeof Intl !== "undefined" && Intl.Segmenter) {
     // @ts-ignore
-    const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
+    const seg = new Intl.Segmenter("ko", {granularity: "grapheme"});
     const parts = Array.from(seg.segment(s)).map((p: any) => p.segment);
     return parts.length > limit ? parts.slice(0, limit).join("") + "…" : s;
   }
@@ -33,7 +34,7 @@ function countGraphemes(s: string): number {
   // @ts-ignore
   if (typeof Intl !== "undefined" && Intl.Segmenter) {
     // @ts-ignore
-    const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
+    const seg = new Intl.Segmenter("ko", {granularity: "grapheme"});
     return Array.from(seg.segment(s)).length;
   }
   return [...s].length;
@@ -106,7 +107,7 @@ const ChatPanel = ({
   isHost = false,
   onEjectUser,
 }: ChatPanelProps) => {
-  const { myUser } = useUserStore();
+  const {myUser} = useUserStore();
   const blockedSet = useUserStore((s) => s.blockedSet);
   const refreshBlockedList = useUserStore((s) => s.refreshBlockedList);
 
@@ -137,14 +138,14 @@ const ChatPanel = ({
   // 차단 확인 모달
   const [blockConfirm, setBlockConfirm] = useState<{
     isOpen: boolean;
-    user: { id: string; nickname: string } | null;
-  }>({ isOpen: false, user: null });
+    user: {id: string; nickname: string} | null;
+  }>({isOpen: false, user: null});
 
   // 강퇴 확인 모달
   const [ejectConfirm, setEjectConfirm] = useState<{
     isOpen: boolean;
-    user: { id: string; nickname: string } | null;
-  }>({ isOpen: false, user: null });
+    user: {id: string; nickname: string} | null;
+  }>({isOpen: false, user: null});
 
   const [atBottom, setAtBottom] = useState(true);
   const footerRef = useRef<HTMLDivElement | null>(null);
@@ -161,6 +162,56 @@ const ChatPanel = ({
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const recentSendTimesRef = useRef<number[]>([]); // 최근 전송 시각 목록
   const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 5초 해제 타이머
+
+  // 번역
+  const [translatedMessages, setTranslatedMessages] = useState<Map<string, string>>(new Map());
+  const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
+
+  // 메시지의 고유 ID 생성 함수
+  const getMessageId = (msg: ChatMessage) => {
+    return `${msg.senderId}-${msg.sentAt}`;
+  };
+
+  const handleTranslate = async (msg: ChatMessage) => {
+    const msgId = getMessageId(msg);
+
+    // 이미 번역 중이면 중단
+    if (translatingIds.has(msgId)) return;
+
+    // 이미 번역되어 있으면 토글 (제거)
+    if (translatedMessages.has(msgId)) {
+      setTranslatedMessages(prev => {
+        const next = new Map(prev);
+        next.delete(msgId);
+        return next;
+      });
+      return;
+    }
+
+    // 번역 시작
+    setTranslatingIds(prev => new Set(prev).add(msgId));
+
+    try {
+      const result = await translateChatMessage(
+        msg.content,
+        undefined,  // targetLang는 백엔드가 자동으로 사용자 기본 언어 사용
+        (msg as any).senderLang  // 보낸 사람의 언어 (있으면)
+      );
+
+      setTranslatedMessages(prev =>
+        new Map(prev).set(msgId, result.translatedText)
+      );
+    } catch (error) {
+      console.error("번역 실패:", error);
+      alert("번역에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setTranslatingIds(prev => {
+        const next = new Set(prev);
+        next.delete(msgId);
+        return next;
+      });
+    }
+  };
 
   const pendingSendRef = useRef<{
     content: string;
@@ -199,7 +250,7 @@ const ChatPanel = ({
   };
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-    messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
+    messagesEndRef.current?.scrollIntoView({behavior, block: "end"});
   };
 
   const onScroll = () => {
@@ -411,7 +462,7 @@ const ChatPanel = ({
       if (el) {
         el.style.height = "auto";
         el.style.overflowY = "hidden";
-        el.focus({ preventScroll: true });
+        el.focus({preventScroll: true});
       }
     });
 
@@ -452,8 +503,8 @@ const ChatPanel = ({
   }, [blockedSet]);
 
   // 차단 모달 열기
-  const openBlockConfirm = (user: { id: string; nickname: string }) => {
-    setBlockConfirm({ isOpen: true, user });
+  const openBlockConfirm = (user: {id: string; nickname: string}) => {
+    setBlockConfirm({isOpen: true, user});
   };
 
   // 차단 확정
@@ -464,18 +515,18 @@ const ChatPanel = ({
     try {
       const res = await blockUser(id);
       onBlockUser(id);
-      refreshBlockedList().catch(() => {});
+      refreshBlockedList().catch(() => { });
       console.log(res.message);
     } catch (err) {
       console.error("차단 실패:", err);
     } finally {
-      setBlockConfirm({ isOpen: false, user: null });
+      setBlockConfirm({isOpen: false, user: null});
     }
   };
 
   // 강퇴 모달 열기
-  const openEjectConfirm = (user: { id: string; nickname: string }) => {
-    setEjectConfirm({ isOpen: true, user });
+  const openEjectConfirm = (user: {id: string; nickname: string}) => {
+    setEjectConfirm({isOpen: true, user});
   };
 
   // 강퇴 확정
@@ -483,7 +534,7 @@ const ChatPanel = ({
     if (ejectConfirm.user && onEjectUser) {
       onEjectUser(ejectConfirm.user);
     }
-    setEjectConfirm({ isOpen: false, user: null });
+    setEjectConfirm({isOpen: false, user: null});
   };
 
   // 게스트 GIF 안내 말풍선 3초 뒤 자동 닫힘
@@ -524,7 +575,7 @@ const ChatPanel = ({
       <ConfirmModal
         isOpen={blockConfirm.isOpen}
         onConfirm={confirmBlock}
-        onCancel={() => setBlockConfirm({ isOpen: false, user: null })}
+        onCancel={() => setBlockConfirm({isOpen: false, user: null})}
         nickname={blockConfirm.user?.nickname ?? ""}
         variant="block"
       />
@@ -533,7 +584,7 @@ const ChatPanel = ({
       <ConfirmModal
         isOpen={ejectConfirm.isOpen}
         onConfirm={confirmEject}
-        onCancel={() => setEjectConfirm({ isOpen: false, user: null })}
+        onCancel={() => setEjectConfirm({isOpen: false, user: null})}
         nickname={ejectConfirm.user?.nickname ?? ""}
         variant="eject"
       />
@@ -621,12 +672,16 @@ const ChatPanel = ({
               (msg as any).rankLevel || (msg as any).userRank?.rankLevel;
             const hasRank = !!rawRankLevel;
 
+            // 번역 관련 데이터
+            const msgId = getMessageId(msg);
+            const translatedText = translatedMessages.get(msgId);
+            const isTranslating = translatingIds.has(msgId);
+
             return (
               <div
                 key={uniqueKey}
-                className={`flex flex-col ${
-                  isMyMessage ? "items-end" : "items-start"
-                }`}
+                className={`group flex flex-col ${isMyMessage ? "items-end" : "items-start"
+                  }`}
               >
                 {/* 닉네임 + 랭크 */}
                 <span className="text-xs text-gray-200 mb-1">
@@ -642,9 +697,8 @@ const ChatPanel = ({
                 </span>
 
                 <div
-                  className={`group relative flex items-end gap-1 max-w-[90%] ${
-                    isMyMessage ? "flex-row-reverse" : "flex-row"
-                  }`}
+                  className={`relative flex items-end gap-1 max-w-[90%] ${isMyMessage ? "flex-row-reverse" : "flex-row"
+                    }`}
                 >
                   {(msg as any).isImage ? (
                     <div className="relative">
@@ -719,9 +773,8 @@ const ChatPanel = ({
                     </div>
                   ) : (
                     <div
-                      className={`relative group px-4 py-2 rounded-lg text-sm ${
-                        isMyMessage ? "bg-purple-600" : "bg-gray-700"
-                      } break-all`}
+                      className={`relative px-4 py-2 rounded-lg text-sm ${isMyMessage ? "bg-purple-600" : "bg-gray-700"
+                        } break-all`}
                     >
                       <span className={!isMyMessage ? "pr-1" : ""}>
                         {msg.content}
@@ -781,6 +834,30 @@ const ChatPanel = ({
                     </div>
                   )}
 
+                  {/* 번역 버튼 - 채팅 버블과 시간 사이에 위치 */}
+                  {!isMyMessage && !(msg as any).isImage && (
+                    <button
+                      onClick={() => handleTranslate(msg)}
+                      className={`
+                        px-1.5 py-0.5 text-xs rounded flex items-center gap-0.5
+                        ${translatedText
+                          ? "bg-purple-700 text-white opacity-100"
+                          : "bg-gray-600 text-gray-300 opacity-0 group-hover:opacity-100"
+                        }
+                        hover:bg-purple-600 transition-all duration-200
+                      `}
+                      disabled={isTranslating}
+                    >
+                      {isTranslating ? (
+                        <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
+                      ) : translatedText ? (
+                        <span>✓</span>
+                      ) : (
+                        <span>🌐</span>
+                      )}
+                    </button>
+                  )}
+
                   <span className="text-xs text-gray-500 whitespace-nowrap">
                     {new Date((msg as any).sentAt).toLocaleTimeString("ko-KR", {
                       hour: "2-digit",
@@ -788,13 +865,30 @@ const ChatPanel = ({
                     })}
                   </span>
                 </div>
+
+                {/* 번역 결과 */}
+                {translatedText && (
+                  <div
+                    className={`
+                      mt-2 px-4 py-2 rounded-lg border-l-2 max-w-[90%]
+                      ${isMyMessage
+                        ? "bg-purple-500/30 border-purple-400"
+                        : "bg-gray-600/50 border-purple-400"
+                      }
+                      text-sm text-gray-100
+                    `}
+                  >
+                    <div className="text-xs text-purple-300 mb-1">번역:</div>
+                    <div className="break-all">{translatedText}</div>
+                  </div>
+                )}
               </div>
             );
           })}
 
           <div
             ref={messagesEndRef}
-            style={{ scrollMarginBottom: (footerH || 88) + 8 }}
+            style={{scrollMarginBottom: (footerH || 88) + 8}}
           />
         </div>
 
@@ -833,16 +927,14 @@ const ChatPanel = ({
         >
           <div
             className={`rounded-lg border bg-gray-700 transition-colors
-                        ${
-                          overLimit
-                            ? "border-red-500"
-                            : "border-gray-600 focus-within:border-purple-500"
-                        } ${isRateLimitedNow ? "opacity-70" : ""}`}
+                        ${overLimit
+                ? "border-red-500"
+                : "border-gray-600 focus-within:border-purple-500"
+              } ${isRateLimitedNow ? "opacity-70" : ""}`}
           >
             <div
-              className={`flex ${
-                isMultiline ? "items-end" : "items-center"
-              } gap-2 px-3 py-2`}
+              className={`flex ${isMultiline ? "items-end" : "items-center"
+                } gap-2 px-3 py-2`}
             >
               <textarea
                 ref={inputRef}
@@ -865,8 +957,8 @@ const ChatPanel = ({
                   isRateLimitedNow
                     ? "채팅 도배로 잠시 제한되었습니다."
                     : myUser
-                    ? "메시지를 입력하세요..."
-                    : "게스트로 채팅하기..."
+                      ? "메시지를 입력하세요..."
+                      : "게스트로 채팅하기..."
                 }
                 className="flex-1 bg-transparent border-0 outline-none resize-none max-h-40
                           text-base md:text-sm leading-6 placeholder:text-gray-400
@@ -924,9 +1016,8 @@ const ChatPanel = ({
 
           <div className="mt-1 flex justify-end">
             <span
-              className={`text-xs ${
-                overLimit ? "text-red-400" : "text-gray-400"
-              }`}
+              className={`text-xs ${overLimit ? "text-red-400" : "text-gray-400"
+                }`}
             >
               {charCount}/{MAX_LEN}
               {overLimit ? " (최대 초과)" : ""}
