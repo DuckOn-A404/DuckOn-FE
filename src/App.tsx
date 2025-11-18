@@ -22,6 +22,8 @@ import LeaderboardPage from "./pages/LeaderboardPage";
 import AppChatRecommandPage from "./pages/ArtistDetailPage/AppChatRecommandPage";
 import FollowedArtistsPage from "./pages/ArtistDetailPage/FollowedArtistsPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import ChildSafetyPage from "./pages/ChildSafetyPage";
+import AccountDeletePage from "./pages/AccountDeletePage";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -46,6 +48,7 @@ function App() {
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/account/delete" element={<AccountDeletePage />} />
           </Route>
 
           {/* 푸터가 없는 페이지들 */}
@@ -63,6 +66,7 @@ function App() {
           <Route path="/artist/:artistId/fan" element={<AppChatRecommandPage />} />
           <Route path="oauth2/success" element={<OAuth2RedirectHandler />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/child-safety" element={<ChildSafetyPage />} />
 
           {/* 404 페이지 */}
           <Route path="*" element={<NotFoundPage />} />
