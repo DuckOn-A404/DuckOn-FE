@@ -243,8 +243,8 @@ export const useSignupForm = () => {
       if (result.sent) {
         setIsCodeSent(true);
         setCodeSentAt(Date.now());
-        setCodeSuccess("인증번호가 발송되었습니다.");
-        setEmailSuccess("인증번호를 확인해주세요.");
+        setCodeSuccess("");
+        setEmailSuccess("인증번호가 발송되었습니다.");
       } else {
         setCodeError(result.message || "인증번호 발송에 실패했습니다.");
       }
@@ -276,6 +276,11 @@ export const useSignupForm = () => {
       setCodeSentAt(null);
       setEmailChecked(false);
       setRemainingSeconds(null);
+
+      setEmailSuccess("");
+      setEmailError(
+        "인증 시간이 만료되었습니다."
+      );
       return;
     }
 
@@ -311,6 +316,13 @@ export const useSignupForm = () => {
       const diffMs = 3 * 60 * 1000 - elapsed;
       if (diffMs <= 0) {
         setRemainingSeconds(0);
+
+        setEmailSuccess("");
+        setCodeSuccess("");
+        setCodeError("");
+        setEmailError(
+          "인증 시간이 만료되었습니다."
+        );
       } else {
         setRemainingSeconds(Math.ceil(diffMs / 1000));
       }

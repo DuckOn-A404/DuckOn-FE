@@ -129,42 +129,51 @@ const SignupPage = () => {
             <button
               type="button"
               onClick={handleSendVerificationCode}
-              disabled={sendingCode || isCodeVerified}
+              disabled={sendingCode || isCodeVerified
+                || (isCodeSent && !isCodeVerified && (remainingSeconds ?? 0) > 0)
+              }
               className="h-11 mt-[30px] px-4 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap"
             >
               {sendingCode ? "발송 중..." : isCodeVerified ? "인증 완료" : "인증번호 발송"}
             </button>
           </div>
-          {isCodeSent && !isCodeVerified && remainingSeconds !== null && (
-            <p className="text-xs text-gray-500 pl-1 -mt-2">
-              남은 시간 {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
-              {String(remainingSeconds % 60).padStart(2, "0")} 내에 인증을 완료해주세요.
-            </p>
-          )}
+          
+          {/* 인증번호가 발송된 상태 */}
           {isCodeSent && !isCodeVerified && (
-            <div className="flex gap-2 items-start">
-              <div className="flex-grow">
-                <InputField
-                  id="verificationCode"
-                  label="인증번호*"
-                  type="text"
-                  placeholder="인증번호를 입력하세요"
-                  icon={<Mail className={iconStyle} />}
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  error={codeError}
-                  success={codeSuccess}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleVerifyCode}
-                disabled={verifyingCode}
-                className="h-11 mt-[30px] px-4 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap"
-              >
-                {verifyingCode ? "확인 중..." : "인증 확인"}
-              </button>
-            </div>
+            <>
+              {remainingSeconds !== null && remainingSeconds > 0 && (
+                <p className="text-xs text-gray-500 pl-1 -mt-2">
+                  남은 시간 {String(Math.floor(remainingSeconds / 60)).padStart(2, "0")}:
+                  {String(remainingSeconds % 60).padStart(2, "0")} 내에 인증을 완료해주세요.
+                </p>
+              )}
+
+              {remainingSeconds !== 0 && (
+                <div className="flex gap-2 items-start">
+                  <div className="flex-grow">
+                    <InputField
+                      id="verificationCode"
+                      label="인증번호*"
+                      type="text"
+                      placeholder="인증번호를 입력하세요"
+                      icon={<Mail className={iconStyle} />}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      error={codeError}
+                      success={codeSuccess}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleVerifyCode}
+                    disabled={verifyingCode}
+                    className="h-11 mt-[30px] px-4 text-sm font-medium bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:text-gray-500 whitespace-nowrap"
+                  >
+                    {verifyingCode ? "확인 중..." : "인증 확인"}
+                  </button>
+                </div>
+              )}
+            </>
           )}
           <div className="flex gap-2 items-start">
             <div className="flex-grow">
