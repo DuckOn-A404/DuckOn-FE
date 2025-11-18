@@ -3,26 +3,73 @@ import SortSelect, {
   type SortOrder,
 } from "../components/common/SortSelect";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import {useNavigate} from "react-router-dom";
-import {useState, useEffect, useRef} from "react";
-import {Search} from "lucide-react";
-import {useArtistList} from "../hooks/useArtistList";
-import {useDebounce} from "../hooks/useDebounce";
-import {createSlug} from "../utils/slugUtils";
-import {Capacitor} from "@capacitor/core"; // 앱 여부 확인용
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, type TouchEvent } from "react";
+import { Search } from "lucide-react";
+import { useArtistList } from "../hooks/useArtistList";
+import { useDebounce } from "../hooks/useDebounce";
+import { createSlug } from "../utils/slugUtils";
+import { Capacitor } from "@capacitor/core"; // 앱 여부 확인용
 
-const sortOptions: {label: string; key: SortKey; order: SortOrder}[] = [
-  {label: "팔로워 많은순", key: "followers", order: "desc"},
-  {label: "이름 오름차순", key: "name", order: "asc"},
-  {label: "이름 내림차순", key: "name", order: "desc"},
-  {label: "데뷔 빠른순", key: "debut", order: "asc"},
-  {label: "데뷔 최신순", key: "debut", order: "desc"},
+const sortOptions: { label: string; key: SortKey; order: SortOrder }[] = [
+  { label: "팔로워 많은순", key: "followers", order: "desc" },
+  { label: "이름 오름차순", key: "name", order: "asc" },
+  { label: "이름 내림차순", key: "name", order: "desc" },
+  { label: "데뷔 빠른순", key: "debut", order: "asc" },
+  { label: "데뷔 최신순", key: "debut", order: "desc" },
 ];
 
-const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // 웹/앱 분기 값
+const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // 웹/앱 분기 값 (UI 용)
+const isRealNativeApp = Capacitor.isNativePlatform();
 
 const ArtistListPage = () => {
   const navigate = useNavigate();
+
+  // 스와이프 뒤로가기용 ref (훅은 상단에서 선언)
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const isTrackingRef = useRef(false);
+
+  // 스와이프 파라미터 (왼쪽 24px 엣지, 80px 이상 이동)
+  const EDGE_WIDTH = 24;
+  const MIN_DISTANCE = 80;
+  const MAX_VERTICAL_DRIFT = 50;
+
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp) return;
+
+    const t = e.touches[0];
+    startXRef.current = t.clientX;
+    startYRef.current = t.clientY;
+
+    // 왼쪽 엣지에서 시작한 경우만 후보로 인정
+    isTrackingRef.current = t.clientX <= EDGE_WIDTH;
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp || !isTrackingRef.current) return;
+
+    const t = e.touches[0];
+    const vertical = Math.abs(t.clientY - startYRef.current);
+
+    // 수직 이동이 너무 크면 스와이프 취소 (스크롤과 구분)
+    if (vertical > MAX_VERTICAL_DRIFT) {
+      isTrackingRef.current = false;
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp || !isTrackingRef.current) return;
+
+    const t = e.changedTouches[0];
+    const diffX = t.clientX - startXRef.current;
+
+    if (diffX > MIN_DISTANCE) {
+      navigate(-1);
+    }
+
+    isTrackingRef.current = false;
+  };
 
   // 검색어 입력값 → 300ms 디바운스 후 서버에 전달
   const [searchText, setSearchText] = useState("");
@@ -48,7 +95,7 @@ const ArtistListPage = () => {
   }, []);
 
   // 목록 데이터: 검색/정렬/사이즈를 한 API로 처리
-  const {artists, totalCount, fetchMore, hasMore, loading} = useArtistList({
+  const { artists, totalCount, fetchMore, hasMore, loading } = useArtistList({
     q: debouncedSearchText || undefined,
     sort,
     order,
@@ -67,7 +114,7 @@ const ArtistListPage = () => {
           fetchMore();
         }
       },
-      {rootMargin: "0px 0px 600px 0px", threshold: 0}
+      { rootMargin: "0px 0px 600px 0px", threshold: 0 }
     );
 
     io.observe(el);
@@ -76,11 +123,17 @@ const ArtistListPage = () => {
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     const slug = createSlug(nameEn);
-    navigate(`/artist/${slug}`, {state: {artistId}});
+    navigate(`/artist/${slug}`, { state: { artistId } });
   };
 
   return (
-    <div className="px-4 md:px-10 py-8">
+    <div
+      className="px-4 md:px-10 py-8"
+      // 앱에서만 실질적으로 동작하는 스와이프 뒤로가기 제스처
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* 제목 영역 */}
       <div className="text-center py-8 mb-5">
         <h1 className="text-4xl font-extrabold text-gray-800 mb-2">아티스트</h1>
@@ -123,7 +176,7 @@ const ArtistListPage = () => {
               ? "w-40 shrink-0 text-[11px] leading-none whitespace-nowrap"
               : "w-48 md:w-56"
           }
-          value={{key: sort, order}}
+          value={{ key: sort, order }}
           options={sortOptions}
           onChange={(v) => {
             setSort(v.key as SortKey);

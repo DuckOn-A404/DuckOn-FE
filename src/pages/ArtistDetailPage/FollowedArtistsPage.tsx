@@ -1,13 +1,59 @@
-import { useEffect } from "react";
+import { useEffect, useRef, type TouchEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
 import { createSlug } from "../../utils/slugUtils";
-import { isNativeApp } from "../../utils/platform";
+import { isNativeApp } from "../../utils/platform"; // 그대로 사용
 
 const FollowedArtistsPage = () => {
   const navigate = useNavigate();
 
-  // 훅은 무조건 최상단에서 호출!
+  // 스와이프 뒤로가기 ref (훅 규칙 준수 위해 최상단)
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const isTrackingRef = useRef(false);
+
+  // 스와이프 설정
+  const EDGE_WIDTH = 24;
+  const MIN_DISTANCE = 80;
+  const MAX_VERTICAL_DRIFT = 50;
+
+  // 앱에서만 동작하는 스와이프 이벤트 핸들러
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isNativeApp) return;
+
+    const t = e.touches[0];
+    startXRef.current = t.clientX;
+    startYRef.current = t.clientY;
+
+    // 왼쪽 엣지에서 시작했을 때만 후보
+    isTrackingRef.current = t.clientX <= EDGE_WIDTH;
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isNativeApp || !isTrackingRef.current) return;
+
+    const t = e.touches[0];
+    const vertical = Math.abs(t.clientY - startYRef.current);
+
+    if (vertical > MAX_VERTICAL_DRIFT) {
+      isTrackingRef.current = false;
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isNativeApp || !isTrackingRef.current) return;
+
+    const t = e.changedTouches[0];
+    const diffX = t.clientX - startXRef.current;
+
+    if (diffX > MIN_DISTANCE) {
+      navigate(-1);
+    }
+
+    isTrackingRef.current = false;
+  };
+
+  // 기존 코드: 훅은 조건부 리턴 위에 위치해야 함
   const {
     followedArtists,
     fetchFollowedArtists,
@@ -15,14 +61,14 @@ const FollowedArtistsPage = () => {
     hasLoaded,
   } = useArtistFollowStore();
 
-  // 페이지가 처음 열릴 때 팔로우 목록 불러오기
+  // 페이지 처음 열릴 때 한번만 로드
   useEffect(() => {
     if (!hasLoaded && !isLoading) {
       void fetchFollowedArtists();
     }
   }, [hasLoaded, isLoading, fetchFollowedArtists]);
 
-  // 조건부 리턴은 훅 아래에 위치해야 함
+  // 이 줄은 훅 호출 아래에 있어야 함
   if (!isNativeApp) {
     navigate("/");
     return null;
@@ -40,6 +86,11 @@ const FollowedArtistsPage = () => {
     <div
       className="min-h-screen w-full bg-gradient-to-b from-[#fdfbff] via-[#f7f4ff] to-[#f5f7ff]"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
+
+      // 여기에서 앱 스와이프 감지
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* 상단 헤더 */}
       <section className="px-5 pt-3 pb-2">
@@ -67,7 +118,6 @@ const FollowedArtistsPage = () => {
       {/* 본문 */}
       <section className="px-4 pb-6">
         {isInitialLoading ? (
-          /* 최초 API 로딩 */
           <div className="mt-20 flex flex-col items-center text-center gap-3 text-gray-500 text-sm">
             <div className="w-10 h-10 rounded-full border-2 border-gray-300 border-t-transparent animate-spin" />
             <p>팔로우한 아티스트를 불러오는 중이에요...</p>
@@ -109,7 +159,6 @@ const FollowedArtistsPage = () => {
                     flex items-center gap-3 px-3.5 py-3
                   "
                 >
-                  {/* 이미지 */}
                   <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-[0_8px_18px_rgba(148,163,184,0.55)]">
                     <img
                       src={artist.imgUrl || 'https://placehold.co/64x64'}
@@ -118,7 +167,6 @@ const FollowedArtistsPage = () => {
                     />
                   </div>
 
-                  {/* 텍스트 */}
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-semibold text-gray-900 truncate">
                       {artist.nameKr}
@@ -128,7 +176,6 @@ const FollowedArtistsPage = () => {
                     </p>
                   </div>
 
-                  {/* 우측 표시 */}
                   <div className="flex flex-col items-end justify-between h-full">
                     <span className="inline-flex items-center rounded-full bg-gradient-to-r from-fuchsia-500/10 to-purple-500/10 border border-fuchsia-200 px-2 py-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-500 mr-1" />
@@ -141,7 +188,6 @@ const FollowedArtistsPage = () => {
                     </span>
                   </div>
 
-                  {/* hover 강조선 */}
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-fuchsia-400 via-rose-400 to-amber-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                 </div>
               </button>

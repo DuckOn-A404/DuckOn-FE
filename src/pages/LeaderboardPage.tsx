@@ -1,4 +1,4 @@
-import {useEffect, useState, useRef} from "react";
+import {useEffect, useState, useRef, type TouchEvent} from "react";
 import {
   Trophy,
   Crown,
@@ -8,10 +8,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 import {Capacitor} from "@capacitor/core";
+import {useNavigate} from "react-router-dom";
 import {getUserLeaderboard, type LeaderboardUser} from "../api/userService";
 import RankBadge from "../components/common/RankBadge";
 
+// 기존 로직 그대로 유지 (스타일/레이아웃 용)
 const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
+const isRealNativeApp = Capacitor.isNativePlatform();
 
 const LeaderboardPage = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
@@ -20,6 +23,52 @@ const LeaderboardPage = () => {
   // 앱에서 TOP3 가로 스와이프용
   const [activeTopIndex, setActiveTopIndex] = useState(0);
   const sliderRef = useRef<HTMLDivElement | null>(null);
+
+  // 뒤로가기 스와이프용 ref & 파라미터
+  const navigate = useNavigate();
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const isTrackingRef = useRef(false);
+
+  const EDGE_WIDTH = 24;          // 왼쪽 엣지 범위 (px)
+  const MIN_DISTANCE = 80;        // 최소 스와이프 거리
+  const MAX_VERTICAL_DRIFT = 50;  // 수직 흔들림 허용
+
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp) return;
+
+    const touch = e.touches[0];
+    startXRef.current = touch.clientX;
+    startYRef.current = touch.clientY;
+
+    // 왼쪽 엣지에서 시작했을 때만 후보
+    isTrackingRef.current = touch.clientX <= EDGE_WIDTH;
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp || !isTrackingRef.current) return;
+
+    const touch = e.touches[0];
+    const vertical = Math.abs(touch.clientY - startYRef.current);
+
+    // 위아래로 너무 많이 움직이면 취소
+    if (vertical > MAX_VERTICAL_DRIFT) {
+      isTrackingRef.current = false;
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp || !isTrackingRef.current) return;
+
+    const touch = e.changedTouches[0];
+    const diffX = touch.clientX - startXRef.current;
+
+    if (diffX > MIN_DISTANCE) {
+      navigate(-1);
+    }
+
+    isTrackingRef.current = false;
+  };
 
   useEffect(() => {
     const loadLeaderboard = async () => {
@@ -145,13 +194,17 @@ const LeaderboardPage = () => {
   return (
     <div
       className="min-h-screen bg-gray-50"
+      // 여기서 스와이프 이벤트 처리 (앱에서만 로직 동작)
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       // 앱에서만 위/아래 safe-area + 여유 padding
       style={
         isNativeApp
           ? {
-            paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
-            paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
-          }
+              paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)",
+            }
           : undefined
       }
     >
@@ -195,10 +248,11 @@ const LeaderboardPage = () => {
                     type="button"
                     onClick={() => scrollToIndex(activeTopIndex - 1)}
                     disabled={activeTopIndex === 0}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${activeTopIndex === 0
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${
+                      activeTopIndex === 0
                         ? "opacity-40 cursor-default"
                         : "active:scale-95"
-                      }`}
+                    }`}
                   >
                     <ChevronLeft className="w-5 h-5 text-gray-700" />
                   </button>
@@ -211,10 +265,11 @@ const LeaderboardPage = () => {
                     type="button"
                     onClick={() => scrollToIndex(activeTopIndex + 1)}
                     disabled={activeTopIndex === top3.length - 1}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${activeTopIndex === top3.length - 1
+                    className={`w-9 h-9 rounded-full flex items-center justify-center border border-gray-300 bg-white shadow-sm ${
+                      activeTopIndex === top3.length - 1
                         ? "opacity-40 cursor-default"
                         : "active:scale-95"
-                      }`}
+                    }`}
                   >
                     <ChevronRight className="w-5 h-5 text-gray-700" />
                   </button>
@@ -224,10 +279,9 @@ const LeaderboardPage = () => {
                   {top3.map((_, idx) => (
                     <span
                       key={idx}
-                      className={`w-2 h-2 rounded-full ${idx === activeTopIndex
-                          ? "bg-purple-600"
-                          : "bg-gray-300"
-                        }`}
+                      className={`w-2 h-2 rounded-full ${
+                        idx === activeTopIndex ? "bg-purple-600" : "bg-gray-300"
+                      }`}
                     />
                   ))}
                 </div>
@@ -368,8 +422,9 @@ const LeaderboardPage = () => {
                 const rank = index + 4;
 
                 // 앱/웹에 따라 사이즈/폰트/간격 다르게
-                const itemWrapperClass = `bg-white rounded-xl shadow-sm transition-all duration-300 ${isNativeApp ? "" : "hover:shadow-lg hover:-translate-y-1"
-                  }`;
+                const itemWrapperClass = `bg-white rounded-xl shadow-sm transition-all duration-300 ${
+                  isNativeApp ? "" : "hover:shadow-lg hover:-translate-y-1"
+                }`;
                 const itemInnerClass = isNativeApp
                   ? "p-3 flex items-center gap-3"
                   : "p-4 flex items-center gap-6";

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, type TouchEvent } from "react";
 import { type MyUser } from "../types/mypage";
 import type { RoomHistory } from "../types/room";
 import {
@@ -21,6 +21,7 @@ const isEmptyImg = (v: unknown): boolean =>
 import { useUserStore } from "../store/useUserStore";
 import { useNavigate } from "react-router-dom";
 import DeleteAccountModal from "../components/common/modal/DeleteAccountModal";
+import { Capacitor } from "@capacitor/core";
 
 // userId별 마지막 imgUrl을 보관/복구
 const lastImgKey = (userId: string) => `last-img:${userId}`;
@@ -36,8 +37,58 @@ const loadLastImg = (userId?: string): string | undefined => {
   return v && v.trim() !== "" ? v : undefined;
 };
 
+// 제스처는 진짜 네이티브 앱에서만 동작하게
+const isRealNativeApp = Capacitor.isNativePlatform();
+
 const MyPage = () => {
   const navigate = useNavigate();
+
+  // 스와이프 뒤로가기용 ref들
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+  const isTrackingRef = useRef(false);
+
+  // 스와이프 파라미터: 왼쪽 24px, 80px 이상 이동, 수직 50px 이내
+  const EDGE_WIDTH = 24;
+  const MIN_DISTANCE = 80;
+  const MAX_VERTICAL_DRIFT = 50;
+
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp) return;
+
+    const t = e.touches[0];
+    startXRef.current = t.clientX;
+    startYRef.current = t.clientY;
+
+    // 왼쪽 엣지에서 시작한 경우만 추적
+    isTrackingRef.current = t.clientX <= EDGE_WIDTH;
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp || !isTrackingRef.current) return;
+
+    const t = e.touches[0];
+    const vertical = Math.abs(t.clientY - startYRef.current);
+
+    // 세로 움직임이 너무 크면 스와이프 취소 (스크롤과 구분)
+    if (vertical > MAX_VERTICAL_DRIFT) {
+      isTrackingRef.current = false;
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    if (!isRealNativeApp || !isTrackingRef.current) return;
+
+    const t = e.changedTouches[0];
+    const diffX = t.clientX - startXRef.current;
+
+    if (diffX > MIN_DISTANCE) {
+      navigate(-1);
+    }
+
+    isTrackingRef.current = false;
+  };
+
   const [myUser, setMyUser] = useState<MyUser | null>(null);
   const [rooms, setRooms] = useState<RoomHistory[]>([]);
   const [roomsPage, setRoomsPage] = useState(1);
@@ -50,7 +101,8 @@ const MyPage = () => {
     null
   );
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
+    useState(false);
 
   const syncGlobal = (u: MyUser) => {
     useUserStore.getState().setMyUser({
@@ -113,11 +165,15 @@ const MyPage = () => {
           const storedImg = loadLastImg(uid);
           const chosenImg = !isEmptyImg(incomingImg) ? incomingImg : storedImg;
 
-          const next: MyUser = { ...(prev ?? {}), ...data, imgUrl: chosenImg } as MyUser;
+          const next: MyUser = {
+            ...(prev ?? {}),
+            ...data,
+            imgUrl: chosenImg,
+          } as MyUser;
           saveLastImg(uid, next.imgUrl as any);
           return next;
         });
-        
+
         // 방 목록 로드
         if (data?.userId) {
           const roomsData = await fetchUserRooms(data.userId, 1, 12);
@@ -159,10 +215,16 @@ const MyPage = () => {
     }
   }, [openList]);
 
-  // 로딩/에러일 때도 같은 앱 레이아웃 유지
+  // 로딩/에러일 때도 같은 레이아웃 유지
   if (loading || !myUser) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#f9f5ff] via-[#fdfbff] to-white md:bg-transparent">
+      <div
+        className="min-h-screen bg-gradient-to-b from-[#f9f5ff] via-[#fdfbff] to-white md:bg-transparent"
+        // 로딩 상태에서도 앱이면 스와이프 가능
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <div className="mx-auto w-full max-w-[430px] md:max-w-5xl px-4 md:px-8 pt-10 pb-24">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 py-10 text-center text-sm">
             {loading ? (
@@ -181,7 +243,13 @@ const MyPage = () => {
   return (
     // 모바일: 연한 그라데이션 + 430px 캔버스
     // 웹(md 이상): 배경 투명, 기존 max width 느낌 유지
-    <div className="min-h-screen bg-gradient-to-b from-[#f9f5ff] via-[#fdfbff] to-white md:bg-transparent">
+    <div
+      className="min-h-screen bg-gradient-to-b from-[#f9f5ff] via-[#fdfbff] to-white md:bg-transparent"
+      // 앱에서만 실질적으로 동작하는 스와이프 뒤로가기 제스처
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       <div className="mx-auto w-full max-w-[430px] md:max-w-5xl px-4 md:px-8 pt-5 md:pt-6 pb-24 space-y-6 md:space-y-8">
         {!isEditing ? (
           <MyProfileCard
@@ -198,7 +266,9 @@ const MyPage = () => {
             onFollowingClick={() => setOpenList("following")}
             onDeleteClick={handleOpenDeleteModal}
             onBlockListClick={() => setIsBlockModalOpen(true)}
-            onChangePasswordClick={() => setIsChangePasswordModalOpen(true)}
+            onChangePasswordClick={() =>
+              setIsChangePasswordModalOpen(true)
+            }
           />
         ) : (
           <EditProfileCard
@@ -232,65 +302,70 @@ const MyPage = () => {
           />
         )}
 
-      <div className="mt-8">
-        <MyCreatedRoomsPanel 
-          rooms={rooms} 
-          pageSize={12}
-          total={roomsTotal}
-          loading={roomsLoading}
-          onLoadMore={async () => {
-            if (roomsLoading || !myUser?.userId) return;
-            if (rooms.length >= roomsTotal) return;
-            
-            setRoomsLoading(true);
-            try {
-              const nextPage = roomsPage + 1;
-              const roomsData = await fetchUserRooms(myUser.userId, nextPage, 12);
-              setRooms(prev => [...prev, ...roomsData.roomList]);
-              setRoomsPage(nextPage);
-            } catch (error) {
-              console.error('방 목록 로드 실패:', error);
-            } finally {
-              setRoomsLoading(false);
-            }
-          }}
+        <div className="mt-8">
+          <MyCreatedRoomsPanel
+            rooms={rooms}
+            pageSize={12}
+            total={roomsTotal}
+            loading={roomsLoading}
+            onLoadMore={async () => {
+              if (roomsLoading || !myUser?.userId) return;
+              if (rooms.length >= roomsTotal) return;
+
+              setRoomsLoading(true);
+              try {
+                const nextPage = roomsPage + 1;
+                const roomsData = await fetchUserRooms(
+                  myUser.userId,
+                  nextPage,
+                  12
+                );
+                setRooms((prev) => [...prev, ...roomsData.roomList]);
+                setRoomsPage(nextPage);
+              } catch (error) {
+                console.error("방 목록 로드 실패:", error);
+              } finally {
+                setRoomsLoading(false);
+              }
+            }}
+          />
+        </div>
+
+        {/* 모달들 – 전체 화면 기준이라 바깥에 그대로 둠 */}
+        {!isSocial && (
+          <PasswordConfirm
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+            onConfirm={handleConfirm}
+          />
+        )}
+
+        {openList === "follower" && (
+          <FollowerList onClose={() => setOpenList(null)} />
+        )}
+        {openList === "following" && (
+          <FollowingList onClose={() => setOpenList(null)} />
+        )}
+
+        <DeleteAccountModal
+          isOpen={showDeleteModal}
+          loading={deleting}
+          onCancel={() => setShowDeleteModal(false)}
+          onConfirm={handleConfirmDelete}
         />
-      </div>
 
-      {/* 모달들 – 전체 화면 기준이라 바깥에 그대로 둠 */}
-      {!isSocial && (
-        <PasswordConfirm
-          isOpen={showModal}
-          onClose={() => setShowModal(false)}
-          onConfirm={handleConfirm}
+        {isBlockModalOpen && (
+          <BlockListModal onClose={() => setIsBlockModalOpen(false)} />
+        )}
+
+        {/* 비밀번호 변경 모달 */}
+        <ChangePasswordModal
+          isOpen={isChangePasswordModalOpen}
+          onClose={() => setIsChangePasswordModalOpen(false)}
         />
-      )}
-
-      {openList === "follower" && (
-        <FollowerList onClose={() => setOpenList(null)} />
-      )}
-      {openList === "following" && (
-        <FollowingList onClose={() => setOpenList(null)} />
-      )}
-
-      <DeleteAccountModal
-        isOpen={showDeleteModal}
-        loading={deleting}
-        onCancel={() => setShowDeleteModal(false)}
-        onConfirm={handleConfirmDelete}
-      />
-
-      {isBlockModalOpen && <BlockListModal onClose={() => setIsBlockModalOpen(false)} />}
-
-      {/* 비밀번호 변경 모달 */}
-      <ChangePasswordModal
-        isOpen={isChangePasswordModalOpen}
-        onClose={() => setIsChangePasswordModalOpen(false)}
-      />
       </div>
     </div>
   );
 };
 
 export default MyPage;
-
