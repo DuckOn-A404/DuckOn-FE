@@ -159,7 +159,7 @@
 //             {user.nickname}
 //           </h3>
 //           <span className="inline-block bg-white/95 text-gray-800 font-bold text-sm px-4 py-1 rounded-full mb-3">
-//             {rank === 1 ? "👑 1위" : `${rank}위`}
+//             {rank === 1 ? "👑 1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}위`}
 //           </span>
 //           <div className="flex items-center gap-2">
 //             <RankBadge rankLevel={user.userRank.rankLevel} size={24} />
@@ -314,7 +314,7 @@
 //                         {top3[1].nickname}
 //                       </h3>
 //                       <span className="inline-block bg-white/90 text-gray-600 font-bold text-sm px-3 py-1 rounded-full mb-2">
-//                         2위
+//                         2nd
 //                       </span>
 //                       <div className="flex justify-center items-center gap-2">
 //                         <RankBadge
@@ -354,7 +354,7 @@
 //                         {top3[0].nickname}
 //                       </h3>
 //                       <span className="inline-block bg-white/95 text-yellow-500 font-extrabold text-base px-4 py-1 rounded-full mb-3">
-//                         👑 1위
+//                         👑 1st
 //                       </span>
 //                       <div className="flex justify-center items-center gap-2">
 //                         <RankBadge
@@ -394,7 +394,7 @@
 //                         {top3[2].nickname}
 //                       </h3>
 //                       <span className="inline-block bg-white/90 text-gray-600 font-bold text-sm px-3 py-1 rounded-full mb-2">
-//                         3위
+//                         3rd
 //                       </span>
 //                       <div className="flex justify-center items-center gap-2">
 //                         <RankBadge
@@ -682,7 +682,7 @@ const LeaderboardPage = () => {
             {user.nickname}
           </h3>
           <span className="inline-block bg-white/95 text-gray-800 font-bold text-sm px-4 py-1 rounded-full mb-3">
-            {rank === 1 ? "👑 1위" : `${rank}위`}
+            {rank === 1 ? "👑 1st" : rank === 2 ? "2nd" : rank === 3 ? "3rd" : `${rank}위`}
           </span>
           <div className="flex items-center gap-2">
             <RankBadge rankLevel={user.userRank.rankLevel} size={24} />
@@ -843,7 +843,7 @@ const LeaderboardPage = () => {
                         {top3[1].nickname}
                       </h3>
                       <span className="inline-block bg-white/90 text-gray-600 font-bold text-sm px-3 py-1 rounded-full mb-2">
-                        2위
+                        2nd
                       </span>
                       <div className="flex justify-center items-center gap-2">
                         <RankBadge
@@ -883,7 +883,7 @@ const LeaderboardPage = () => {
                         {top3[0].nickname}
                       </h3>
                       <span className="inline-block bg-white/95 text-yellow-500 font-extrabold text-base px-4 py-1 rounded-full mb-3">
-                        👑 1위
+                        👑 1st
                       </span>
                       <div className="flex justify-center items-center gap-2">
                         <RankBadge
@@ -923,7 +923,7 @@ const LeaderboardPage = () => {
                         {top3[2].nickname}
                       </h3>
                       <span className="inline-block bg-white/90 text-gray-600 font-bold text-sm px-3 py-1 rounded-full mb-2">
-                        3위
+                        3rd
                       </span>
                       <div className="flex justify-center items-center gap-2">
                         <RankBadge
