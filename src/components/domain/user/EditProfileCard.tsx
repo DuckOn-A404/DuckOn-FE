@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import type { MyUser } from "../../../types/mypage";
 import { fetchMyProfile, updateUserProfile } from "../../../api/userService";
-import { Camera } from "lucide-react";
+import { Camera, ChevronDown } from "lucide-react";
 import { useUserStore } from "../../../store/useUserStore";
 import { Dialog } from "@headlessui/react";
 
@@ -13,9 +13,20 @@ export type EditProfileCardProps = {
 
 const DEFAULT_IMG = "/default_image.png";
 
+// 언어 옵션 정의
+const LANGUAGE_OPTIONS = [
+  { value: "ko", label: "한국어" },
+  { value: "en", label: "English" },
+  { value: "ja", label: "日本語" },
+  { value: "zh", label: "中文" },
+  { value: "es", label: "Español" },
+  { value: "fr", label: "Français" },
+] as const;
+
 
 const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
+  const [language, setLanguage] = useState(user.language || "ko");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(user.imgUrl ?? DEFAULT_IMG);
   const [showImageOptions, setShowImageOptions] = useState(false);
@@ -83,8 +94,10 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
       fd.append("nickname", trimmedNick);
     }
 
-    // (필요시) 언어 필드 – 고정값이 꼭 필요한 스펙이면 유지
-    // fd.append("language", "ko");
+    // 언어 필드 - 변경된 경우에만 추가
+    if (language && language !== user.language) {
+      fd.append("language", language);
+    }
 
     // 기본 이미지로 변경하는 경우: 실제 default_image.png 파일 전송
     if (shouldResetToDefault) {
@@ -253,6 +266,31 @@ const EditProfileCard = ({ user, onCancel, onUpdate }: EditProfileCardProps) => 
                 className="w-full rounded-lg border border-gray-200 px-2 py-1"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* 언어 선택 */}
+          <div className="grid grid-cols-1 sm:grid-cols-[8rem,1fr] items-center gap-2 sm:gap-3">
+            <label htmlFor="language" className="text-gray-500 font-medium">
+              언어
+            </label>
+            <div className="min-w-0 relative">
+              <select
+                id="language"
+                className="w-full rounded-lg border border-gray-200 px-2 py-1 pr-8 appearance-none bg-white cursor-pointer hover:border-purple-300 transition"
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+              >
+                {LANGUAGE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown 
+                size={16} 
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
               />
             </div>
           </div>

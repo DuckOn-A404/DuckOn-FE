@@ -4,6 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import RankProgress from "../../common/RankProgress";
 import TruncatedTitle from "../../common/TruncatedTitle";
 
+// 언어 코드를 라벨로 변환
+const getLanguageLabel = (code: string): string => {
+  const languageMap: Record<string, string> = {
+    ko: "한국어",
+    en: "English",
+    ja: "日本語",
+    zh: "中文",
+    es: "Español",
+    fr: "Français",
+  };
+  return languageMap[code] || code;
+};
+
 type MyProfileCardProps = {
   user: MyUser;
   onEditClick: () => void;
@@ -190,6 +203,10 @@ const MyProfileCard = ({
               <TruncatedTitle title={user.nickname} />
             </div>
           </div>
+          <div className="flex items-start gap-2">
+            <div className="w-14 text-gray-500 font-medium">언어</div>
+            <div className="flex-1">{getLanguageLabel(user.language)}</div>
+          </div>
         </div>
       </div>
 
@@ -265,6 +282,15 @@ const MyProfileCard = ({
                 title={user.nickname}
                 className="text-sm sm:text-base"
               />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <div className="shrink-0 w-20 sm:w-24 text-gray-500 font-medium">
+              언어
+            </div>
+            <div className="min-w-0 flex-1">
+              {getLanguageLabel(user.language)}
             </div>
           </div>
         </div>
