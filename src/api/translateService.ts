@@ -102,17 +102,33 @@ export async function translateMessage(
  */
 export async function translateChatMessage(
   text: string,
-  targetLang?: string,
-  senderLang?: string
+  targetLang?: string | null,
+  senderLang?: string | null
 ): Promise<ChatTranslateResponseDTO> {
+  const safeTargetLang = targetLang ?? "";
+  const safeSenderLang = senderLang ?? "";
+
+  const body: ChatTranslateRequestDTO = {
+    text,
+    targetLang: safeTargetLang,   // 항상 string
+    senderLang: safeSenderLang,   // 항상 string
+  };
+
   const { data } = await api.post<{ data: ChatTranslateResponseDTO }>(
     "/translation/chat",
-    {
-      text,
-      targetLang,
-      senderLang
-    } satisfies ChatTranslateRequestDTO
+    body
   );
-  
-  return data.data;  // ApiResponseDTO.success()의 data 필드
+
+  return data.data;
 }
+//   const { data } = await api.post<{ data: ChatTranslateResponseDTO }>(
+//     "/translation/chat",
+//     {
+//       text,
+//       targetLang,
+//       senderLang
+//     } satisfies ChatTranslateRequestDTO
+//   );
+  
+//   return data.data;  // ApiResponseDTO.success()의 data 필드
+// }

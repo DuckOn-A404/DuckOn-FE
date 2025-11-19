@@ -19,6 +19,15 @@ import {
 //   label: string;
 // };
 
+const LANGUAGE_OPTIONS = [
+  { value: "ko", label: "한국어" },
+  { value: "en", label: "English" },
+  { value: "ja", label: "日本語" },
+  { value: "zh", label: "中文" },
+  { value: "es", label: "Español" },
+  { value: "fr", label: "Français" },
+];
+
 const SignupPage = () => {
   const navigate = useNavigate();
   const {
@@ -239,6 +248,47 @@ const SignupPage = () => {
             onChange={handleChange}
             options={languageOptions}
           /> */}
+
+          {/* ======= 언어 선택 필드 추가 시작 ======= */}
+          <div className="flex flex-col gap-1">
+            <label
+              htmlFor="language"
+              className="text-gray-700 text-sm font-medium mb-1 flex items-center gap-2"
+            >
+              {/* <Globe className={iconStyle} /> */}
+              <span>주언어*</span>
+            </label>
+            <div className="relative">
+              <select
+                id="language"
+                name="language"
+                value={formData.language}
+                onChange={handleChange}
+                className="
+                  w-full appearance-none
+                  rounded-lg border border-gray-300 bg-white
+                  pl-3 pr-8 py-2
+                  text-sm text-gray-900
+                  focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500
+                "
+              >
+                {LANGUAGE_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              {/* 셀렉트 오른쪽 아래 화살표 */}
+              <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                ▼
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              선택한 언어로 사이트 UI와 채팅 번역이 제공됩니다.
+            </p>
+          </div>
+          {/* ======= 언어 선택 필드 추가 끝 ======= */}
+
           <div>
             <label
               htmlFor="profileImg"
