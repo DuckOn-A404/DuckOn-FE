@@ -979,6 +979,7 @@ type ChatPanelProps = {
   onBlockUser: (userId: string) => void;
   isHost?: boolean;
   onEjectUser?: (user: {id: string; nickname: string}) => void;
+  isKicked?: boolean;
 };
 
 // 최근 메시지/이름 미리보기
@@ -1071,6 +1072,7 @@ const ChatPanel = ({
   onBlockUser,
   isHost = false,
   onEjectUser,
+  isKicked = false,
 }: ChatPanelProps) => {
   const {myUser} = useUserStore();
   const blockedSet = useUserStore((s) => s.blockedSet);
@@ -1387,6 +1389,7 @@ const ChatPanel = ({
   const GIF_URL_REGEX = /\.gif(\?|#|$)/i;
 
   const handleSendMessage = () => {
+    if (isKicked) return;
     const v = newMessage.trim();
     if (!v) return;
     if (countGraphemes(newMessage) > MAX_LEN) return;
@@ -2041,16 +2044,18 @@ const ChatPanel = ({
                   }
                 }}
                 placeholder={
-                  isRateLimitedNow
-                    ? "채팅 도배로 잠시 제한되었습니다."
-                    : myUser
-                      ? "메시지를 입력하세요..."
-                      : "게스트로 채팅하기..."
+                  isKicked
+                    ? "강퇴된 방에서는 채팅을 보낼 수 없습니다."
+                    :isRateLimitedNow
+                      ? "채팅 도배로 잠시 제한되었습니다."
+                      : myUser
+                        ? "메시지를 입력하세요..."
+                        : "게스트로 채팅하기..."
                 }
                 className="flex-1 bg-transparent border-0 outline-none resize-none max-h-40
                           text-base md:text-sm leading-6 placeholder:text-gray-400
                           focus:ring-0 p-0"
-                disabled={isRateLimitedNow}
+                disabled={isRateLimitedNow || isKicked}
               />
 
               {/* GIF 버튼 (게스트도 모달은 열 수 있음) */}
@@ -2089,7 +2094,7 @@ const ChatPanel = ({
                   e.preventDefault();
                   if (!overLimit) handleSendMessage();
                 }}
-                disabled={!newMessage.trim() || overLimit || isRateLimitedNow}
+                disabled={!newMessage.trim() || overLimit || isRateLimitedNow || isKicked}
                 className="h-9 w-9 rounded-full flex items-center justify-center
                           bg-gray-600 hover:bg-gray-500 transition-colors
                           disabled:bg-gray-700 disabled:cursor-not-allowed

@@ -19,6 +19,7 @@ type VideoPlayerProps = {
   onVideoEnd: () => void;
   roomTitle: string;
   hostNickname?: string | null;
+  isKicked?: boolean;
 };
 
 // 드리프트 보정 파라미터
@@ -41,6 +42,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onVideoEnd,
   roomTitle,
   hostNickname,
+  isKicked = false,
 }) => {
   const playerRef = useRef<YT.Player | null>(null);
 
@@ -370,6 +372,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     roomTitle,
     hostNickname,
   ]);
+
+  useEffect(() => {
+    if (!isKicked) return;
+    const p = playerRef.current;
+    if (!p) return;
+
+    try {
+      p.pauseVideo();
+    } catch {}
+  }, [isKicked]);
 
   const prevIndexRef = useRef<number>(currentVideoIndex);
   const prevVideoIdRef = useRef<string>(videoId);

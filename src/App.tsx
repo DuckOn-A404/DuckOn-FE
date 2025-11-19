@@ -48,7 +48,7 @@ function App() {
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
             <Route path="/leaderboard" element={<LeaderboardPage />} />
-            <Route path="/account/delete" element={<AccountDeletePage />} />
+            {/* <Route path="/account/delete" element={<AccountDeletePage />} /> */}
           </Route>
 
           {/* 푸터가 없는 페이지들 */}
@@ -67,6 +67,7 @@ function App() {
           <Route path="oauth2/success" element={<OAuth2RedirectHandler />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/child-safety" element={<ChildSafetyPage />} />
+          <Route path="/account/delete" element={<AccountDeletePage />} />
 
           {/* 404 페이지 */}
           <Route path="*" element={<NotFoundPage />} />

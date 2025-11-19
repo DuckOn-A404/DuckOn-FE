@@ -1357,22 +1357,108 @@ const LiveRoomPage = () => {
   const mainBody =
     !isNativeApp || isLandscape ? webLikeBody : appPortraitBody;
 
+  // return (
+  //   <div
+  //     className="flex flex-col h-[100svh] bg-gray-900 text-white"
+  //     style={
+  //       isNativeApp ? {paddingTop: "env(safe-area-inset-top)"} : undefined
+  //     }
+  //   >
+  //     <RoomDeletedModal
+  //       isOpen={roomDeletedOpen}
+  //       onConfirm={async () => {
+  //         try {
+  //           await stompClient?.deactivate();
+  //         } catch { }
+  //         navigate(-1);
+  //       }}
+  //     />
+  //     {isQuizModalOpen && (
+  //       <EntryQuizModal
+  //         question={entryQuestion ?? DEFAULT_QUIZ_PROMPT}
+  //         onSubmit={handleSubmitAnswer}
+  //         onExit={() => navigate("/")}
+  //       />
+  //     )}
+
+  //     {isKicked && (
+  //       <EjectAlarmModal
+  //         onClose={() => {
+  //           setIsKicked(false);
+  //           if (window.history.length > 1) {
+  //             navigate(-1);
+  //             return;
+  //           }
+  //           if (artistSlug) {
+  //             navigate(`/artist/${artistSlug}`);
+  //             return;
+  //           }
+  //           navigate("/");
+  //         }}
+  //       />
+  //     )}
+
+      
+  //     <KickedInfoModal
+  //       isOpen={kickedOpen}
+  //       title="입장 불가"
+  //       description="해당 방에서 강퇴되어 입장이 불가합니다."
+  //       confirmText="확인"
+  //       onConfirm={() => {
+  //         setKickedOpen(false);
+  //         if (artistSlug) {
+  //           navigate(`/artist/${artistSlug}`);
+  //           return;
+  //         }
+  //         navigate("/");
+  //       }}
+  //       onClose={() => setKickedOpen(false)}
+  //     />
+
+  //     {room && (
+  //       <LiveHeader
+  //         isHost={room.hostId === myUserId}
+  //         title={room.title}
+  //         hostId={room.hostId}
+  //         hostNickname={hostNickname ?? room.hostNickname}
+  //         hostRankLevel={room.hostRank?.rankLevel ?? "GREEN"}
+  //         participantCount={participantCount ?? room.participantCount ?? 0}
+  //         onExit={handleExit}
+  //         onDelete={
+  //           room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
+  //         }
+  //         onSaveTitle={handleSaveTitle}
+  //       />
+  //     )}
+
+  //     {mainBody}
+
+  //     <ConfirmModal
+  //       isOpen={isDeleteOpen}
+  //       title="방 삭제"
+  //       description="정말 방을 삭제하시겠습니까?"
+  //       confirmText="삭제"
+  //       cancelText="취소"
+  //       onConfirm={handleDeleteRoom}
+  //       onCancel={() => setIsDeleteOpen(false)}
+  //     />
+  //   </div>
+  // );
   return (
     <div
       className="flex flex-col h-[100svh] bg-gray-900 text-white"
-      style={
-        isNativeApp ? {paddingTop: "env(safe-area-inset-top)"} : undefined
-      }
+      style={isNativeApp ? { paddingTop: "env(safe-area-inset-top)" } : undefined}
     >
       <RoomDeletedModal
         isOpen={roomDeletedOpen}
         onConfirm={async () => {
           try {
             await stompClient?.deactivate();
-          } catch { }
+          } catch {}
           navigate(-1);
         }}
       />
+
       {isQuizModalOpen && (
         <EntryQuizModal
           question={entryQuestion ?? DEFAULT_QUIZ_PROMPT}
@@ -1381,24 +1467,58 @@ const LiveRoomPage = () => {
         />
       )}
 
-      {isKicked && (
-        <EjectAlarmModal
-          onClose={() => {
-            setIsKicked(false);
-            if (window.history.length > 1) {
-              navigate(-1);
-              return;
-            }
-            if (artistSlug) {
-              navigate(`/artist/${artistSlug}`);
-              return;
-            }
-            navigate("/");
-          }}
-        />
+      {/* 강퇴 모드: 방 UI를 전부 막고 모달만 보여주기 */}
+      {isKicked ? (
+        <div className="flex-1 flex items-center justify-center bg-black/80">
+          <EjectAlarmModal
+            onClose={() => {
+              setIsKicked(false);
+              if (window.history.length > 1) {
+                navigate(-1);
+                return;
+              }
+              if (artistSlug) {
+                navigate(`/artist/${artistSlug}`);
+                return;
+              }
+              navigate("/");
+            }}
+          />
+        </div>
+      ) : (
+        <>
+          {/* ✅ 평소처럼 방 UI 렌더 */}
+          {room && (
+            <LiveHeader
+              isHost={room.hostId === myUserId}
+              title={room.title}
+              hostId={room.hostId}
+              hostNickname={hostNickname ?? room.hostNickname}
+              hostRankLevel={room.hostRank?.rankLevel ?? "GREEN"}
+              participantCount={participantCount ?? room.participantCount ?? 0}
+              onExit={handleExit}
+              onDelete={
+                room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
+              }
+              onSaveTitle={handleSaveTitle}
+            />
+          )}
+
+          {mainBody}
+
+          <ConfirmModal
+            isOpen={isDeleteOpen}
+            title="방 삭제"
+            description="정말 방을 삭제하시겠습니까?"
+            confirmText="삭제"
+            cancelText="취소"
+            onConfirm={handleDeleteRoom}
+            onCancel={() => setIsDeleteOpen(false)}
+          />
+        </>
       )}
 
-      {/* 재입장 금지(400) 모달 (room 로딩 후에도 안전하게 유지) */}
+      {/* 재입장 금지(400) 모달은 그대로 유지 */}
       <KickedInfoModal
         isOpen={kickedOpen}
         title="입장 불가"
@@ -1413,34 +1533,6 @@ const LiveRoomPage = () => {
           navigate("/");
         }}
         onClose={() => setKickedOpen(false)}
-      />
-
-      {room && (
-        <LiveHeader
-          isHost={room.hostId === myUserId}
-          title={room.title}
-          hostId={room.hostId}
-          hostNickname={hostNickname ?? room.hostNickname}
-          hostRankLevel={room.hostRank?.rankLevel ?? "GREEN"}
-          participantCount={participantCount ?? room.participantCount ?? 0}
-          onExit={handleExit}
-          onDelete={
-            room.hostId === myUserId ? () => setIsDeleteOpen(true) : undefined
-          }
-          onSaveTitle={handleSaveTitle}
-        />
-      )}
-
-      {mainBody}
-
-      <ConfirmModal
-        isOpen={isDeleteOpen}
-        title="방 삭제"
-        description="정말 방을 삭제하시겠습니까?"
-        confirmText="삭제"
-        cancelText="취소"
-        onConfirm={handleDeleteRoom}
-        onCancel={() => setIsDeleteOpen(false)}
       />
     </div>
   );
