@@ -93,17 +93,7 @@ const LoginPage = () => {
             아이디 또는 비밀번호를 확인해주세요.
           </p>
         )}
-        {/* 로그인 상태 유지 + 비밀번호 찾기
-        <div className="w-full flex justify-between items-center text-sm mb-4">
-          <label className="flex items-center gap-2 text-gray-600 text-left">
-            <input type="checkbox" className="w-4 h-4" />
-            로그인 상태 유지
-          </label>
-          <button className="text-purple-600 font-medium hover:underline">
-            비밀번호 찾기
-          </button>
-        </div> */}
-
+        
         {/* 로그인 버튼 */}
         <button
           className="w-full bg-gradient-to-r from-purple-600 to-pink-500 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:brightness-110 hover:shadow-lg"
@@ -192,6 +182,15 @@ const LoginPage = () => {
             회원가입
           </Link>
         </p>
+        {/* 비밀번호 찾기 */}
+        <div className="mt-2 text-center">
+          <Link
+            to="/forgot-password"
+            className="text-purple-600 text-sm font-medium hover:underline"
+          >
+            비밀번호 찾기
+          </Link>
+        </div>
       </LoginSignupCard>
 
       <div
