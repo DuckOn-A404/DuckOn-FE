@@ -171,7 +171,7 @@ export const sendPasswordResetCode = async (
     "/auth/code",
     {
       email,
-      emailPurpose: "PASSWORD_RESET",
+      emailPurpose: "RESET_PASSWORD",
     },
     {
       skipAuth: true,
@@ -196,7 +196,7 @@ export const verifyPasswordResetCode = async (
     {
       email,
       code,
-      emailPurpose: "PASSWORD_RESET",
+      emailPurpose: "RESET_PASSWORD",
     },
     {
       skipAuth: true,
@@ -218,7 +218,7 @@ export const setNewPassword = async (
     "/me/new-password",
     newPassword,
     {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
     }
   );
   return response.data;
