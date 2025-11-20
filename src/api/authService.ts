@@ -158,3 +158,68 @@ export const verifyEmailCode = async (
   );
   return response.data;
 };
+
+/**
+ * 비밀번호 찾기용 이메일 인증번호 발송 API 요청
+ * @param email - 인증번호를 받을 이메일 주소
+ * @returns - { sent: boolean, message: string } 형식의 응답 데이터
+ */
+export const sendPasswordResetCode = async (
+  email: string
+): Promise<{ sent: boolean; message: string }> => {
+  const response = await api.post(
+    "/auth/code",
+    {
+      email,
+      emailPurpose: "PASSWORD_RESET",
+    },
+    {
+      skipAuth: true,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  return response.data;
+};
+
+/**
+ * 비밀번호 찾기용 이메일 인증번호 검증 및 JWT 토큰 발급 API 요청
+ * @param email - 인증할 이메일 주소
+ * @param code - 인증번호
+ * @returns - { status: number, message: string, data: { accessToken: string, refreshToken: string } } 형식의 응답 데이터
+ */
+export const verifyPasswordResetCode = async (
+  email: string,
+  code: string
+): Promise<{ status: number; message: string; data: { accessToken: string; refreshToken: string } }> => {
+  const response = await api.post(
+    "/auth/verify-with-token",
+    {
+      email,
+      code,
+      emailPurpose: "PASSWORD_RESET",
+    },
+    {
+      skipAuth: true,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  return response.data;
+};
+
+/**
+ * 새로운 비밀번호 설정 API 요청 (JWT 필요)
+ * @param newPassword - 새로운 비밀번호 (8자 이상, 영어+숫자+특문)
+ * @returns - { status: number, message: string, data: string } 형식의 응답 데이터
+ */
+export const setNewPassword = async (
+  newPassword: string
+): Promise<{ status: number; message: string; data: string }> => {
+  const response = await api.patch(
+    "/me/new-password",
+    newPassword,
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+  return response.data;
+};

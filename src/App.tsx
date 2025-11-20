@@ -2,6 +2,7 @@ import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import MainLayout from "./layouts/MainLayout";
 import ArtistListPage from "./pages/ArtistListPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
@@ -62,6 +63,7 @@ function App() {
           {/* 레이아웃이 필요 없는 페이지들 */}
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/live/:roomId" element={<LiveRoomPage />} />
           <Route path="/artist/:artistId/fan" element={<AppChatRecommandPage />} />
           <Route path="oauth2/success" element={<OAuth2RedirectHandler />} />
