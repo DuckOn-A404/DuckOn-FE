@@ -30,8 +30,14 @@ jobs:
           cache: npm
 
       - name: Install
-        working-directory: ./frontend
         run: npm ci --prefer-offline --no-audit --progress=false
+
+      - name: Build
+        env:
+          VITE_API_BASE_URL: ${{ steps.vars.outputs.api }}
+          VITE_OAUTH2_BASE_URL: ${{ steps.vars.outputs.oauth }}
+          VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
+        run: npm run build
 
       - name: Build (dev defaults for PR)
         working-directory: ./frontend
@@ -102,23 +108,19 @@ jobs:
           [ -n "${{ steps.vars.outputs.s3_bucket }}" ] || { echo "Missing S3 bucket var"; exit 1; }
           [ -n "${{ steps.vars.outputs.cf_dist }}" ] || { echo "Missing CloudFront dist var"; exit 1; }
 
-      - name: Upload assets to S3 (long cache except html)
-        working-directory: ./frontend/dist
+      - name: Upload assets to S3
+        working-directory: ./dist
         run: |
-          set -euo pipefail
-          BUCKET="${{ steps.vars.outputs.s3_bucket }}"
-
-          # 1) HTML 제외 장기 캐시
-          aws s3 cp . "s3://$BUCKET" --recursive \
+          aws s3 cp . "s3://${{ steps.vars.outputs.s3_bucket }}" --recursive \
             --exclude "*.html" \
             --cache-control "public,max-age=31536000,immutable"
 
-          # 2) HTML은 no-cache로 개별 업로드 (charset 포함)
           find . -name "*.html" -print0 | while IFS= read -r -d '' f; do
-            aws s3 cp "$f" "s3://$BUCKET/${f#./}" \
+            aws s3 cp "$f" "s3://${{ steps.vars.outputs.s3_bucket }}/${f#./}" \
               --cache-control "no-cache" \
               --content-type "text/html; charset=utf-8"
           done
+
 
       - name: Invalidate CloudFront cache
         run: |
