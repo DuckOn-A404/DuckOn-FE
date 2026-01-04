@@ -4,7 +4,7 @@ export const UI_STRINGS: Partial<Record<LangCode, Record<string, string>>> = {
   ko: {
     // 기존 home, common, artistList 등...
 
-    "home.trending.title": "지금 핫한 방",
+    "home.trending.title": "지금 핫한 방!",
     "home.trending.viewerSuffix": "명 시청 중",
     "home.trending.swipeHint": "좌우로 스와이프해서 다른 방도 확인해보세요",
     "home.trending.emptyTitle": "아직 생성된 방이 없습니다.",
