@@ -293,3 +293,9 @@ jobs:
 
             [ "$STATUS" = "Success" ] && exit 0 || exit 1
           done
+      - name: Invalidate CloudFront cache (FE)
+        run: |
+          set -euo pipefail
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ vars.CF_DISTRIBUTION_ID_PROD }}" \
+            --paths "/*"
