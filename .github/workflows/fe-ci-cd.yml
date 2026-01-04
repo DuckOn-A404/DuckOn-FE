@@ -1,301 +1,128 @@
-name: FE Dev/Prod CI/CD (dev=SSH, prod=SSM)
+name: FE CI/CD (S3 + CloudFront)
 
 on:
   pull_request:
-    branches: [ develop, main ]   # PR: 빌드만
+    branches: [ develop, main ]   # PR: build only
   push:
-    branches: [ develop, main ]   # push/merge: 빌드+배포
+    branches: [ develop, main ]   # push: build + deploy
   workflow_dispatch:
 
 concurrency:
-  group: fe-${{ github.ref }}
+  group: fe-s3-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: duckonfront
-  DEV_NET: duckon-dev            # ✅ GitLab 최신 인프라 네이밍
-  DEV_APP: duckon-front-dev
-  PROD_APP: duckon-front-prod
+  NODE_VERSION: "20"
 
 jobs:
+  # -------------------------
+  # PR: build only
+  # -------------------------
   pr-build:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute lowercase owner
-        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
-
-      - name: Detect Dockerfile & context
-        run: |
-          set -euo pipefail
-          FOUND=$(git ls-files | grep -E '(^|/)(Dockerfile)$' | head -n1 || true)
-          [ -n "$FOUND" ] || { echo "No Dockerfile"; exit 1; }
-          DIR=$(dirname "$FOUND")
-          if [ "$DIR" = "." ]; then
-            echo "BUILD_CONTEXT=." >> $GITHUB_ENV
-            echo "DOCKERFILE_PATH=./Dockerfile" >> $GITHUB_ENV
-          else
-            echo "BUILD_CONTEXT=$DIR" >> $GITHUB_ENV
-            echo "DOCKERFILE_PATH=$FOUND" >> $GITHUB_ENV
-          fi
-          echo "Detected context=$DIR, dockerfile=$FOUND"
-
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/setup-node@v4
         with:
-          install: true
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
 
-      # PR은 dev 기준 conf로 빌드만(푸시 X)
-      - name: Docker build (no push) - DEV defaults
-        uses: docker/build-push-action@v5
-        with:
-          context: ${{ env.BUILD_CONTEXT }}
-          file: ${{ env.DOCKERFILE_PATH }}
-          push: false
-          build-args: |
-            NGINX_CONF=nginx.dev.conf
-            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL_DEV || '/api' }}
-            VITE_YOUTUBE_API_KEY=${{ secrets.VITE_YOUTUBE_API_KEY }}
-          tags: ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/${{ env.IMAGE_NAME }}:dryrun-${{ github.sha }}
+      - name: Install
+        working-directory: ./frontend
+        run: npm ci --prefer-offline --no-audit --progress=false
 
-  push-deploy:
+      - name: Build (dev defaults for PR)
+        working-directory: ./frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_DEV }}
+          VITE_OAUTH2_BASE_URL: ${{ vars.VITE_OAUTH2_BASE_URL_DEV }}
+          VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
+        run: npm run build
+
+  # -------------------------
+  # Push: build + deploy
+  # -------------------------
+  build-deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write
-    outputs:
-      env_name: ${{ steps.vars.outputs.env_name }}
-      tag_sha: ${{ steps.vars.outputs.tag_sha }}
-      tag_latest: ${{ steps.vars.outputs.tag_latest }}
-      image_repo: ${{ steps.vars.outputs.image_repo }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Compute lowercase owner & env/tags
+      - name: Figure env (dev/prod) & targets
         id: vars
         run: |
-          set -eux
-          OWNER_LC="${GITHUB_REPOSITORY_OWNER,,}"
-
+          set -euo pipefail
           BR="${GITHUB_REF##*/}"
           if [ "$BR" = "main" ]; then
             echo "env_name=prod" >> $GITHUB_OUTPUT
-            echo "tag_latest=prod-latest" >> $GITHUB_OUTPUT
-            echo "nginx_conf=nginx.prod.conf" >> $GITHUB_OUTPUT
+            echo "s3_bucket=${{ vars.S3_BUCKET_FE_PROD }}" >> $GITHUB_OUTPUT
+            echo "cf_dist=${{ vars.CF_DISTRIBUTION_ID_PROD }}" >> $GITHUB_OUTPUT
+            echo "api=${{ vars.VITE_API_BASE_URL_PROD }}" >> $GITHUB_OUTPUT
+            echo "oauth=${{ vars.VITE_OAUTH2_BASE_URL_PROD }}" >> $GITHUB_OUTPUT
           else
+            # develop
             echo "env_name=dev" >> $GITHUB_OUTPUT
-            echo "tag_latest=dev-latest" >> $GITHUB_OUTPUT
-            echo "nginx_conf=nginx.dev.conf" >> $GITHUB_OUTPUT
+            echo "s3_bucket=${{ vars.S3_BUCKET_FE_DEV }}" >> $GITHUB_OUTPUT
+            echo "cf_dist=${{ vars.CF_DISTRIBUTION_ID_DEV }}" >> $GITHUB_OUTPUT
+            echo "api=${{ vars.VITE_API_BASE_URL_DEV }}" >> $GITHUB_OUTPUT
+            echo "oauth=${{ vars.VITE_OAUTH2_BASE_URL_DEV }}" >> $GITHUB_OUTPUT
           fi
 
-          echo "tag_sha=${GITHUB_SHA}" >> $GITHUB_OUTPUT
-          echo "image_repo=${{ env.REGISTRY }}/${OWNER_LC}/${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
-
-      - name: Login to GHCR (push)
-        uses: docker/login-action@v3
+      - uses: actions/setup-node@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
 
-      - uses: docker/setup-buildx-action@v3
-        with:
-          install: true
+      - name: Install
+        working-directory: ./frontend
+        run: npm ci --prefer-offline --no-audit --progress=false
 
-      - name: Build args for branch
-        id: buildargs
-        run: |
-          set -eux
-          if [ "${{ steps.vars.outputs.env_name }}" = "prod" ]; then
-            echo "VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL_PROD || '/api' }}" >> $GITHUB_OUTPUT
-          else
-            echo "VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL_DEV || '/api' }}" >> $GITHUB_OUTPUT
-          fi
+      - name: Build
+        working-directory: ./frontend
+        env:
+          VITE_API_BASE_URL: ${{ steps.vars.outputs.api }}
+          VITE_OAUTH2_BASE_URL: ${{ steps.vars.outputs.oauth }}
+          VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
+        run: npm run build
 
-      - name: Build & push FE image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          # Dockerfile이 루트가 아니라면 위 pr-build에서 찾은 방식으로 context/file 쓰는게 맞는데,
-          # 대부분 FE 레포는 루트 Dockerfile이라 context '.'로 고정해도 OK.
-          # 루트가 아니라면 아래 두 줄로 바꾸세요:
-          # context: ${{ env.BUILD_CONTEXT }}
-          # file: ${{ env.DOCKERFILE_PATH }}
-          push: true
-          build-args: |
-            NGINX_CONF=${{ steps.vars.outputs.nginx_conf }}
-            VITE_API_BASE_URL=${{ steps.buildargs.outputs.VITE_API_BASE_URL }}
-            VITE_YOUTUBE_API_KEY=${{ secrets.VITE_YOUTUBE_API_KEY }}
-          tags: |
-            ${{ steps.vars.outputs.image_repo }}:${{ steps.vars.outputs.tag_latest }}
-            ${{ steps.vars.outputs.image_repo }}:${{ steps.vars.outputs.tag_sha }}
-
-  deploy-dev:
-    name: Deploy DEV (SSH)
-    runs-on: ubuntu-latest
-    needs: [ push-deploy ]
-    if: needs.push-deploy.outputs.env_name == 'dev'
-    steps:
-      - name: Deploy FE to DEV via SSH (pull GHCR image)
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.DEV_HOST }}
-          username: ${{ secrets.DEV_USER }}
-          key: ${{ secrets.DEV_SSH_KEY }}
-          script_stop: true
-          script: |
-            set -euo pipefail
-            IMAGE_REPO="${{ needs.push-deploy.outputs.image_repo }}"
-            TAG="${{ needs.push-deploy.outputs.tag_sha }}"
-            LATEST="${{ needs.push-deploy.outputs.tag_latest }}"
-            NET="${{ env.DEV_NET }}"
-            APP="${{ env.DEV_APP }}"
-
-            # ✅ dev 네트워크 보장 (GitLab과 동일)
-            docker network create "$NET" >/dev/null 2>&1 || true
-
-            # GHCR private면 login 필요. public이면 없어도 pull 가능.
-            if [ -n "${{ secrets.DEV_GHCR_PAT || '' }}" ]; then
-              echo "${{ secrets.DEV_GHCR_PAT }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
-            fi
-
-            echo "[pull] $IMAGE_REPO:$TAG (fallback: $LATEST)"
-            docker pull "$IMAGE_REPO:$TAG" || docker pull "$IMAGE_REPO:$LATEST"
-
-            # ✅ FE dev는 80:80 고정 (기존 인프라 그대로)
-            docker rm -f "$APP" 2>/dev/null || true
-            docker run -d --name "$APP" \
-              --network "$NET" \
-              -p 80:80 \
-              --restart unless-stopped \
-              "$IMAGE_REPO:$TAG"
-
-            echo "[healthcheck]"
-            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1/ || true)
-            echo "HTTP $code"
-            [ "$code" = "200" ] || [ "$code" = "301" ] || [ "$code" = "302" ] || exit 31
-
-  deploy-prod:
-    name: Deploy PROD (SSM)
-    runs-on: ubuntu-latest
-    needs: [ push-deploy ]
-    if: needs.push-deploy.outputs.env_name == 'prod'
-    steps:
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
-      - name: Configure AWS (PROD)
+      - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
           aws-region: ${{ vars.AWS_REGION_PROD }}
 
-      - name: Deploy FE to PROD via SSM (pull GHCR image)
-        env:
-          REGION: ${{ vars.AWS_REGION_PROD }}
-          INSTANCE: ${{ vars.PROD_INSTANCE_ID }}
-          IMAGE_REPO: ${{ needs.push-deploy.outputs.image_repo }}
-          TAG: ${{ needs.push-deploy.outputs.tag_sha }}
-          LATEST: ${{ needs.push-deploy.outputs.tag_latest }}
+      - name: Verify required vars
         run: |
           set -euo pipefail
-          aws sts get-caller-identity
+          [ -n "${{ steps.vars.outputs.s3_bucket }}" ] || { echo "Missing S3 bucket var"; exit 1; }
+          [ -n "${{ steps.vars.outputs.cf_dist }}" ] || { echo "Missing CloudFront dist var"; exit 1; }
 
-          SCRIPT=$(cat <<'EOS'
-          set -eux
+      - name: Upload assets to S3 (long cache except html)
+        working-directory: ./frontend/dist
+        run: |
+          set -euo pipefail
+          BUCKET="${{ steps.vars.outputs.s3_bucket }}"
 
-          IMAGE_REPO="__IMAGE_REPO__"
-          TAG="__TAG__"
-          LATEST="__LATEST__"
-          APP="__APP__"
+          # 1) HTML 제외 장기 캐시
+          aws s3 cp . "s3://$BUCKET" --recursive \
+            --exclude "*.html" \
+            --cache-control "public,max-age=31536000,immutable"
 
-          # (옵션) GHCR 로그인(Private일 때만). Public이면 빈 값이라 스킵.
-          GHCR_USER="__GHCR_USER__"
-          GHCR_PAT="__GHCR_PAT__"
-          if [ -n "$GHCR_PAT" ] && [ "$GHCR_PAT" != "__EMPTY__" ]; then
-            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-          fi
-
-          # ✅ GitLab PROD 로직: duckon-proxy의 네트워크 자동 감지, 없으면 duckon-net 보장
-          NET=""
-          if docker inspect duckon-proxy >/dev/null 2>&1; then
-            NET=$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{printf "%s " $k}}{{end}}' duckon-proxy | awk '{print $1}')
-          fi
-          if [ -z "$NET" ]; then
-            if docker network ls --format '{{.Name}}' | grep -q '^duckon-net$'; then
-              NET="duckon-net"
-            else
-              docker network create duckon-net >/dev/null 2>&1 || true
-              NET="duckon-net"
-            fi
-          fi
-          echo "Using network: $NET"
-
-          echo "Pulling image $IMAGE_REPO:$TAG (fallback: $LATEST)"
-          docker pull "$IMAGE_REPO:$TAG" || docker pull "$IMAGE_REPO:$LATEST"
-
-          docker rm -f "$APP" 2>/dev/null || true
-          docker run -d --name "$APP" \
-            --network "$NET" \
-            --restart unless-stopped \
-            "$IMAGE_REPO:$TAG"
-
-          docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
-          EOS
-          )
-
-          SCRIPT="${SCRIPT//__IMAGE_REPO__/$IMAGE_REPO}"
-          SCRIPT="${SCRIPT//__TAG__/$TAG}"
-          SCRIPT="${SCRIPT//__LATEST__/$LATEST}"
-          SCRIPT="${SCRIPT//__APP__/${{ env.PROD_APP }}}"
-
-          GHCR_USER="${{ secrets.PROD_GHCR_USERNAME }}"
-          GHCR_PAT="${{ secrets.PROD_GHCR_PAT }}"
-          [ -z "$GHCR_USER" ] && GHCR_USER="__EMPTY__"
-          [ -z "$GHCR_PAT" ] && GHCR_PAT="__EMPTY__"
-          SCRIPT="${SCRIPT//__GHCR_USER__/$GHCR_USER}"
-          SCRIPT="${SCRIPT//__GHCR_PAT__/$GHCR_PAT}"
-
-          jq -n --arg script "$SCRIPT" '{commands: [$script]}' > ssm-params.json
-
-          CMD_ID=$(aws ssm send-command \
-            --instance-ids "$INSTANCE" \
-            --document-name "AWS-RunShellScript" \
-            --parameters file://ssm-params.json \
-            --comment "DuckOn FE prod deploy $TAG" \
-            --region "$REGION" \
-            --query "Command.CommandId" \
-            --output text)
-          echo "CommandId: $CMD_ID"
-
-          while true; do
-            OUT=$(aws ssm get-command-invocation \
-              --command-id "$CMD_ID" \
-              --instance-id "$INSTANCE" \
-              --region "$REGION" \
-              --output json || true)
-            STATUS=$(echo "$OUT" | jq -r '.Status // empty')
-            echo "SSM status: ${STATUS:-unknown}"
-
-            if [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ] || [ -z "$STATUS" ]; then
-              sleep 3
-              continue
-            fi
-
-            echo "----- STDOUT -----"
-            echo "$OUT" | jq -r '.StandardOutputContent // ""'
-            echo "----- STDERR -----"
-            echo "$OUT" | jq -r '.StandardErrorContent // ""'
-
-            [ "$STATUS" = "Success" ] && exit 0 || exit 1
+          # 2) HTML은 no-cache로 개별 업로드 (charset 포함)
+          find . -name "*.html" -print0 | while IFS= read -r -d '' f; do
+            aws s3 cp "$f" "s3://$BUCKET/${f#./}" \
+              --cache-control "no-cache" \
+              --content-type "text/html; charset=utf-8"
           done
-      - name: Invalidate CloudFront cache (FE)
+
+      - name: Invalidate CloudFront cache
         run: |
           set -euo pipefail
           aws cloudfront create-invalidation \
-            --distribution-id "${{ vars.CF_DISTRIBUTION_ID_PROD }}" \
-            --paths "/*"
+            --distribution-id "${{ steps.vars.outputs.cf_dist }}" \
+            --paths "/index.html" "/"
