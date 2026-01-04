@@ -32,15 +32,7 @@ jobs:
       - name: Install
         run: npm ci --prefer-offline --no-audit --progress=false
 
-      - name: Build
-        env:
-          VITE_API_BASE_URL: ${{ steps.vars.outputs.api }}
-          VITE_OAUTH2_BASE_URL: ${{ steps.vars.outputs.oauth }}
-          VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
-        run: npm run build
-
-      - name: Build (dev defaults for PR)
-        working-directory: ./frontend
+      - name: Build (PR uses DEV vars)
         env:
           VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_DEV }}
           VITE_OAUTH2_BASE_URL: ${{ vars.VITE_OAUTH2_BASE_URL_DEV }}
@@ -70,7 +62,6 @@ jobs:
             echo "api=${{ vars.VITE_API_BASE_URL_PROD }}" >> $GITHUB_OUTPUT
             echo "oauth=${{ vars.VITE_OAUTH2_BASE_URL_PROD }}" >> $GITHUB_OUTPUT
           else
-            # develop
             echo "env_name=dev" >> $GITHUB_OUTPUT
             echo "s3_bucket=${{ vars.S3_BUCKET_FE_DEV }}" >> $GITHUB_OUTPUT
             echo "cf_dist=${{ vars.CF_DISTRIBUTION_ID_DEV }}" >> $GITHUB_OUTPUT
@@ -84,16 +75,20 @@ jobs:
           cache: npm
 
       - name: Install
-        working-directory: ./frontend
         run: npm ci --prefer-offline --no-audit --progress=false
 
       - name: Build
-        working-directory: ./frontend
         env:
           VITE_API_BASE_URL: ${{ steps.vars.outputs.api }}
           VITE_OAUTH2_BASE_URL: ${{ steps.vars.outputs.oauth }}
           VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
         run: npm run build
+
+      - name: Verify dist exists
+        run: |
+          set -euo pipefail
+          [ -d dist ] || { echo "dist/ not found. Build failed or output dir differs."; exit 1; }
+          ls -la dist | head
 
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -109,8 +104,10 @@ jobs:
           [ -n "${{ steps.vars.outputs.cf_dist }}" ] || { echo "Missing CloudFront dist var"; exit 1; }
 
       - name: Upload assets to S3
-        working-directory: ./dist
         run: |
+          set -euo pipefail
+          cd dist
+
           aws s3 cp . "s3://${{ steps.vars.outputs.s3_bucket }}" --recursive \
             --exclude "*.html" \
             --cache-control "public,max-age=31536000,immutable"
@@ -120,7 +117,6 @@ jobs:
               --cache-control "no-cache" \
               --content-type "text/html; charset=utf-8"
           done
-
 
       - name: Invalidate CloudFront cache
         run: |
