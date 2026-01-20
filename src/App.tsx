@@ -24,6 +24,7 @@ import FollowedArtistsPage from "./pages/ArtistDetailPage/FollowedArtistsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import ChildSafetyPage from "./pages/ChildSafetyPage";
 import AccountDeletePage from "./pages/AccountDeletePage";
+import SearchResultsPage from "./pages/SearchResultsPage";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -68,6 +69,7 @@ function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/child-safety" element={<ChildSafetyPage />} />
           <Route path="/account/delete" element={<AccountDeletePage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
 
           {/* 404 페이지 */}
           <Route path="*" element={<NotFoundPage />} />
