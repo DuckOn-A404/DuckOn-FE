@@ -19,7 +19,6 @@ import {useEffect} from "react";
 import {sendPageView} from "./analytics";
 import RoomListPage from "./pages/RoomListPage";
 import TitleManager from "./TitleManager";
-import LeaderboardPage from "./pages/LeaderboardPage";
 import AppChatRecommandPage from "./pages/ArtistDetailPage/AppChatRecommandPage";
 import FollowedArtistsPage from "./pages/ArtistDetailPage/FollowedArtistsPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -48,7 +47,6 @@ function App() {
             <Route path="/artist/:nameEn" element={<ArtistDetailPage />} />
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
-            <Route path="/leaderboard" element={<LeaderboardPage />} />
             {/* <Route path="/account/delete" element={<AccountDeletePage />} /> */}
           </Route>
 

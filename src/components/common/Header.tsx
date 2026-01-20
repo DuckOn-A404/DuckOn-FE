@@ -611,7 +611,6 @@ import { useNavigate } from "react-router-dom";
 import { Menu as HeadlessMenu } from "@headlessui/react";
 import {
   ChevronDown,
-  Trophy,
   Menu as MenuIcon,
   Heart,
   ExternalLink,
@@ -649,10 +648,6 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
       setOpen(false);
     };
 
-    const handleGoRanking = () => {
-      navigate("/leaderboard");
-      setOpen(false);
-    };
 
     const handleGoFollowedArtists = () => {
       // 팔로우/아티스트 목록 보는 페이지로 이동 (현재 쓰는 경로에 맞춰 사용)
@@ -814,20 +809,6 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
               <ExternalLink className="w-4 h-4 text-gray-400" />
             </a>
 
-            {/* 랭킹 */}
-            <button
-              onClick={handleGoRanking}
-              className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-gray-50 active:bg-gray-100"
-            >
-              <Trophy className="w-5 h-5 text-purple-500" />
-              <div className="flex flex-col items-start">
-                <span className="font-medium">랭킹</span>
-                <span className="text-[11px] text-gray-500">
-                  팬 랭킹 / 활동 순위 보기
-                </span>
-              </div>
-            </button>
-
             {/* 팔로우한 아티스트 → 아티스트 리스트/팔로우 페이지 */}
             <button
               onClick={handleGoFollowedArtists}
@@ -920,26 +901,6 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
 
           {/* 우측 영역 */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
-            {/* 랭킹 버튼 (웹용 그대로) */}
-            <button
-              onClick={() => navigate("/leaderboard")}
-              className="
-                inline-flex items-center justify-center gap-1.5
-                px-3 py-2 rounded-lg
-                text-sm font-semibold text-gray-700
-                bg-gradient-to-r from-purple-100 to-pink-100
-                hover:from-purple-200 hover:to-pink-200
-                transition-all duration-300
-                hover:shadow-[0_8px_20px_rgba(168,85,247,.15)]
-                hover:-translate-y-0.5
-              "
-            >
-              <Trophy size={16} className="text-purple-600" />
-              <span className="hidden sm:inline text-purple-600">
-                {t("header.web.ranking", "랭킹")}
-              </span>
-            </button>
-
             {user ? (
               <HeadlessMenu as="div" className="relative">
                 <HeadlessMenu.Button className="group flex items-center gap-2 rounded-full pl-1 pr-2 py-1 transition-all hover:bg-black/5 focus-visible:outline-none">
