@@ -549,7 +549,7 @@
 
 // export default HomePage;
 
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useState} from "react";
 import {useNavigate, Link} from "react-router-dom";
 import {Tv} from "lucide-react";
 import {motion} from "framer-motion";
@@ -559,19 +559,20 @@ import ArtistCard from "../components/domain/artist/ArtistCard";
 import ArtistCardSkeleton from "../components/domain/artist/ArtistCartdSekeleton";
 import GuideModal, {type GuideStep} from "../components/common/modal/GuideModal";
 import AuroraStreakBG from "../components/common/bg/AuroraStreakBG";
-import HeroBanner from "../components/home/HeroBanner";
+// import HeroBanner from "../components/home/HeroBanner";
 import UIText from "../components/common/UIText"; // 🔹 추가
+import AnimatedSearchBar from "../components/home/AnimatedSearchBar";
 
 import {getRandomArtists} from "../api/artistService";
 import {type Artist} from "../types/artist";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import {createSlug} from "../utils/slugUtils";
 
-const BANNER_AUTOPLAY_MS = 4800;
+// const BANNER_AUTOPLAY_MS = 4800;
 const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // 웹/앱 분기 값
 
 const HomePage = () => {
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  // const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -586,27 +587,27 @@ const HomePage = () => {
   } = useTrendingRooms(1, 4);
 
   // 2560x1440 비율의 배너 이미지 + 마지막 가상 CTA
-  const banners = useMemo(
-    () => [
-      {id: 1, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blackpink_HYLT_banner.jpeg"},
-      {id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"},
-      {id: 2, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg"},
-      {id: 3, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg"},
-      {
-        id: 8,
-        img: "https://dn9z1o6i8w44p.cloudfront.net/memes%2F2025%2F11%2Ff47c930a-44b8-488b-b30a-58cd45dc99b7.gif",
-      },
-      {id: 10, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg"},
-      {id: 13, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg"},
-      {
-        id: 15,
-        title: "지금 바로 시작하세요",
-        subtitle: "방을 만들고 팬들과 함께 즐겨보세요",
-        gradient: "from-fuchsia-500 via-rose-500 to-amber-500",
-      },
-    ],
-    []
-  );
+  // const banners = useMemo(
+  //   () => [
+  //     {id: 1, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blackpink_HYLT_banner.jpeg"},
+  //     {id: 11, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_closeup_banner.jpeg"},
+  //     {id: 2, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/blacnkpink_KTL_banner.jpeg"},
+  //     {id: 3, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/aespa_armageddon_banner.jpeg"},
+  //     {
+  //       id: 8,
+  //       img: "https://dn9z1o6i8w44p.cloudfront.net/memes%2F2025%2F11%2Ff47c930a-44b8-488b-b30a-58cd45dc99b7.gif",
+  //     },
+  //     {id: 10, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_blue_banner.jpeg"},
+  //     {id: 13, img: "https://duckon-bucket.s3.ap-northeast-2.amazonaws.com/banner/newjeans_mirror_banner.jpeg"},
+  //     {
+  //       id: 15,
+  //       title: "지금 바로 시작하세요",
+  //       subtitle: "방을 만들고 팬들과 함께 즐겨보세요",
+  //       gradient: "from-fuchsia-500 via-rose-500 to-amber-500",
+  //     },
+  //   ],
+  //   []
+  // );
 
   const guideSteps: GuideStep[] = [
     {
@@ -646,8 +647,8 @@ const HomePage = () => {
     <div className="w-full relative">
       <AuroraStreakBG />
 
-      {/* HERO (유튜브 권장 비율 + 세이프존) */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
+      {/* HERO (유튜브 권장 비율 + 세이프존) - 임시로 숨김 */}
+      {/* <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4">
         <HeroBanner
           items={banners as any}
           current={currentBannerIndex}
@@ -658,7 +659,15 @@ const HomePage = () => {
             setGuideOpen(true);
           }}
         />
-      </div>
+      </div> */}
+
+      {/* 애니메이션 검색바 */}
+      <AnimatedSearchBar
+        onSearch={(query) => {
+          // 검색 기능 구현 (필요시 navigate 등 추가)
+          console.log("Search query:", query);
+        }}
+      />
 
       {/* 메인 콘텐츠 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 space-y-24">
@@ -725,8 +734,8 @@ const HomePage = () => {
                       </div>
                       <div
                         className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-500 ${isExpanded
-                            ? "from-black/80 via-black/40 to-transparent opacity-100"
-                            : "from-black/60 to-transparent opacity-80"
+                          ? "from-black/80 via-black/40 to-transparent opacity-100"
+                          : "from-black/60 to-transparent opacity-80"
                           }`}
                       />
                       <div className="absolute top-4 left-4 z-10">
@@ -743,8 +752,8 @@ const HomePage = () => {
                       <div className="relative h-full flex flex-col justify-end p-6">
                         <h3
                           className={`text-white font-bold mb-2 transition-all duration-500 ${isExpanded
-                              ? "text-2xl line-clamp-2"
-                              : "text-lg line-clamp-3"
+                            ? "text-2xl line-clamp-2"
+                            : "text-lg line-clamp-3"
                             }`}
                         >
                           {room.title}

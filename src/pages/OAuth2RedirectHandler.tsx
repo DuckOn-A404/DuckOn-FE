@@ -48,6 +48,20 @@ const OAuth2RedirectHandler = () => {
 
         setMyUser(userData);
 
+        // localStorage에서 pendingRoomCreation 확인
+        const pendingState = localStorage.getItem("pendingRoomCreation");
+        if (pendingState) {
+          try {
+            const {returnPath} = JSON.parse(pendingState);
+            if (returnPath) {
+              navigate(returnPath);
+              return;
+            }
+          } catch (error) {
+            console.error("Failed to parse pending room creation:", error);
+          }
+        }
+
         navigate("/");
       } catch {
         navigate("/login");

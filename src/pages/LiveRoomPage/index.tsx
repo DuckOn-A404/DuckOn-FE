@@ -1624,6 +1624,7 @@ type LiveRoomLocationState = {
   artistId?: number;
   isHost?: boolean;
   entryAnswer?: string; // 잠금 방 대비
+  playlist?: string[]; // 검색에서 선택한 영상들
 };
 
 const LiveRoomPage = () => {
@@ -2420,6 +2421,11 @@ const LiveRoomPage = () => {
           if (!isMounted) return;
           const normalized = normalizeRoomResponse(data);
           if (!normalized) return;
+
+          // 검색에서 여러 영상을 선택한 경우, playlist를 덮어씀
+          if (navState?.playlist && navState.playlist.length > 0) {
+            normalized.playlist = normalizePlaylist(navState.playlist);
+          }
 
           setRoom(normalized);
           if (normalized.hostNickname) setHostNickname(normalized.hostNickname);
