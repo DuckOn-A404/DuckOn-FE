@@ -1,7 +1,7 @@
 import { api } from "./axiosInstance";
 import type { Artist } from "../types/artist";
 
-export type MinorArtistListResponse = {
+export type RisingArtistListResponse = {
   artistList: Artist[];
   page: number;
   size: number;
@@ -9,14 +9,14 @@ export type MinorArtistListResponse = {
   totalElements: number;
 };
 
-export const getMinorArtistList = async (params: {
+export const getRisingArtistList = async (params: {
   page?: number;
   size?: number;
   sort?: string;
   order?: string;
   keyword?: string;
-}): Promise<MinorArtistListResponse> => {
-  const response = await api.get("/minor-artists", {
+}): Promise<RisingArtistListResponse> => {
+  const response = await api.get("/rising-artists", {
     params: {
       page: params.page ?? 1,
       size: params.size ?? 30,
@@ -37,8 +37,8 @@ export const getMinorArtistList = async (params: {
   };
 };
 
-export const addMinorArtist = async (formData: FormData): Promise<{ message: string; artistId: number }> => {
-  const response = await api.post("/minor-artists", formData, {
+export const addRisingArtist = async (formData: FormData): Promise<{ message: string; artistId: number }> => {
+  const response = await api.post("/rising-artists", formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -46,8 +46,8 @@ export const addMinorArtist = async (formData: FormData): Promise<{ message: str
   return response.data;
 };
 
-export const getRandomMinorArtists = async (size = 5): Promise<Artist[]> => {
-  const res = await api.get("/minor-artists/random", {
+export const getRandomRisingArtists = async (size = 5): Promise<Artist[]> => {
+  const res = await api.get("/rising-artists/random", {
     params: { size },
     skipAuth: true,
   });

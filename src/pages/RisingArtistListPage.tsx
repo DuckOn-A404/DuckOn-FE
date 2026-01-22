@@ -18,12 +18,12 @@ import { createSlug } from "../utils/slugUtils";
 import { Capacitor } from "@capacitor/core";
 import { useUiTranslate } from "../hooks/useUiTranslate";
 import UIText from "../components/common/UIText";
-import AddMinorArtistModal from "../components/domain/artist/AddMinorArtistModal";
+import AddRisingArtistModal from "../components/domain/artist/AddRisingArtistModal";
 
 const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 const isRealNativeApp = Capacitor.isNativePlatform();
 
-const MinorArtistListPage = () => {
+const RisingArtistListPage = () => {
   const navigate = useNavigate();
   const { t } = useUiTranslate();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,7 +142,7 @@ const MinorArtistListPage = () => {
     sort,
     order,
     size: pageSize,
-    isMinor: true,
+    isRising: true,
   });
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -181,18 +181,18 @@ const MinorArtistListPage = () => {
     >
       <div className="text-center py-8 mb-5">
         <UIText
-          id="minorArtistList.title"
+          id="risingArtistList.title"
           as="h1"
           className="text-4xl font-extrabold text-gray-800 mb-2"
         >
-          마이너 아티스트
+          라이징 아티스트
         </UIText>
         <UIText
-          id="minorArtistList.subtitle"
+          id="risingArtistList.subtitle"
           as="p"
           className="text-lg text-gray-500"
         >
-          마이너 아티스트들 입니다, 아직은요.
+          라이징 아티스트들 입니다, 아직은요.
         </UIText>
       </div>
 
@@ -311,7 +311,7 @@ const MinorArtistListPage = () => {
         </div>
       )}
 
-      <AddMinorArtistModal
+      <AddRisingArtistModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleArtistAdded}
@@ -320,4 +320,4 @@ const MinorArtistListPage = () => {
   );
 };
 
-export default MinorArtistListPage;
+export default RisingArtistListPage;

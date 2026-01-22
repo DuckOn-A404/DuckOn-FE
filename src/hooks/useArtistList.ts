@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { type Artist } from "../types/artist";
 import { getArtistList, type SortKey, type SortOrder } from "../api/artistService";
-import { getMinorArtistList } from "../api/minorArtistService";
+import { getRisingArtistList } from "../api/risingArtistService";
 
 type ListParams = {
   q?: string;       // 검색어(옵션) - 제공되면 /artists?keyword= 로 전송됨
   sort: SortKey;    // "followers" | "name" | "debut"
   order: SortOrder; // "asc" | "desc"
   size: number;     // 페이지 당 아이템 수
-  isMinor?: boolean; // 마이너 아티스트 여부
+  isRising?: boolean; // 라이징 아티스트 여부
 };
 
 export const useArtistList = (params: ListParams) => {
@@ -33,8 +33,8 @@ export const useArtistList = (params: ListParams) => {
     inflightRef.current = true;
     setLoading(true);
     try {
-      const res = params.isMinor
-        ? await getMinorArtistList({
+      const res = params.isRising
+        ? await getRisingArtistList({
             page: p,
             size: params.size,
             sort: params.sort,

@@ -562,10 +562,10 @@ import AuroraStreakBG from "../components/common/bg/AuroraStreakBG";
 // import HeroBanner from "../components/home/HeroBanner";
 import UIText from "../components/common/UIText"; // 🔹 추가
 import AnimatedSearchBar from "../components/home/AnimatedSearchBar";
-import AddMinorArtistModal from "../components/domain/artist/AddMinorArtistModal";
+import AddRisingArtistModal from "../components/domain/artist/AddRisingArtistModal";
 
 import {getRandomArtists} from "../api/artistService";
-import {getRandomMinorArtists} from "../api/minorArtistService";
+import {getRandomRisingArtists} from "../api/risingArtistService";
 import {type Artist} from "../types/artist";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import {createSlug} from "../utils/slugUtils";
@@ -576,9 +576,9 @@ const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; //
 const HomePage = () => {
   // const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
-  const [minorArtists, setMinorArtists] = useState<Artist[]>([]);
+  const [risingArtists, setRisingArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
-  const [isLoadingMinorArtists, setIsLoadingMinorArtists] = useState(true);
+  const [isLoadingRisingArtists, setIsLoadingRisingArtists] = useState(true);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
   const [expandedRoomIndex, setExpandedRoomIndex] = useState(0);
@@ -651,12 +651,12 @@ const HomePage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getRandomMinorArtists(5);
-        setMinorArtists(data);
+        const data = await getRandomRisingArtists(5);
+        setRisingArtists(data);
       } catch {
-        setMinorArtists([]);
+        setRisingArtists([]);
       } finally {
-        setIsLoadingMinorArtists(false);
+        setIsLoadingRisingArtists(false);
       }
     })();
   }, []);
@@ -1045,19 +1045,19 @@ const HomePage = () => {
           )}
         </section>
 
-        {/* 마이너 아티스트 */}
+        {/* 라이징 아티스트 */}
         <section>
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold">
-              <UIText id="home.minorArtists.title">
-                마이너 아티스트
+              <UIText id="home.risingArtists.title">
+                라이징 아티스트
               </UIText>
             </h2>
 
             {/* 웹에서만 '더보기 →' 보이도록 */}
             {!isNativeApp && (
               <Link
-                to="/minor-artist-list"
+                to="/rising-artist-list"
                 className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
               >
                 <UIText id="common.more">더보기 →</UIText>
@@ -1068,11 +1068,11 @@ const HomePage = () => {
           {/* 웹: 기존 UI 100% 동일 유지 */}
           {!isNativeApp && (
             <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              {isLoadingMinorArtists
+              {isLoadingRisingArtists
                 ? Array.from({length: 5}).map((_, i) => (
                   <ArtistCardSkeleton key={i} />
                 ))
-                : minorArtists.map((artist) => (
+                : risingArtists.map((artist) => (
                   <motion.div
                     key={artist.artistId}
                     initial={{opacity: 0, y: 10}}
@@ -1098,7 +1098,7 @@ const HomePage = () => {
           {isNativeApp && (
             <div className="md:hidden rounded-3xl bg-white/90 backdrop-blur-sm border border-white/70 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,.12)]">
               <div className="grid grid-cols-3 gap-4">
-                {isLoadingMinorArtists
+                {isLoadingRisingArtists
                   ? // 로딩 스켈레톤
                   Array.from({length: 5}).map((_, idx) => (
                     <div
@@ -1110,7 +1110,7 @@ const HomePage = () => {
                     </div>
                   ))
                   : // 실제 아티스트 (최대 5명)
-                  minorArtists.slice(0, 5).map((artist) => (
+                  risingArtists.slice(0, 5).map((artist) => (
                     <button
                       key={artist.artistId}
                       type="button"
@@ -1139,14 +1139,14 @@ const HomePage = () => {
                     </button>
                   ))}
 
-                {/* 전체 마이너 아티스트로 가는 '전체 보기' 동그라미 */}
+                {/* 전체 라이징 아티스트로 가는 '전체 보기' 동그라미 */}
                 <button
                   type="button"
-                  onClick={() => navigate("/minor-artist-list")}
+                  onClick={() => navigate("/rising-artist-list")}
                   className="flex flex-col items-center gap-2 active:scale-95 transition"
                 >
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-[0_10px_25px_rgba(15,23,42,.35)]">
-                    <UIText id="home.minorArtists.allArtistsCircle">
+                    <UIText id="home.risingArtists.allArtistsCircle">
                       전체 보기
                     </UIText>
                   </div>
@@ -1171,12 +1171,12 @@ const HomePage = () => {
               <div className="relative px-6 py-5 flex items-center justify-between gap-4">
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-purple-900 mb-1">
-                    <UIText id="home.minorArtists.cta.title">
+                    <UIText id="home.risingArtists.cta.title">
                       원하는 아티스트가 없나요?
                     </UIText>
                   </p>
                   <p className="text-xs text-purple-700/80">
-                    <UIText id="home.minorArtists.cta.subtitle">
+                    <UIText id="home.risingArtists.cta.subtitle">
                       직접 추가하고 팬들과 함께 즐겨보세요
                     </UIText>
                   </p>
@@ -1197,7 +1197,7 @@ const HomePage = () => {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                   </svg>
-                  <UIText id="home.minorArtists.cta.button">
+                  <UIText id="home.risingArtists.cta.button">
                     아티스트 추가하기
                   </UIText>
                 </button>
@@ -1320,19 +1320,19 @@ const HomePage = () => {
       />
 
       {/* 아티스트 추가 모달 */}
-      <AddMinorArtistModal
+      <AddRisingArtistModal
         isOpen={isAddArtistModalOpen}
         onClose={() => setIsAddArtistModalOpen(false)}
         onSuccess={async () => {
           setIsAddArtistModalOpen(false);
-          setIsLoadingMinorArtists(true);
+          setIsLoadingRisingArtists(true);
           try {
-            const data = await getRandomMinorArtists(5);
-            setMinorArtists(data);
+            const data = await getRandomRisingArtists(5);
+            setRisingArtists(data);
           } catch {
-            setMinorArtists([]);
+            setRisingArtists([]);
           } finally {
-            setIsLoadingMinorArtists(false);
+            setIsLoadingRisingArtists(false);
           }
         }}
       />

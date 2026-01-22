@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { X, Upload, AlertCircle } from "lucide-react";
-import { addMinorArtist } from "../../../api/minorArtistService";
+import { addRisingArtist } from "../../../api/risingArtistService";
 
-interface AddMinorArtistModalProps {
+interface AddRisingArtistModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-const AddMinorArtistModal = ({ isOpen, onClose, onSuccess }: AddMinorArtistModalProps) => {
+const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistModalProps) => {
   const [nameKr, setNameKr] = useState("");
   const [nameEn, setNameEn] = useState("");
   const [debutDate, setDebutDate] = useState("");
@@ -56,7 +56,7 @@ const AddMinorArtistModal = ({ isOpen, onClose, onSuccess }: AddMinorArtistModal
         formData.append("image", imageFile);
       }
 
-      await addMinorArtist(formData);
+      await addRisingArtist(formData);
       
       setNameKr("");
       setNameEn("");
@@ -210,4 +210,4 @@ const AddMinorArtistModal = ({ isOpen, onClose, onSuccess }: AddMinorArtistModal
   );
 };
 
-export default AddMinorArtistModal;
+export default AddRisingArtistModal;
