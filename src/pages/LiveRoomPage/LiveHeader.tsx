@@ -234,6 +234,7 @@ const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 const LiveHeader = ({
   isHost,
   title,
+  hostId,
   hostNickname,
   participantCount,
   onExit,
@@ -366,23 +367,40 @@ const LiveHeader = ({
             <span>
               {t("live.header.label.host", "호스트:")}
             </span>
-            <button
-              type="button"
-              onClick={() => window.open(isHost ? '/mypage' : `/user/${hostNickname}`, '_blank')}
-              className="hover:text-purple-400 transition-colors cursor-pointer"
-            >
-              <NicknameWithRank
-                nickname={
-                  hostNickname ||
-                  t(
-                    "live.header.host.unknown",
-                    "알 수 없음"
-                  )
-                }
-                rankLevel={hostRankLevel ?? "GREEN"} // 기본 GREEN 처리
-                badgeSize={14}
-              />
-            </button>
+            {/* 호스트 닉네임: 방장이거나 게스트면 클릭 불가 */}
+            {isHost || (hostId && hostId.startsWith('guest:')) ? (
+              <span className="text-sm text-gray-400">
+                <NicknameWithRank
+                  nickname={
+                    hostNickname ||
+                    t(
+                      "live.header.host.unknown",
+                      "알 수 없음"
+                    )
+                  }
+                  rankLevel={hostRankLevel ?? "GREEN"}
+                  badgeSize={14}
+                />
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => window.open(`/user/${hostId}`, '_blank')}
+                className="hover:text-purple-400 transition-colors cursor-pointer"
+              >
+                <NicknameWithRank
+                  nickname={
+                    hostNickname ||
+                    t(
+                      "live.header.host.unknown",
+                      "알 수 없음"
+                    )
+                  }
+                  rankLevel={hostRankLevel ?? "GREEN"}
+                  badgeSize={14}
+                />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-x-1.5">

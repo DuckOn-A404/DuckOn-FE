@@ -2427,18 +2427,8 @@ const ChatPanel = ({
   const handleTranslate = async (msg: ChatMessage) => {
     const msgId = getMessageId(msg);
 
-    // 이미 번역 중이면 중단
-    if (translatingIds.has(msgId)) return;
-
-    // 이미 번역되어 있으면 토글 (제거)
-    if (translatedMessages.has(msgId)) {
-      setTranslatedMessages((prev) => {
-        const next = new Map(prev);
-        next.delete(msgId);
-        return next;
-      });
-      return;
-    }
+    // 이미 번역 중이거나 번역 완료된 경우 중단
+    if (translatingIds.has(msgId) || translatedMessages.has(msgId)) return;
 
     // 번역 시작
     setTranslatingIds((prev) => new Set(prev).add(msgId));
@@ -3045,22 +3035,36 @@ const ChatPanel = ({
               >
                 {/* 닉네임 + 랭크 + 3점 메뉴 */}
                 <div className="flex items-center gap-2 mb-1">
-                  {/* 닉네임 클릭 시 프로필 페이지 이동 */}
-                  <button
-                    type="button"
-                    onClick={() => window.open(isMyMessage ? '/mypage' : `/user/${msg.senderNickName}`, '_blank')}
-                    className="text-xs text-gray-200 hover:text-purple-400 transition-colors cursor-pointer"
-                  >
-                    {hasRank ? (
-                      <NicknameWithRank
-                        nickname={msg.senderNickName}
-                        rankLevel={rawRankLevel}
-                        badgeSize={18}
-                      />
-                    ) : (
-                      msg.senderNickName
-                    )}
-                  </button>
+                  {/* 닉네임 (본인이거나 게스트면 클릭 불가) */}
+                  {isMyMessage || senderId.startsWith('guest:') ? (
+                    <span className="text-xs text-gray-200">
+                      {hasRank ? (
+                        <NicknameWithRank
+                          nickname={msg.senderNickName}
+                          rankLevel={rawRankLevel}
+                          badgeSize={18}
+                        />
+                      ) : (
+                        msg.senderNickName
+                      )}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => window.open(`/user/${senderId}`, '_blank')}
+                      className="text-xs text-gray-200 hover:text-purple-400 transition-colors cursor-pointer"
+                    >
+                      {hasRank ? (
+                        <NicknameWithRank
+                          nickname={msg.senderNickName}
+                          rankLevel={rawRankLevel}
+                          badgeSize={18}
+                        />
+                      ) : (
+                        msg.senderNickName
+                      )}
+                    </button>
+                  )}
 
                   {/* 3점 메뉴 (내 메시지가 아니고 로그인 유저인 경우만) */}
                   {!isMyMessage && !!myUser && (
@@ -3177,12 +3181,13 @@ const ChatPanel = ({
                         px-1.5 py-0.5 text-xs rounded flex items-center gap-0.5
                         ${
                           translatedText
-                            ? "bg-purple-700 text-white"
-                            : "bg-gray-600 text-gray-300"
+                            ? "bg-purple-700 text-white cursor-default"
+                            : "bg-gray-600 text-gray-300 hover:bg-purple-600"
                         }
-                        hover:bg-purple-600 transition-all duration-200
+                        transition-all duration-200
+                        disabled:cursor-default disabled:opacity-70
                       `}
-                      disabled={isTranslating}
+                      disabled={isTranslating || !!translatedText}
                     >
                       {isTranslating ? (
                         <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full" />
