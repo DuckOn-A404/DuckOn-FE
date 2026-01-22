@@ -562,7 +562,6 @@ import AuroraStreakBG from "../components/common/bg/AuroraStreakBG";
 // import HeroBanner from "../components/home/HeroBanner";
 import UIText from "../components/common/UIText"; // 🔹 추가
 import AnimatedSearchBar from "../components/home/AnimatedSearchBar";
-import AddRisingArtistModal from "../components/domain/artist/AddRisingArtistModal";
 
 import {getRandomArtists} from "../api/artistService";
 import {getRandomRisingArtists} from "../api/risingArtistService";
@@ -582,7 +581,6 @@ const HomePage = () => {
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
   const [expandedRoomIndex, setExpandedRoomIndex] = useState(0);
-  const [isAddArtistModalOpen, setIsAddArtistModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -1182,7 +1180,7 @@ const HomePage = () => {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsAddArtistModalOpen(true)}
+                  onClick={() => navigate("/rising-artist-list")}
                   className="
                     shrink-0 px-5 py-2.5 rounded-xl
                     bg-gradient-to-r from-purple-600 to-fuchsia-600
@@ -1317,24 +1315,6 @@ const HomePage = () => {
           setGuideIndex((i) => (i - 1 + guideSteps.length) % guideSteps.length)
         }
         onNext={() => setGuideIndex((i) => (i + 1) % guideSteps.length)}
-      />
-
-      {/* 아티스트 추가 모달 */}
-      <AddRisingArtistModal
-        isOpen={isAddArtistModalOpen}
-        onClose={() => setIsAddArtistModalOpen(false)}
-        onSuccess={async () => {
-          setIsAddArtistModalOpen(false);
-          setIsLoadingRisingArtists(true);
-          try {
-            const data = await getRandomRisingArtists(5);
-            setRisingArtists(data);
-          } catch {
-            setRisingArtists([]);
-          } finally {
-            setIsLoadingRisingArtists(false);
-          }
-        }}
       />
     </div>
   );
