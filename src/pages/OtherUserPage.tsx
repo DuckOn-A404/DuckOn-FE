@@ -209,7 +209,7 @@
 
 // export default OtherUserPage;
 
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { OtherUser } from "../types/otherUser";
 import type { RoomHistory } from "../types/room";
@@ -223,8 +223,10 @@ import { useUserStore } from "../store/useUserStore";
 const OtherUserPage = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const myUser = useUserStore((state) => state.myUser);
 
+  const returnUrl = encodeURIComponent(location.pathname + location.search);
   const [otherUser, setOtherUser] = useState<OtherUser | null>(null);
   const [rooms, setRooms] = useState<RoomHistory[]>([]);
   const [roomsPage, setRoomsPage] = useState(1);
@@ -410,13 +412,13 @@ const OtherUserPage = () => {
               </p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => navigate("/signup")}
+                  onClick={() => navigate(`/signup?returnUrl=${returnUrl}`)}
                   className="flex-1 px-6 py-3 bg-rose-400 text-white rounded-lg hover:bg-rose-500 transition-colors font-bold shadow-md"
                 >
                   회원가입하기
                 </button>
                 <button
-                  onClick={() => navigate("/login")}
+                  onClick={() => navigate(`/login?returnUrl=${returnUrl}`)}
                   className="flex-1 px-6 py-3 bg-purple-400 text-white rounded-lg hover:bg-purple-500 transition-colors font-medium shadow-md"
                 >
                   로그인하기
@@ -465,7 +467,7 @@ const OtherUserPage = () => {
                 취소
               </button>
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => navigate(`/login?returnUrl=${returnUrl}`)}
                 className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
               >
                 로그인

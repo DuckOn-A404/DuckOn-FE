@@ -34,13 +34,20 @@ const LoginPage = () => {
       };
       setUser(userForStore);
 
-      // returnUrl이 있으면 해당 페이지로, 없으면 홈으로
+      // // returnUrl이 있으면 해당 페이지로, 없으면 홈으로
+      // const returnUrl = searchParams.get("returnUrl");
+      // if (returnUrl) {
+      //   navigate(decodeURIComponent(returnUrl));
+      // } else {
+      //   navigate("/");
+      // }
+      
+      // ✅ returnUrl이 있으면 해당 페이지로, 없으면 홈으로 (강제 덮어쓰기 방지)
       const returnUrl = searchParams.get("returnUrl");
-      if (returnUrl) {
-        navigate(decodeURIComponent(returnUrl));
-      } else {
-        navigate("/");
-      }
+      const target = returnUrl ? decodeURIComponent(returnUrl) : "/";
+
+      // 기존 navigate 대신 브라우저 레벨 이동으로 확정
+      window.location.replace(target);
     } catch (err: any) {
       setError(err.message || "로그인에 실패했습니다.");
     }
