@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import MainLayout from "./layouts/MainLayout";
 import ArtistListPage from "./pages/ArtistListPage";
+import RisingArtistListPage from "./pages/RisingArtistListPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
 import MyPage from "./pages/MyPage";
 import OtherUserPage from "./pages/OtherUserPage";
@@ -26,6 +27,7 @@ import ChildSafetyPage from "./pages/ChildSafetyPage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminRouteGuard from "./routes/AdminRouteGuard";
+import PublicRoute from "./components/common/PublicRoute";
 
 import AdminPage from "./pages/AdminPage"; // index.tsx
 import DashboardManagePage from "./pages/AdminPage/DashboardManagePage";
@@ -64,13 +66,20 @@ function App() {
           <Route element={<LayoutWithoutFooter />}>
             {/* <Route path="/room-list" element={<RoomListPage />}></Route> */}
             <Route path="/artist-list" element={<ArtistListPage />} />
+            <Route path="/rising-artist-list" element={<RisingArtistListPage />} />
             <Route path="/room-list" element={<RoomListPage />} />
             <Route path="/followed-artists" element={<FollowedArtistsPage />} />
           </Route>
 
+          {/* 비로그인 유저만 접근 가능한 페이지 (로그인 시 홈으로 리다이렉트) */}
+          <Route element={<PublicRoute />}>
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Route>
+
           {/* 레이아웃이 필요 없는 페이지들 */}
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          {/* <Route path="/signup" element={<SignupPage />} /> */}
+          {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/live/:roomId" element={<LiveRoomPage />} />
           <Route path="/artist/:artistId/fan" element={<AppChatRecommandPage />} />
