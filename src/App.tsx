@@ -26,6 +26,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ChildSafetyPage from "./pages/ChildSafetyPage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
+import PublicRoute from "./components/common/PublicRoute";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -61,9 +62,15 @@ function App() {
             <Route path="/followed-artists" element={<FollowedArtistsPage />} />
           </Route>
 
+          {/* 비로그인 유저만 접근 가능한 페이지 (로그인 시 홈으로 리다이렉트) */}
+          <Route element={<PublicRoute />}>
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/login" element={<LoginPage />} />
+          </Route>
+
           {/* 레이아웃이 필요 없는 페이지들 */}
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          {/* <Route path="/signup" element={<SignupPage />} /> */}
+          {/* <Route path="/login" element={<LoginPage />} /> */}
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/live/:roomId" element={<LiveRoomPage />} />
           <Route path="/artist/:artistId/fan" element={<AppChatRecommandPage />} />
