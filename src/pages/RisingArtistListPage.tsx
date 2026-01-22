@@ -137,7 +137,7 @@ const RisingArtistListPage = () => {
     return () => window.removeEventListener("resize", compute);
   }, []);
 
-  const { artists, totalCount, fetchMore, hasMore, loading } = useArtistList({
+  const { artists, totalCount, fetchMore, hasMore, loading, error } = useArtistList({
     q: debouncedSearchText || undefined,
     sort,
     order,
@@ -305,9 +305,23 @@ const RisingArtistListPage = () => {
 
       <div ref={sentinelRef} className="h-10 mt-10" />
 
+      {/* 로딩 스피너 */}
       {loading && (
         <div className="flex justify-center items-center h-24">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      )}
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="flex flex-col justify-center items-center py-10 px-4 text-center">
+          <p className="text-gray-600 mb-4 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            다시 시도
+          </button>
         </div>
       )}
 

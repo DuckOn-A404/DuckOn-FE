@@ -1804,11 +1804,7 @@ const LiveRoomPage = () => {
       }
     }
 
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/");
-    }
+    navigate("/");
   };
 
   const handleDeleteRoom = async () => {
@@ -1820,7 +1816,7 @@ const LiveRoomPage = () => {
       await performDelete();
     } finally {
       setIsDeleteOpen(false);
-      navigate(-1);
+      navigate("/");
     }
   };
 

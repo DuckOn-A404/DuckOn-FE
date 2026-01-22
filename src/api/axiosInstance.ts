@@ -97,6 +97,8 @@ api.interceptors.request.use((config) => {
     } else {
       delete (config.headers as any).Authorization;
     }
+  } else {
+    delete (config.headers as any).Authorization;
   }
 
   return config;
@@ -131,6 +133,11 @@ api.interceptors.response.use(
 
     // 401이 아니면 그대로
     if (status !== 401) {
+      return Promise.reject(error);
+    }
+
+    // skipAuth 요청의 401은 토큰 갱신 시도하지 않음 (공개 API)
+    if (original.skipAuth) {
       return Promise.reject(error);
     }
 

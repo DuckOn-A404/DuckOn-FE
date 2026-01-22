@@ -156,35 +156,52 @@ const SearchResultsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
       {/* 상단 검색바 영역 */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-3">
-            {/* 뒤로가기 버튼 */}
-            <button
-              onClick={() => navigate(-1)}
-              className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
-            >
-              <ArrowLeft className="h-5 w-5 text-gray-700" />
-            </button>
-
-            {/* 검색바 */}
-            <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-full bg-gray-100 border-2 border-transparent focus:border-purple-500 focus:outline-none focus:bg-white transition-all"
-                  placeholder="검색어를 입력하세요"
-                />
-              </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-4">
+            {/* 로고 영역 (Header.tsx와 동일한 스타일) */}
+            <div className="flex items-center gap-2 mr-2">
               <button
-                type="submit"
-                className="flex-shrink-0 w-12 h-12 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center"
+                className="group flex items-center gap-2 outline-none"
+                onClick={() => navigate("/")}
+                aria-label="DuckOn 홈으로 이동"
               >
-                <Search className="h-5 w-5 text-white" />
+                <img className="h-7 w-7" src="/duck.svg" alt="DuckOn 로고" />
+                <span className="font-extrabold tracking-tight text-lg hidden sm:inline">
+                  DuckOn
+                </span>
+                <span className="ml-1 h-2 w-2 rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 opacity-70 group-hover:opacity-100 transition hidden sm:inline" />
               </button>
-            </form>
+            </div>
+
+            <div className="flex-1 flex items-center gap-3">
+              {/* 뒤로가기 버튼 */}
+              <button
+                onClick={() => navigate(-1)}
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors flex items-center justify-center"
+              >
+                <ArrowLeft className="h-5 w-5 text-gray-700" />
+              </button>
+
+              {/* 검색바 */}
+              <form onSubmit={handleSubmit} className="flex-1 flex items-center gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-2.5 rounded-full bg-gray-100 border-2 border-transparent focus:border-purple-500 focus:outline-none focus:bg-white transition-all text-sm sm:text-base"
+                    placeholder="검색어를 입력하세요"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center"
+                >
+                  <Search className="h-5 w-5 text-white" />
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
