@@ -26,7 +26,15 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ChildSafetyPage from "./pages/ChildSafetyPage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
-import PublicRoute from "./components/common/PublicRoute";
+import AdminRouteGuard from "./routes/AdminRouteGuard";
+
+import AdminPage from "./pages/AdminPage"; // index.tsx
+import DashboardManagePage from "./pages/AdminPage/DashboardManagePage";
+import UserManagePage from "./pages/AdminPage/UserManagePage";
+import ArtistManagePage from "./pages/AdminPage/ArtistManagePage";
+import ReportManagePage from "./pages/AdminPage/ReportManagePage";
+import BannersManagePage from "./pages/AdminPage/BannersManagePage";
+import SettingsManagePage from "./pages/AdminPage/SettingsManagePage";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -80,6 +88,18 @@ function App() {
           <Route path="/account/delete" element={<AccountDeletePage />} />
           <Route path="/search" element={<SearchResultsPage />} />
 
+          {/* 관리자 페이지(ADMIN 계정만 접근 가능) */}
+          <Route element={<AdminRouteGuard />}>
+            <Route path="/admin" element={<AdminPage />}>
+              <Route index element={<DashboardManagePage />} />
+              <Route path="users" element={<UserManagePage />} />
+              <Route path="artists" element={<ArtistManagePage />} />
+              <Route path="reports" element={<ReportManagePage />} />
+              <Route path="banners" element={<BannersManagePage />} />
+              <Route path="settings" element={<SettingsManagePage />} />
+            </Route>
+          </Route>
+          
           {/* 404 페이지 */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

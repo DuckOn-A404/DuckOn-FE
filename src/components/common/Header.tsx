@@ -633,6 +633,7 @@ type HeaderProps = {
 summary : 앱일 때는 심플 흰색 헤더 + 햄버거, 웹일 때는 기존 덕온 헤더 유지 */
 const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
   const navigate = useNavigate();
+  const isAdmin = user?.role === "ADMIN";
   const [open, setOpen] = useState(false);
 
   // 캡시터 앱 여부
@@ -901,6 +902,38 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
 
           {/* 우측 영역 */}
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
+            {/* 관리자 페이지로 이동 버튼 */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => navigate("/admin")}
+                className="px-3 py-1.5 rounded-lg text-sm font-semibold 
+                          border-2 border-purple-300 text-purple-600 hover:border-purple-400 
+                          hover:bg-purple-50 transition flex items-center gap-1.5"
+              >
+                <svg 
+                  className="w-4 h-4" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" 
+                  />
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
+                  />
+                </svg>
+                관리자
+              </button>
+            )}
+
             {user ? (
               <HeadlessMenu as="div" className="relative">
                 <HeadlessMenu.Button className="group flex items-center gap-2 rounded-full pl-1 pr-2 py-1 transition-all hover:bg-black/5 focus-visible:outline-none">

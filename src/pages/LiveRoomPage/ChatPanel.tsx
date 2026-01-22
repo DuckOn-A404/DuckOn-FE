@@ -962,23 +962,24 @@
 
 // export default ChatPanel;
 
-// import {useState, useEffect, useRef, useMemo} from "react";
-// import {Send, MoreVertical, UserX, LogOut, AlertTriangle} from "lucide-react";
-// import {Popover, Transition} from "@headlessui/react";
-// import {useUserStore} from "../../store/useUserStore";
-// import type {ChatMessage} from "../../types/chat";
-// import {blockUser} from "../../api/userService";
+
+// import { useState, useEffect, useRef, useMemo } from "react";
+// import { Send, MoreVertical, UserX, LogOut, AlertTriangle } from "lucide-react";
+// import { Popover, Transition } from "@headlessui/react";
+// import { useUserStore } from "../../store/useUserStore";
+// import type { ChatMessage } from "../../types/chat";
+// import { blockUser } from "../../api/userService";
 // import GifModal from "../../components/domain/GifModal";
 // import NicknameWithRank from "../../components/common/NicknameWithRank";
-// import {translateChatMessage} from "../../api/translateService";
-
+// import { translateChatMessage } from "../../api/translateService";
+// import { useUiTranslate } from "../../hooks/useUiTranslate";
 
 // type ChatPanelProps = {
 //   messages: ChatMessage[];
 //   sendMessage: (content: string) => Promise<void> | void;
 //   onBlockUser: (userId: string) => void;
 //   isHost?: boolean;
-//   onEjectUser?: (user: {id: string; nickname: string}) => void;
+//   onEjectUser?: (user: { id: string; nickname: string }) => void;
 //   isKicked?: boolean;
 // };
 
@@ -988,7 +989,7 @@
 //   // @ts-ignore
 //   if (typeof Intl !== "undefined" && Intl.Segmenter) {
 //     // @ts-ignore
-//     const seg = new Intl.Segmenter("ko", {granularity: "grapheme"});
+//     const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
 //     const parts = Array.from(seg.segment(s)).map((p: any) => p.segment);
 //     return parts.length > limit ? parts.slice(0, limit).join("") + "…" : s;
 //   }
@@ -1000,7 +1001,7 @@
 //   // @ts-ignore
 //   if (typeof Intl !== "undefined" && Intl.Segmenter) {
 //     // @ts-ignore
-//     const seg = new Intl.Segmenter("ko", {granularity: "grapheme"});
+//     const seg = new Intl.Segmenter("ko", { granularity: "grapheme" });
 //     return Array.from(seg.segment(s)).length;
 //   }
 //   return [...s].length;
@@ -1028,6 +1029,8 @@
 //   nickname: string;
 //   variant?: "block" | "eject";
 // }) => {
+//   const { t } = useUiTranslate();
+
 //   if (!isOpen) return null;
 
 //   const isEject = variant === "eject";
@@ -1036,29 +1039,43 @@
 //     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
 //       <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
 //         <h3 className="text-lg font-bold text-white">
-//           {isEject ? "사용자 강퇴" : "사용자 차단"}
+//           {isEject
+//             ? t("chat.confirm.title.eject", "사용자 강퇴")
+//             : t("chat.confirm.title.block", "사용자 차단")}
 //         </h3>
 //         <p className="text-sm text-gray-300 mt-2">
-//           정말로{" "}
-//           <span className="font-semibold text-purple-400">{nickname}</span>님을
-//           {isEject ? " 강퇴하시겠습니까?" : " 차단하시겠습니까?"}
+//           {t("chat.confirm.prefix", "정말로")}{" "}
+//           <span className="font-semibold text-purple-400">{nickname}</span>
+//           {t(
+//             isEject
+//               ? "chat.confirm.suffix.eject"
+//               : "chat.confirm.suffix.block",
+//             isEject ? "님을 강퇴하시겠습니까?" : "님을 차단하시겠습니까?"
+//           )}
 //           <br />
-//           {isEject
-//             ? "강퇴되면 이 방에 다시 입장하지 못할 수 있습니다."
-//             : "차단하면 이 사용자의 메시지가 더 이상 보이지 않습니다."}
+//           {t(
+//             isEject
+//               ? "chat.confirm.desc.eject"
+//               : "chat.confirm.desc.block",
+//             isEject
+//               ? "강퇴되면 이 방에 다시 입장하지 못할 수 있습니다."
+//               : "차단하면 이 사용자의 메시지가 더 이상 보이지 않습니다."
+//           )}
 //         </p>
 //         <div className="mt-6 flex justify-end gap-3">
 //           <button
 //             onClick={onCancel}
 //             className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-md transition-colors"
 //           >
-//             취소
+//             {t("chat.button.cancel", "취소")}
 //           </button>
 //           <button
 //             onClick={onConfirm}
 //             className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
 //           >
-//             {isEject ? "강퇴" : "차단"}
+//             {isEject
+//               ? t("chat.button.confirm.eject", "강퇴")
+//               : t("chat.button.confirm.block", "차단")}
 //           </button>
 //         </div>
 //       </div>
@@ -1074,7 +1091,9 @@
 //   onEjectUser,
 //   isKicked = false,
 // }: ChatPanelProps) => {
-//   const {myUser} = useUserStore();
+//   const { t } = useUiTranslate();
+
+//   const { myUser } = useUserStore();
 //   const blockedSet = useUserStore((s) => s.blockedSet);
 //   const refreshBlockedList = useUserStore((s) => s.refreshBlockedList);
 
@@ -1105,14 +1124,14 @@
 //   // 차단 확인 모달
 //   const [blockConfirm, setBlockConfirm] = useState<{
 //     isOpen: boolean;
-//     user: {id: string; nickname: string} | null;
-//   }>({isOpen: false, user: null});
+//     user: { id: string; nickname: string } | null;
+//   }>({ isOpen: false, user: null });
 
 //   // 강퇴 확인 모달
 //   const [ejectConfirm, setEjectConfirm] = useState<{
 //     isOpen: boolean;
-//     user: {id: string; nickname: string} | null;
-//   }>({isOpen: false, user: null});
+//     user: { id: string; nickname: string } | null;
+//   }>({ isOpen: false, user: null });
 
 //   // ✅ 신고 모달 상태 (프론트 전용)
 //   const [reportTarget, setReportTarget] = useState<{
@@ -1139,7 +1158,9 @@
 //   const rateLimitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 5초 해제 타이머
 
 //   // 번역
-//   const [translatedMessages, setTranslatedMessages] = useState<Map<string, string>>(new Map());
+//   const [translatedMessages, setTranslatedMessages] = useState<
+//     Map<string, string>
+//   >(new Map());
 //   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
 
 //   // 메시지의 고유 ID 생성 함수
@@ -1155,7 +1176,7 @@
 
 //     // 이미 번역되어 있으면 토글 (제거)
 //     if (translatedMessages.has(msgId)) {
-//       setTranslatedMessages(prev => {
+//       setTranslatedMessages((prev) => {
 //         const next = new Map(prev);
 //         next.delete(msgId);
 //         return next;
@@ -1164,23 +1185,28 @@
 //     }
 
 //     // 번역 시작
-//     setTranslatingIds(prev => new Set(prev).add(msgId));
+//     setTranslatingIds((prev) => new Set(prev).add(msgId));
 
 //     try {
 //       const result = await translateChatMessage(
 //         msg.content,
-//         undefined,  // targetLang는 백엔드가 자동으로 사용자 기본 언어 사용
-//         (msg as any).senderLang  // 보낸 사람의 언어 (있으면)
+//         undefined, // targetLang는 백엔드가 자동으로 사용자 기본 언어 사용
+//         (msg as any).senderLang // 보낸 사람의 언어 (있으면)
 //       );
 
-//       setTranslatedMessages(prev =>
+//       setTranslatedMessages((prev) =>
 //         new Map(prev).set(msgId, result.translatedText)
 //       );
 //     } catch (error) {
 //       console.error("번역 실패:", error);
-//       alert("번역에 실패했습니다. 다시 시도해주세요.");
+//       alert(
+//         t(
+//           "chat.translate.error",
+//           "번역에 실패했습니다. 다시 시도해주세요."
+//         )
+//       );
 //     } finally {
-//       setTranslatingIds(prev => {
+//       setTranslatingIds((prev) => {
 //         const next = new Set(prev);
 //         next.delete(msgId);
 //         return next;
@@ -1225,7 +1251,7 @@
 //   };
 
 //   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
-//     messagesEndRef.current?.scrollIntoView({behavior, block: "end"});
+//     messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
 //   };
 
 //   const onScroll = () => {
@@ -1438,7 +1464,7 @@
 //       if (el) {
 //         el.style.height = "auto";
 //         el.style.overflowY = "hidden";
-//         el.focus({preventScroll: true});
+//         el.focus({ preventScroll: true });
 //       }
 //     });
 
@@ -1479,8 +1505,8 @@
 //   }, [blockedSet]);
 
 //   // 차단 모달 열기
-//   const openBlockConfirm = (user: {id: string; nickname: string}) => {
-//     setBlockConfirm({isOpen: true, user});
+//   const openBlockConfirm = (user: { id: string; nickname: string }) => {
+//     setBlockConfirm({ isOpen: true, user });
 //   };
 
 //   // 차단 확정
@@ -1491,18 +1517,18 @@
 //     try {
 //       const res = await blockUser(id);
 //       onBlockUser(id);
-//       refreshBlockedList().catch(() => { });
+//       refreshBlockedList().catch(() => {});
 //       console.log(res.message);
 //     } catch (err) {
 //       console.error("차단 실패:", err);
 //     } finally {
-//       setBlockConfirm({isOpen: false, user: null});
+//       setBlockConfirm({ isOpen: false, user: null });
 //     }
 //   };
 
 //   // 강퇴 모달 열기
-//   const openEjectConfirm = (user: {id: string; nickname: string}) => {
-//     setEjectConfirm({isOpen: true, user});
+//   const openEjectConfirm = (user: { id: string; nickname: string }) => {
+//     setEjectConfirm({ isOpen: true, user });
 //   };
 
 //   // 강퇴 확정
@@ -1510,11 +1536,11 @@
 //     if (ejectConfirm.user && onEjectUser) {
 //       onEjectUser(ejectConfirm.user);
 //     }
-//     setEjectConfirm({isOpen: false, user: null});
+//     setEjectConfirm({ isOpen: false, user: null });
 //   };
 
 //   // ✅ 신고 모달 열기
-//   const openReportModal = (user: {id: string; nickname: string}) => {
+//   const openReportModal = (user: { id: string; nickname: string }) => {
 //     setReportTarget(user);
 //     setReportReason("");
 //     setReportDone(false);
@@ -1578,7 +1604,7 @@
 //       <ConfirmModal
 //         isOpen={blockConfirm.isOpen}
 //         onConfirm={confirmBlock}
-//         onCancel={() => setBlockConfirm({isOpen: false, user: null})}
+//         onCancel={() => setBlockConfirm({ isOpen: false, user: null })}
 //         nickname={blockConfirm.user?.nickname ?? ""}
 //         variant="block"
 //       />
@@ -1587,7 +1613,7 @@
 //       <ConfirmModal
 //         isOpen={ejectConfirm.isOpen}
 //         onConfirm={confirmEject}
-//         onCancel={() => setEjectConfirm({isOpen: false, user: null})}
+//         onCancel={() => setEjectConfirm({ isOpen: false, user: null })}
 //         nickname={ejectConfirm.user?.nickname ?? ""}
 //         variant="eject"
 //       />
@@ -1609,25 +1635,34 @@
 //               </div>
 //               <div>
 //                 <h2 className="text-sm font-semibold text-white">
-//                   {reportTarget.nickname} 님 신고하기
+//                   {reportTarget.nickname}
+//                   {t("chat.report.title.suffix", "님 신고하기")}
 //                 </h2>
 //                 <p className="text-[11px] text-gray-400">
-//                   부적절한 채팅이나 불쾌한 행동이 있었다면 신고 사유를
-//                   남겨주세요.
+//                   {t(
+//                     "chat.report.desc",
+//                     "부적절한 채팅이나 불쾌한 행동이 있었다면 신고 사유를 남겨주세요."
+//                   )}
 //                 </p>
 //               </div>
 //             </div>
 
 //             <textarea
 //               className="w-full h-28 resize-none rounded-xl bg-gray-950/70 border border-gray-700 px-3 py-2 text-xs text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-1 focus:ring-red-400 focus:border-red-400"
-//               placeholder="예) 욕설 및 비방, 불쾌한 채팅, 스팸 메시지 등"
+//               placeholder={t(
+//                 "chat.report.placeholder",
+//                 "예) 욕설 및 비방, 불쾌한 채팅, 스팸 메시지 등"
+//               )}
 //               value={reportReason}
 //               onChange={(e) => setReportReason(e.target.value)}
 //             />
 
 //             {reportDone && (
 //               <p className="mt-2 text-[11px] text-emerald-400">
-//                 신고되었습니다. 빠른 시일 내로 조치를 취하겠습니다.
+//                 {t(
+//                   "chat.report.done",
+//                   "신고되었습니다. 빠른 시일 내로 조치를 취하겠습니다."
+//                 )}
 //               </p>
 //             )}
 
@@ -1637,18 +1672,21 @@
 //                 onClick={closeReportModal}
 //                 className="px-3 py-1.5 rounded-lg border border-gray-600 text-gray-200 hover:bg-gray-800"
 //               >
-//                 닫기
+//                 {t("chat.report.button.close", "닫기")}
 //               </button>
 //               <button
 //                 type="button"
 //                 disabled={!reportReason.trim() || reportDone}
 //                 onClick={handleSubmitReport}
-//                 className={`px-3 py-1.5 rounded-lg font-semibold ${!reportReason.trim() || reportDone
+//                 className={`px-3 py-1.5 rounded-lg font-semibold ${
+//                   !reportReason.trim() || reportDone
 //                     ? "bg-red-500/40 text-red-100 cursor-not-allowed"
 //                     : "bg-red-500 text-white hover:bg-red-600"
-//                   }`}
+//                 }`}
 //               >
-//                 {reportDone ? "신고 완료" : "신고하기"}
+//                 {reportDone
+//                   ? t("chat.report.button.submitted", "신고 완료")
+//                   : t("chat.report.button.submit", "신고하기")}
 //               </button>
 //             </div>
 //           </div>
@@ -1666,7 +1704,10 @@
 //             }}
 //           >
 //             <div className="bg-red-500 text-white text-sm md:text-base px-5 py-2 rounded-2xl shadow-lg border border-red-300 flex items-center gap-2 whitespace-nowrap justify-center">
-//               ⚠️ 채팅 도배로 5초간 채팅이 제한됩니다.
+//               {t(
+//                 "chat.rateLimit.banner",
+//                 "⚠️ 채팅 도배로 5초간 채팅이 제한됩니다."
+//               )}
 //             </div>
 //           </div>
 //         )}
@@ -1692,7 +1733,10 @@
 //               whitespace-nowrap
 //             "
 //             >
-//               로그인한 유저만 밈을 사용할 수 있습니다!
+//               {t(
+//                 "chat.gif.guestHint",
+//                 "로그인한 유저만 밈을 사용할 수 있습니다!"
+//               )}
 //             </div>
 //           </div>
 //         )}
@@ -1739,8 +1783,9 @@
 //             return (
 //               <div
 //                 key={uniqueKey}
-//                 className={`group flex flex-col ${isMyMessage ? "items-end" : "items-start"
-//                   }`}
+//                 className={`group flex flex-col ${
+//                   isMyMessage ? "items-end" : "items-start"
+//                 }`}
 //               >
 //                 {/* 닉네임 + 랭크 */}
 //                 <span className="text-xs text-gray-200 mb-1">
@@ -1756,8 +1801,9 @@
 //                 </span>
 
 //                 <div
-//                   className={`relative flex items-end gap-1 max-w-[90%] ${isMyMessage ? "flex-row-reverse" : "flex-row"
-//                     }`}
+//                   className={`relative flex items-end gap-1 max-w-[90%] ${
+//                     isMyMessage ? "flex-row-reverse" : "flex-row"
+//                   }`}
 //                 >
 //                   {(msg as any).isImage ? (
 //                     <div className="relative">
@@ -1805,7 +1851,7 @@
 //                                 >
 //                                   <AlertTriangle className="w-3 h-3" />
 //                                   <span className="whitespace-nowrap">
-//                                     신고하기
+//                                     {t("chat.menu.report", "신고하기")}
 //                                   </span>
 //                                 </button>
 
@@ -1821,7 +1867,7 @@
 //                                   >
 //                                     <LogOut size={14} />
 //                                     <span className="whitespace-nowrap">
-//                                       강퇴하기
+//                                       {t("chat.menu.eject", "강퇴하기")}
 //                                     </span>
 //                                   </button>
 //                                 )}
@@ -1837,7 +1883,7 @@
 //                                 >
 //                                   <UserX size={14} />
 //                                   <span className="whitespace-nowrap">
-//                                     차단하기
+//                                     {t("chat.menu.block", "차단하기")}
 //                                   </span>
 //                                 </button>
 //                               </div>
@@ -1848,8 +1894,9 @@
 //                     </div>
 //                   ) : (
 //                     <div
-//                       className={`relative px-4 py-2 rounded-lg text-sm ${isMyMessage ? "bg-purple-600" : "bg-gray-700"
-//                         } break-all`}
+//                       className={`relative px-4 py-2 rounded-lg text-sm ${
+//                         isMyMessage ? "bg-purple-600" : "bg-gray-700"
+//                       } break-all`}
 //                     >
 //                       <span className={!isMyMessage ? "pr-1" : ""}>
 //                         {msg.content}
@@ -1882,7 +1929,7 @@
 //                                 >
 //                                   <AlertTriangle className="w-3 h-3" />
 //                                   <span className="whitespace-nowrap">
-//                                     신고하기
+//                                     {t("chat.menu.report", "신고하기")}
 //                                   </span>
 //                                 </button>
 
@@ -1898,7 +1945,7 @@
 //                                   >
 //                                     <LogOut size={14} />
 //                                     <span className="whitespace-nowrap">
-//                                       강퇴하기
+//                                       {t("chat.menu.eject", "강퇴하기")}
 //                                     </span>
 //                                   </button>
 //                                 )}
@@ -1914,7 +1961,7 @@
 //                                 >
 //                                   <UserX size={14} />
 //                                   <span className="whitespace-nowrap">
-//                                     차단하기
+//                                     {t("chat.menu.block", "차단하기")}
 //                                   </span>
 //                                 </button>
 //                               </div>
@@ -1931,9 +1978,10 @@
 //                       onClick={() => handleTranslate(msg)}
 //                       className={`
 //                         px-1.5 py-0.5 text-xs rounded flex items-center gap-0.5
-//                         ${translatedText
-//                           ? "bg-purple-700 text-white"
-//                           : "bg-gray-600 text-gray-300"
+//                         ${
+//                           translatedText
+//                             ? "bg-purple-700 text-white"
+//                             : "bg-gray-600 text-gray-300"
 //                         }
 //                         hover:bg-purple-600 transition-all duration-200
 //                       `}
@@ -1962,9 +2010,10 @@
 //                   <div
 //                     className={`
 //                       mt-2 px-4 py-2 rounded-lg border-l-2 max-w-[90%]
-//                       ${isMyMessage
-//                         ? "bg-purple-500/30 border-purple-400"
-//                         : "bg-gray-600/50 border-purple-400"
+//                       ${
+//                         isMyMessage
+//                           ? "bg-purple-500/30 border-purple-400"
+//                           : "bg-gray-600/50 border-purple-400"
 //                       }
 //                       text-sm text-gray-100
 //                     `}
@@ -1978,7 +2027,7 @@
 
 //           <div
 //             ref={messagesEndRef}
-//             style={{scrollMarginBottom: (footerH || 88) + 8}}
+//             style={{ scrollMarginBottom: (footerH || 88) + 8 }}
 //           />
 //         </div>
 
@@ -2017,14 +2066,16 @@
 //         >
 //           <div
 //             className={`rounded-lg border bg-gray-700 transition-colors
-//                         ${overLimit
-//                 ? "border-red-500"
-//                 : "border-gray-600 focus-within:border-purple-500"
-//               } ${isRateLimitedNow ? "opacity-70" : ""}`}
+//                         ${
+//                           overLimit
+//                             ? "border-red-500"
+//                             : "border-gray-600 focus-within:border-purple-500"
+//                         } ${isRateLimitedNow ? "opacity-70" : ""}`}
 //           >
 //             <div
-//               className={`flex ${isMultiline ? "items-end" : "items-center"
-//                 } gap-2 px-3 py-2`}
+//               className={`flex ${
+//                 isMultiline ? "items-end" : "items-center"
+//               } gap-2 px-3 py-2`}
 //             >
 //               <textarea
 //                 ref={inputRef}
@@ -2045,12 +2096,24 @@
 //                 }}
 //                 placeholder={
 //                   isKicked
-//                     ? "강퇴된 방에서는 채팅을 보낼 수 없습니다."
-//                     :isRateLimitedNow
-//                       ? "채팅 도배로 잠시 제한되었습니다."
-//                       : myUser
-//                         ? "메시지를 입력하세요..."
-//                         : "게스트로 채팅하기..."
+//                     ? t(
+//                         "chat.placeholder.kicked",
+//                         "강퇴된 방에서는 채팅을 보낼 수 없습니다."
+//                       )
+//                     : isRateLimitedNow
+//                     ? t(
+//                         "chat.placeholder.rateLimited",
+//                         "채팅 도배로 잠시 제한되었습니다."
+//                       )
+//                     : myUser
+//                     ? t(
+//                         "chat.placeholder.loggedIn",
+//                         "메시지를 입력하세요..."
+//                       )
+//                     : t(
+//                         "chat.placeholder.guest",
+//                         "게스트로 채팅하기..."
+//                       )
 //                 }
 //                 className="flex-1 bg-transparent border-0 outline-none resize-none max-h-40
 //                           text-base md:text-sm leading-6 placeholder:text-gray-400
@@ -2067,7 +2130,7 @@
 //                           bg-gray-600 hover:bg-gray-500 transition-colors
 //                           disabled:bg-gray-700 disabled:cursor-not-allowed
 //                           shrink-0 text-xs font-medium text-white leading-tight"
-//                 aria-label="GIF 선택"
+//                 aria-label={t("chat.gif.button.label", "GIF 선택")}
 //               >
 //                 <div className="text-center">
 //                   <div>GIF</div>
@@ -2094,12 +2157,17 @@
 //                   e.preventDefault();
 //                   if (!overLimit) handleSendMessage();
 //                 }}
-//                 disabled={!newMessage.trim() || overLimit || isRateLimitedNow || isKicked}
+//                 disabled={
+//                   !newMessage.trim() ||
+//                   overLimit ||
+//                   isRateLimitedNow ||
+//                   isKicked
+//                 }
 //                 className="h-9 w-9 rounded-full flex items-center justify-center
 //                           bg-gray-600 hover:bg-gray-500 transition-colors
 //                           disabled:bg-gray-700 disabled:cursor-not-allowed
 //                           shrink-0"
-//                 aria-label="메시지 전송"
+//                 aria-label={t("chat.send.button.label", "메시지 전송")}
 //               >
 //                 <Send size={18} className="text-white" />
 //               </button>
@@ -2108,11 +2176,17 @@
 
 //           <div className="mt-1 flex justify-end">
 //             <span
-//               className={`text-xs ${overLimit ? "text-red-400" : "text-gray-400"
-//                 }`}
+//               className={`text-xs ${
+//                 overLimit ? "text-red-400" : "text-gray-400"
+//               }`}
 //             >
 //               {charCount}/{MAX_LEN}
-//               {overLimit ? " (최대 초과)" : ""}
+//               {overLimit
+//                 ? ` ${t(
+//                     "chat.charCount.overLimitSuffix",
+//                     "(최대 초과)"
+//                   )}`
+//                 : ""}
 //             </span>
 //           </div>
 //         </div>
@@ -2775,7 +2849,7 @@ const ChatPanel = ({
     return previewGraphemes(m.content ?? "", 10);
   };
 
-  // 단순히 “차단 중인지 여부”
+  // 단순히 "차단 중인지 여부"
   const isRateLimitedNow = rateLimitedUntil !== null;
 
   const myId = String(myUser?.userId ?? guestId ?? "");
@@ -2969,18 +3043,96 @@ const ChatPanel = ({
                   isMyMessage ? "items-end" : "items-start"
                 }`}
               >
-                {/* 닉네임 + 랭크 */}
-                <span className="text-xs text-gray-200 mb-1">
-                  {hasRank ? (
-                    <NicknameWithRank
-                      nickname={msg.senderNickName}
-                      rankLevel={rawRankLevel}
-                      badgeSize={18}
-                    />
-                  ) : (
-                    msg.senderNickName
+                {/* 닉네임 + 랭크 + 3점 메뉴 */}
+                <div className="flex items-center gap-2 mb-1">
+                  {/* 닉네임 클릭 시 프로필 페이지 이동 */}
+                  <button
+                    type="button"
+                    onClick={() => window.open(isMyMessage ? '/mypage' : `/user/${msg.senderNickName}`, '_blank')}
+                    className="text-xs text-gray-200 hover:text-purple-400 transition-colors cursor-pointer"
+                  >
+                    {hasRank ? (
+                      <NicknameWithRank
+                        nickname={msg.senderNickName}
+                        rankLevel={rawRankLevel}
+                        badgeSize={18}
+                      />
+                    ) : (
+                      msg.senderNickName
+                    )}
+                  </button>
+
+                  {/* 3점 메뉴 (내 메시지가 아니고 로그인 유저인 경우만) */}
+                  {!isMyMessage && !!myUser && (
+                    <Popover className="relative">
+                      <Popover.Button className="p-1 rounded-md hover:bg-gray-600 focus:outline-none opacity-60 hover:opacity-100 transition-all">
+                        <MoreVertical size={14} className="text-gray-300" />
+                      </Popover.Button>
+                      <Transition
+                        enter="transition duration-100 ease-out"
+                        enterFrom="transform scale-95 opacity-0"
+                        enterTo="transform scale-100 opacity-100"
+                        leave="transition duration-75 ease-out"
+                        leaveFrom="transform scale-100 opacity-100"
+                        leaveTo="transform scale-95 opacity-0"
+                      >
+                        <Popover.Panel className="absolute z-10 top-full mt-1 left-0 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
+                          <div className="flex flex-col p-1">
+                            {/* 신고하기 */}
+                            <button
+                              onClick={() =>
+                                openReportModal({
+                                  id: senderId,
+                                  nickname: msg.senderNickName,
+                                })
+                              }
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-red-300 hover:bg-red-500/80 hover:text-white rounded-md"
+                            >
+                              <AlertTriangle className="w-3 h-3" />
+                              <span className="whitespace-nowrap">
+                                {t("chat.menu.report", "신고하기")}
+                              </span>
+                            </button>
+
+                            {/* 강퇴하기 (방장만) */}
+                            {isHost && (
+                              <button
+                                onClick={() =>
+                                  openEjectConfirm({
+                                    id: senderId,
+                                    nickname: msg.senderNickName,
+                                  })
+                                }
+                                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-red-600 rounded-md"
+                              >
+                                <LogOut size={14} />
+                                <span className="whitespace-nowrap">
+                                  {t("chat.menu.eject", "강퇴하기")}
+                                </span>
+                              </button>
+                            )}
+
+                            {/* 차단하기 */}
+                            <button
+                              onClick={() =>
+                                openBlockConfirm({
+                                  id: senderId,
+                                  nickname: msg.senderNickName,
+                                })
+                              }
+                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
+                            >
+                              <UserX size={14} />
+                              <span className="whitespace-nowrap">
+                                {t("chat.menu.block", "차단하기")}
+                              </span>
+                            </button>
+                          </div>
+                        </Popover.Panel>
+                      </Transition>
+                    </Popover>
                   )}
-                </span>
+                </div>
 
                 <div
                   className={`relative flex items-end gap-1 max-w-[90%] ${
@@ -3006,73 +3158,6 @@ const ChatPanel = ({
                             "none";
                         }}
                       />
-                      {!isMyMessage && !!myUser && (
-                        <Popover className="absolute top-1 right-1">
-                          <Popover.Button className="p-0.5 rounded-full bg-black/30 hover:bg-black/50 focus:outline-none">
-                            <MoreVertical size={14} className="text-white" />
-                          </Popover.Button>
-                          <Transition
-                            enter="transition duration-100 ease-out"
-                            enterFrom="transform scale-95 opacity-0"
-                            enterTo="transform scale-100 opacity-100"
-                            leave="transition duration-75 ease-out"
-                            leaveFrom="transform scale-100 opacity-100"
-                            leaveTo="transform scale-95 opacity-0"
-                          >
-                            <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
-                              <div className="flex flex-col p-1">
-                                {/* ✅ 신고하기 (프론트 전용) */}
-                                <button
-                                  onClick={() =>
-                                    openReportModal({
-                                      id: senderId,
-                                      nickname: msg.senderNickName,
-                                    })
-                                  }
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-red-300 hover:bg-red-500/80 hover:text-white rounded-md"
-                                >
-                                  <AlertTriangle className="w-3 h-3" />
-                                  <span className="whitespace-nowrap">
-                                    {t("chat.menu.report", "신고하기")}
-                                  </span>
-                                </button>
-
-                                {isHost && (
-                                  <button
-                                    onClick={() =>
-                                      openEjectConfirm({
-                                        id: senderId,
-                                        nickname: msg.senderNickName,
-                                      })
-                                    }
-                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-red-600 rounded-md"
-                                  >
-                                    <LogOut size={14} />
-                                    <span className="whitespace-nowrap">
-                                      {t("chat.menu.eject", "강퇴하기")}
-                                    </span>
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() =>
-                                    openBlockConfirm({
-                                      id: senderId,
-                                      nickname: msg.senderNickName,
-                                    })
-                                  }
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
-                                >
-                                  <UserX size={14} />
-                                  <span className="whitespace-nowrap">
-                                    {t("chat.menu.block", "차단하기")}
-                                  </span>
-                                </button>
-                              </div>
-                            </Popover.Panel>
-                          </Transition>
-                        </Popover>
-                      )}
                     </div>
                   ) : (
                     <div
@@ -3080,77 +3165,7 @@ const ChatPanel = ({
                         isMyMessage ? "bg-purple-600" : "bg-gray-700"
                       } break-all`}
                     >
-                      <span className={!isMyMessage ? "pr-1" : ""}>
-                        {msg.content}
-                      </span>
-
-                      {!isMyMessage && !!myUser && (
-                        <Popover className="absolute top-1 right-1">
-                          <Popover.Button className="p-0.5 rounded-full hover:bg-black/20 focus:outline-none">
-                            <MoreVertical size={14} className="text-white" />
-                          </Popover.Button>
-                          <Transition
-                            enter="transition duration-100 ease-out"
-                            enterFrom="transform scale-95 opacity-0"
-                            enterTo="transform scale-100 opacity-100"
-                            leave="transition duration-75 ease-out"
-                            leaveFrom="transform scale-100 opacity-100"
-                            leaveTo="transform scale-95 opacity-0"
-                          >
-                            <Popover.Panel className="absolute z-10 top-0 left-full ml-2 w-40 bg-gray-600 border border-gray-500 rounded-lg shadow-lg">
-                              <div className="flex flex-col p-1">
-                                {/* ✅ 신고하기 (프론트 전용) */}
-                                <button
-                                  onClick={() =>
-                                    openReportModal({
-                                      id: senderId,
-                                      nickname: msg.senderNickName,
-                                    })
-                                  }
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-red-300 hover:bg-red-500/80 hover:text-white rounded-md"
-                                >
-                                  <AlertTriangle className="w-3 h-3" />
-                                  <span className="whitespace-nowrap">
-                                    {t("chat.menu.report", "신고하기")}
-                                  </span>
-                                </button>
-
-                                {isHost && (
-                                  <button
-                                    onClick={() =>
-                                      openEjectConfirm({
-                                        id: senderId,
-                                        nickname: msg.senderNickName,
-                                      })
-                                    }
-                                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-red-600 rounded-md"
-                                  >
-                                    <LogOut size={14} />
-                                    <span className="whitespace-nowrap">
-                                      {t("chat.menu.eject", "강퇴하기")}
-                                    </span>
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() =>
-                                    openBlockConfirm({
-                                      id: senderId,
-                                      nickname: msg.senderNickName,
-                                    })
-                                  }
-                                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-gray-200 hover:bg-purple-600 rounded-md"
-                                >
-                                  <UserX size={14} />
-                                  <span className="whitespace-nowrap">
-                                    {t("chat.menu.block", "차단하기")}
-                                  </span>
-                                </button>
-                              </div>
-                            </Popover.Panel>
-                          </Transition>
-                        </Popover>
-                      )}
+                      <span>{msg.content}</span>
                     </div>
                   )}
 
