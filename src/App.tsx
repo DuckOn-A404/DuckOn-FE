@@ -27,6 +27,7 @@ import ChildSafetyPage from "./pages/ChildSafetyPage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
 import AdminRouteGuard from "./routes/AdminRouteGuard";
+import PublicRoute from "./components/common/PublicRoute";
 
 import AdminPage from "./pages/AdminPage"; // index.tsx
 import DashboardManagePage from "./pages/AdminPage/DashboardManagePage";
