@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { type Artist } from "../types/artist";
 import { getArtistList, type SortKey, type SortOrder } from "../api/artistService";
+import { getMinorArtistList } from "../api/minorArtistService";
 
 type ListParams = {
   q?: string;       // 검색어(옵션) - 제공되면 /artists?keyword= 로 전송됨
   sort: SortKey;    // "followers" | "name" | "debut"
   order: SortOrder; // "asc" | "desc"
   size: number;     // 페이지 당 아이템 수
+  isMinor?: boolean; // 마이너 아티스트 여부
 };
 
 export const useArtistList = (params: ListParams) => {
@@ -31,13 +33,21 @@ export const useArtistList = (params: ListParams) => {
     inflightRef.current = true;
     setLoading(true);
     try {
-      const res = await getArtistList({
-        page: p,
-        size: params.size,
-        sort: params.sort,
-        order: params.order,
-        keyword: params.q?.trim() || undefined,
-      });
+      const res = params.isMinor
+        ? await getMinorArtistList({
+            page: p,
+            size: params.size,
+            sort: params.sort,
+            order: params.order,
+            keyword: params.q?.trim() || undefined,
+          })
+        : await getArtistList({
+            page: p,
+            size: params.size,
+            sort: params.sort,
+            order: params.order,
+            keyword: params.q?.trim() || undefined,
+          });
 
       const newData = res.artistList as Artist[];
       setArtists(prev => (p === 1 ? newData : [...prev, ...newData]));

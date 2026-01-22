@@ -562,8 +562,10 @@ import AuroraStreakBG from "../components/common/bg/AuroraStreakBG";
 // import HeroBanner from "../components/home/HeroBanner";
 import UIText from "../components/common/UIText"; // 🔹 추가
 import AnimatedSearchBar from "../components/home/AnimatedSearchBar";
+import AddMinorArtistModal from "../components/domain/artist/AddMinorArtistModal";
 
 import {getRandomArtists} from "../api/artistService";
+import {getRandomMinorArtists} from "../api/minorArtistService";
 import {type Artist} from "../types/artist";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import {createSlug} from "../utils/slugUtils";
@@ -574,10 +576,13 @@ const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; //
 const HomePage = () => {
   // const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [recommendedArtists, setRecommendedArtists] = useState<Artist[]>([]);
+  const [minorArtists, setMinorArtists] = useState<Artist[]>([]);
   const [isLoadingArtists, setIsLoadingArtists] = useState(true);
+  const [isLoadingMinorArtists, setIsLoadingMinorArtists] = useState(true);
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideIndex, setGuideIndex] = useState(0);
   const [expandedRoomIndex, setExpandedRoomIndex] = useState(0);
+  const [isAddArtistModalOpen, setIsAddArtistModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -639,6 +644,19 @@ const HomePage = () => {
         setRecommendedArtists([]);
       } finally {
         setIsLoadingArtists(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getRandomMinorArtists(5);
+        setMinorArtists(data);
+      } catch {
+        setMinorArtists([]);
+      } finally {
+        setIsLoadingMinorArtists(false);
       }
     })();
   }, []);
@@ -1027,6 +1045,167 @@ const HomePage = () => {
           )}
         </section>
 
+        {/* 마이너 아티스트 */}
+        <section>
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold">
+              <UIText id="home.minorArtists.title">
+                마이너 아티스트
+              </UIText>
+            </h2>
+
+            {/* 웹에서만 '더보기 →' 보이도록 */}
+            {!isNativeApp && (
+              <Link
+                to="/minor-artist-list"
+                className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
+              >
+                <UIText id="common.more">더보기 →</UIText>
+              </Link>
+            )}
+          </div>
+
+          {/* 웹: 기존 UI 100% 동일 유지 */}
+          {!isNativeApp && (
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+              {isLoadingMinorArtists
+                ? Array.from({length: 5}).map((_, i) => (
+                  <ArtistCardSkeleton key={i} />
+                ))
+                : minorArtists.map((artist) => (
+                  <motion.div
+                    key={artist.artistId}
+                    initial={{opacity: 0, y: 10}}
+                    whileInView={{opacity: 1, y: 0}}
+                    viewport={{once: true, amount: 0.2}}
+                    transition={{duration: 0.35, ease: "easeOut"}}
+                  >
+                    <ArtistCard
+                      {...artist}
+                      onClick={() => {
+                        const slug = createSlug(artist.nameEn);
+                        navigate(`/artist/${slug}`, {
+                          state: {artistId: artist.artistId},
+                        });
+                      }}
+                    />
+                  </motion.div>
+                ))}
+            </div>
+          )}
+
+          {/* 앱: 덕온 톤의 라이트 카드 + 동그라미 아티스트 */}
+          {isNativeApp && (
+            <div className="md:hidden rounded-3xl bg-white/90 backdrop-blur-sm border border-white/70 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,.12)]">
+              <div className="grid grid-cols-3 gap-4">
+                {isLoadingMinorArtists
+                  ? // 로딩 스켈레톤
+                  Array.from({length: 5}).map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col items-center gap-2 animate-pulse"
+                    >
+                      <div className="w-20 h-20 rounded-full bg-slate-200/80" />
+                      <div className="w-16 h-3 rounded-full bg-slate-200/80" />
+                    </div>
+                  ))
+                  : // 실제 아티스트 (최대 5명)
+                  minorArtists.slice(0, 5).map((artist) => (
+                    <button
+                      key={artist.artistId}
+                      type="button"
+                      className="flex flex-col items-center gap-2 active:scale-95 transition"
+                      onClick={() => {
+                        const slug = createSlug(artist.nameEn);
+                        navigate(`/artist/${slug}`, {
+                          state: {artistId: artist.artistId},
+                        });
+                      }}
+                    >
+                      {/* 그라데이션 링 + 둥근 썸네일 */}
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-500 to-sky-400 p-[2px]">
+                        <div className="w-full h-full rounded-full overflow-hidden bg-slate-200">
+                          <img
+                            src={artist.imgUrl || "/default_image.png"}
+                            alt={artist.nameKr || artist.nameEn}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                      </div>
+                      <p className="mt-1 text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
+                        {artist.nameKr || artist.nameEn}
+                      </p>
+                    </button>
+                  ))}
+
+                {/* 전체 마이너 아티스트로 가는 '전체 보기' 동그라미 */}
+                <button
+                  type="button"
+                  onClick={() => navigate("/minor-artist-list")}
+                  className="flex flex-col items-center gap-2 active:scale-95 transition"
+                >
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-[0_10px_25px_rgba(15,23,42,.35)]">
+                    <UIText id="home.minorArtists.allArtistsCircle">
+                      전체 보기
+                    </UIText>
+                  </div>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* CTA: 아티스트 추가하기 */}
+          <motion.div
+            initial={{opacity: 0, y: 20}}
+            whileInView={{opacity: 1, y: 0}}
+            viewport={{once: true}}
+            transition={{duration: 0.4, delay: 0.2}}
+            className="mt-8 mx-auto max-w-2xl"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 border border-purple-100/50 shadow-sm hover:shadow-lg transition-all duration-300">
+              {/* 배경 장식 */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-3xl" />
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-fuchsia-200/30 to-purple-200/30 rounded-full blur-2xl" />
+              
+              <div className="relative px-6 py-5 flex items-center justify-between gap-4">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-purple-900 mb-1">
+                    <UIText id="home.minorArtists.cta.title">
+                      원하는 아티스트가 없나요?
+                    </UIText>
+                  </p>
+                  <p className="text-xs text-purple-700/80">
+                    <UIText id="home.minorArtists.cta.subtitle">
+                      직접 추가하고 팬들과 함께 즐겨보세요
+                    </UIText>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAddArtistModalOpen(true)}
+                  className="
+                    shrink-0 px-5 py-2.5 rounded-xl
+                    bg-gradient-to-r from-purple-600 to-fuchsia-600
+                    hover:from-purple-700 hover:to-fuchsia-700
+                    text-white text-sm font-bold
+                    shadow-md hover:shadow-xl
+                    transition-all duration-200
+                    active:scale-95
+                    flex items-center gap-2
+                  "
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                  </svg>
+                  <UIText id="home.minorArtists.cta.button">
+                    아티스트 추가하기
+                  </UIText>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
         {/* 빠르게 시작하기 */}
         <section>
           <div className="flex items-center justify-between mb-6">
@@ -1138,6 +1317,24 @@ const HomePage = () => {
           setGuideIndex((i) => (i - 1 + guideSteps.length) % guideSteps.length)
         }
         onNext={() => setGuideIndex((i) => (i + 1) % guideSteps.length)}
+      />
+
+      {/* 아티스트 추가 모달 */}
+      <AddMinorArtistModal
+        isOpen={isAddArtistModalOpen}
+        onClose={() => setIsAddArtistModalOpen(false)}
+        onSuccess={async () => {
+          setIsAddArtistModalOpen(false);
+          setIsLoadingMinorArtists(true);
+          try {
+            const data = await getRandomMinorArtists(5);
+            setMinorArtists(data);
+          } catch {
+            setMinorArtists([]);
+          } finally {
+            setIsLoadingMinorArtists(false);
+          }
+        }}
       />
     </div>
   );
