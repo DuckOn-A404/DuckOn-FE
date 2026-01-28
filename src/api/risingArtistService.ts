@@ -96,9 +96,25 @@ export const addRisingArtist = async (
   return response.data;
 };
 
-export const getRandomRisingArtists = async (size = 5): Promise<Artist[]> => {
-  const res = await api.get("/rising-artists/random", {
-    params: { size },
+export interface RandomEmergingArtistsResponse {
+  status: number;
+  message: string;
+  data: EmergingArtistItem[];
+}
+
+export const getRandomRisingArtists = async (count = 5): Promise<Artist[]> => {
+  const response = await api.get<RandomEmergingArtistsResponse>("/emerging-artists/random", {
+    params: { count },
+    skipAuth: true,
   });
-  return res.data.artistList as Artist[];
+
+  const artistList: Artist[] = (response.data?.data ?? []).map((item) => ({
+    artistId: item.emergingArtistId,
+    nameEn: item.nameEn,
+    nameKr: item.nameKr,
+    debutDate: item.debutDate,
+    imgUrl: item.imgUrl,
+  }));
+
+  return artistList;
 };

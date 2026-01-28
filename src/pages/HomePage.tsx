@@ -13,6 +13,7 @@ import UIText from "../components/common/UIText"; //
 import AnimatedSearchBar from "../components/home/AnimatedSearchBar";
 
 import {getRandomArtists} from "../api/artistService";
+import {getRandomRisingArtists} from "../api/risingArtistService";
 import {type Artist} from "../types/artist";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import {createSlug} from "../utils/slugUtils";
@@ -97,7 +98,7 @@ const HomePage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getRandomArtists(5);
+        const data = await getRandomRisingArtists(5);
         setRisingArtists(data);
       } catch {
         setRisingArtists([]);
