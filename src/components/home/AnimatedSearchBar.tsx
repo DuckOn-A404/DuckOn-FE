@@ -280,10 +280,10 @@ const AnimatedSearchBar = ({onSearch}: AnimatedSearchBarProps) => {
       >
         <h1 className={`font-bold text-gray-900 mb-2 ${
           isMobile 
-            ? 'text-lg' 
+            ? 'text-xl' 
             : 'text-3xl md:text-4xl lg:text-5xl'
         }`}>
-          어떤 영상을 함께 보고 싶으신가요?
+          {isMobile ? '함께 볼 영상을 검색하세요' : '어떤 영상을 함께 보고 싶으신가요?'}
         </h1>
       </motion.div>
 
