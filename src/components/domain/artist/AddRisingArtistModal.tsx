@@ -60,10 +60,7 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
         imgUrl: imagePreview, // base64 데이터 URL 또는 이미지 URL
       };
 
-      const response = await addRisingArtist(requestData);
-      
-      console.log("라이징 아티스트 등록 성공:", response);
-      console.log("등록된 아티스트 ID:", response.data.emergingArtistId);
+      await addRisingArtist(requestData);
       
       setNameKr("");
       setNameEn("");
@@ -73,7 +70,6 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("라이징 아티스트 등록 실패:", err);
       setError(err.response?.data?.message || "아티스트 추가에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
@@ -138,7 +134,12 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
               id="nameEn"
               type="text"
               value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 영문, 숫자, 공백, 일부 특수문자만 허용 (한글 제외)
+                const englishOnly = value.replace(/[^a-zA-Z0-9\s!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g, "");
+                setNameEn(englishOnly);
+              }}
               placeholder="예: NewJeans"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
               disabled={isSubmitting}

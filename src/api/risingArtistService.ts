@@ -39,8 +39,6 @@ export const getRisingArtistList = async (params: {
   order?: string;
   keyword?: string;
 }): Promise<RisingArtistListResponse> => {
-  console.log("라이징 아티스트 목록 조회 요청:", params);
-  
   const response = await api.get<GetEmergingArtistsResponse>("/emerging-artists", {
     params: {
       page: params.page ?? 1,
@@ -52,8 +50,6 @@ export const getRisingArtistList = async (params: {
     skipAuth: true,
   });
 
-  console.log("라이징 아티스트 목록 조회 응답:", response.data);
-
   const apiData = response.data?.data;
   
   // API 응답의 items를 Artist 타입으로 변환
@@ -64,8 +60,6 @@ export const getRisingArtistList = async (params: {
     debutDate: item.debutDate,
     imgUrl: item.imgUrl,
   }));
-
-  console.log(`변환된 아티스트 목록: ${artistList.length}개 아이템`);
 
   return {
     artistList,

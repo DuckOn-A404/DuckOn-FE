@@ -7,6 +7,7 @@ import MainLayout from "./layouts/MainLayout";
 import ArtistListPage from "./pages/ArtistListPage";
 import RisingArtistListPage from "./pages/RisingArtistListPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
+import RisingArtistDetailPage from "./pages/RisingArtistDetailPage";
 import MyPage from "./pages/MyPage";
 import OtherUserPage from "./pages/OtherUserPage";
 import LiveRoomPage from "./pages/LiveRoomPage";
@@ -57,6 +58,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/artist/:nameEn" element={<ArtistDetailPage />} />
+            <Route path="/rising-artist/:nameEn" element={<RisingArtistDetailPage />} />
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
             {/* <Route path="/account/delete" element={<AccountDeletePage />} /> */}
