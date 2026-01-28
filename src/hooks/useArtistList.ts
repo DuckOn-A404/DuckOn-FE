@@ -16,6 +16,8 @@ export const useArtistList = (params: ListParams) => {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [page, setPage] = useState(1);
 
   // IntersectionObserver의 연속 트리거/중복요청을 막기 위한 플래그
@@ -26,12 +28,16 @@ export const useArtistList = (params: ListParams) => {
     setPage(1);
     setHasMore(true);
     setTotalCount(0);
+    setError(null);
+    setRetryCount(0);
   };
 
   const fetchPage = async (p: number) => {
-    if (inflightRef.current) return;
+    if (inflightRef.current || retryCount >= 3) return;
     inflightRef.current = true;
     setLoading(true);
+    setError(null);
+
     try {
       const res = params.isRising
         ? await getRisingArtistList({
@@ -54,6 +60,15 @@ export const useArtistList = (params: ListParams) => {
       setTotalCount(res.totalElements);
       setHasMore(p < res.totalPages); // 검색(keyword) 시 백엔드가 totalPages=1 → hasMore=false
       setPage(p + 1);
+      setRetryCount(0); // 성공 시 재시도 횟수 초기화
+    } catch (err) {
+      console.error("Failed to fetch artist list:", err);
+      const nextRetryCount = retryCount + 1;
+      setRetryCount(nextRetryCount);
+      
+      if (nextRetryCount >= 3) {
+        setError("이런 서버에 무슨일이 있군요 잠시후 다시 시도해주세요");
+      }
     } finally {
       setLoading(false);
       inflightRef.current = false;
@@ -61,7 +76,7 @@ export const useArtistList = (params: ListParams) => {
   };
 
   const fetchMore = () => {
-    if (!loading && hasMore && !inflightRef.current) {
+    if (!loading && hasMore && !inflightRef.current && !error) {
       fetchPage(page);
     }
   };
@@ -72,5 +87,5 @@ export const useArtistList = (params: ListParams) => {
     fetchPage(1);
   }, [params.q, params.sort, params.order, params.size]);
 
-  return { artists, totalCount, fetchMore, loading, hasMore, reset };
+  return { artists, totalCount, fetchMore, loading, hasMore, error, reset };
 };

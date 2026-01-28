@@ -392,7 +392,7 @@ const ArtistListPage = () => {
   }, []);
 
   // 목록 데이터: 검색/정렬/사이즈를 한 API로 처리
-  const { artists, totalCount, fetchMore, hasMore, loading } = useArtistList({
+  const { artists, totalCount, fetchMore, hasMore, loading, error } = useArtistList({
     q: debouncedSearchText || undefined,
     sort,
     order,
@@ -555,6 +555,19 @@ const ArtistListPage = () => {
       {loading && (
         <div className="flex justify-center items-center h-24">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      )}
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="flex flex-col justify-center items-center py-10 px-4 text-center">
+          <p className="text-gray-600 mb-4 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            다시 시도
+          </button>
         </div>
       )}
     </div>

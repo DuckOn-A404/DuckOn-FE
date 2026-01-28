@@ -49,7 +49,6 @@ export const addRisingArtist = async (formData: FormData): Promise<{ message: st
 export const getRandomRisingArtists = async (size = 5): Promise<Artist[]> => {
   const res = await api.get("/rising-artists/random", {
     params: { size },
-    skipAuth: true,
   });
   return res.data.artistList as Artist[];
 };

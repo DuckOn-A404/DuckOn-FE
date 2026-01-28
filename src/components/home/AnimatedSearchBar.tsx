@@ -1,7 +1,10 @@
-import {useState, useEffect} from "react";
-import {Search} from "lucide-react";
+import {useState, useEffect, useRef} from "react";
+import {Search, User} from "lucide-react";
 import {motion, AnimatePresence} from "framer-motion";
 import {useNavigate} from "react-router-dom";
+import {useDebounce} from "../../hooks/useDebounce";
+import {searchArtists} from "../../api/artistService";
+import type {Artist} from "../../types/artist";
 
 interface AnimatedSearchBarProps {
   onSearch?: (query: string) => void;
@@ -16,7 +19,12 @@ const AnimatedSearchBar = ({onSearch}: AnimatedSearchBarProps) => {
 
   const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<Artist[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -26,17 +34,53 @@ const AnimatedSearchBar = ({onSearch}: AnimatedSearchBarProps) => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // 검색 페이지로 이동
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-
-      // 콜백이 있으면 실행
-      if (onSearch) {
-        onSearch(searchQuery.trim());
+  // 연관 검색어 가져오기
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (debouncedSearchQuery.trim().length < 1) {
+        setSuggestions([]);
+        setIsDropdownOpen(false);
+        return;
       }
+
+      try {
+        const results = await searchArtists(debouncedSearchQuery);
+        setSuggestions(results.slice(0, 5)); // 최대 5개만 표시
+        setIsDropdownOpen(results.length > 0);
+      } catch (error) {
+        console.error("Failed to fetch search suggestions:", error);
+      } finally {
+      }
+    };
+
+    fetchSuggestions();
+  }, [debouncedSearchQuery]);
+
+  // 드롭다운 바깥 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSubmit = (e?: React.FormEvent, query?: string) => {
+    if (e) e.preventDefault();
+    const finalQuery = query || searchQuery;
+    if (finalQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(finalQuery.trim())}`);
+      if (onSearch) onSearch(finalQuery.trim());
+      setIsDropdownOpen(false);
     }
+  };
+
+  const handleSuggestionClick = (artistName: string) => {
+    setSearchQuery(artistName);
+    handleSubmit(undefined, artistName);
   };
 
   return (
@@ -52,48 +96,88 @@ const AnimatedSearchBar = ({onSearch}: AnimatedSearchBarProps) => {
         </h1>
       </motion.div>
 
-      <motion.form
-        onSubmit={handleSubmit}
-        initial={{opacity: 0, y: 20}}
-        animate={{opacity: 1, y: 0}}
-        transition={{duration: 0.6, delay: 0.2, ease: "easeOut"}}
-        className="relative"
-      >
-        <div className="relative flex items-center gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 pointer-events-none z-10" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-16 pr-6 py-5 md:py-6 text-lg md:text-xl rounded-full bg-white/95 backdrop-blur-sm border-2 border-gray-200 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
-              placeholder=""
-            />
-            <div className="absolute left-16 top-1/2 -translate-y-1/2 pointer-events-none overflow-hidden">
-              <AnimatePresence mode="wait">
-                {!searchQuery && (
-                  <motion.span
-                    key={currentPlaceholderIndex}
-                    initial={{opacity: 0, y: 10}}
-                    animate={{opacity: 1, y: 0}}
-                    exit={{opacity: 0, y: -10}}
-                    transition={{duration: 0.5}}
-                    className="text-lg md:text-xl text-gray-400"
-                  >
-                    {placeholders[currentPlaceholderIndex]}
-                  </motion.span>
-                )}
-              </AnimatePresence>
+      <div className="relative" ref={dropdownRef}>
+        <motion.form
+          onSubmit={handleSubmit}
+          initial={{opacity: 0, y: 20}}
+          animate={{opacity: 1, y: 0}}
+          transition={{duration: 0.6, delay: 0.2, ease: "easeOut"}}
+          className="relative"
+        >
+          <div className="relative flex items-center gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400 pointer-events-none z-10" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && suggestions.length > 0 && setIsDropdownOpen(true)}
+                className="w-full pl-16 pr-6 py-5 md:py-6 text-lg md:text-xl rounded-full bg-white/95 backdrop-blur-sm border-2 border-gray-200 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/20 transition-all shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)]"
+                placeholder=""
+              />
+              <div className="absolute left-16 top-1/2 -translate-y-1/2 pointer-events-none overflow-hidden">
+                <AnimatePresence mode="wait">
+                  {!searchQuery && (
+                    <motion.span
+                      key={currentPlaceholderIndex}
+                      initial={{opacity: 0, y: 10}}
+                      animate={{opacity: 1, y: 0}}
+                      exit={{opacity: 0, y: -10}}
+                      transition={{duration: 0.5}}
+                      className="text-lg md:text-xl text-gray-400"
+                    >
+                      {placeholders[currentPlaceholderIndex]}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
+            <button
+              type="submit"
+              className="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
+            >
+              <Search className="h-6 w-6 md:h-7 md:w-7 text-white" />
+            </button>
           </div>
-          <button
-            type="submit"
-            className="flex-shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full bg-purple-600 hover:bg-purple-700 active:scale-95 transition-all flex items-center justify-center shadow-lg hover:shadow-xl"
-          >
-            <Search className="h-6 w-6 md:h-7 md:w-7 text-white" />
-          </button>
-        </div>
-      </motion.form>
+        </motion.form>
+
+        {/* 연관 검색어 드롭다운 */}
+        <AnimatePresence>
+          {isDropdownOpen && (
+            <motion.div
+              initial={{opacity: 0, y: -10}}
+              animate={{opacity: 1, y: 0}}
+              exit={{opacity: 0, y: -10}}
+              className="absolute left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
+            >
+              <ul className="py-2">
+                {suggestions.map((artist) => (
+                  <li
+                    key={artist.artistId}
+                    onClick={() => handleSuggestionClick(artist.nameKr || artist.nameEn)}
+                    className="px-6 py-3 hover:bg-purple-50 cursor-pointer flex items-center gap-3 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                      {artist.imgUrl ? (
+                        <img
+                          src={artist.imgUrl}
+                          alt={artist.nameKr}
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-4 h-4 text-purple-600" />
+                      )}
+                    </div>
+                    <span className="text-gray-700 font-medium">
+                      {artist.nameKr} <span className="text-gray-400 text-sm ml-1">({artist.nameEn})</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
