@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Upload, AlertCircle } from "lucide-react";
-import { addRisingArtist } from "../../../api/risingArtistService";
+import { addRisingArtist, type AddRisingArtistRequest } from "../../../api/risingArtistService";
 
 interface AddRisingArtistModalProps {
   isOpen: boolean;
@@ -45,18 +45,25 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
       return;
     }
 
+    if (!imagePreview) {
+      setError("프로필 이미지를 선택해주세요.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("nameKr", nameKr.trim());
-      formData.append("nameEn", nameEn.trim());
-      formData.append("debutDate", debutDate);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+      const requestData: AddRisingArtistRequest = {
+        nameKr: nameKr.trim(),
+        nameEn: nameEn.trim(),
+        debutDate: debutDate,
+        imgUrl: imagePreview, // base64 데이터 URL 또는 이미지 URL
+      };
 
-      await addRisingArtist(formData);
+      const response = await addRisingArtist(requestData);
+      
+      console.log("라이징 아티스트 등록 성공:", response);
+      console.log("등록된 아티스트 ID:", response.data.emergingArtistId);
       
       setNameKr("");
       setNameEn("");
@@ -66,6 +73,7 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
       onSuccess();
       onClose();
     } catch (err: any) {
+      console.error("라이징 아티스트 등록 실패:", err);
       setError(err.response?.data?.message || "아티스트 추가에 실패했습니다.");
     } finally {
       setIsSubmitting(false);
