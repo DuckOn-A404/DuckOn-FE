@@ -1,0 +1,288 @@
+import { useState, useRef } from "react";
+import { Send } from "lucide-react";
+import { useUserStore } from "../../store/useUserStore";
+import { useArtistFollowStore } from "../../store/useArtistFollowStore";
+import { isNativeApp } from "../../utils/platform";
+import { useUiTranslate } from "../../hooks/useUiTranslate";
+
+type RightSidebarProps = {
+  artistId: number;
+};
+
+// TODO: 라이징 아티스트용 채팅 탭과 추천 탭 컴포넌트 생성 필요
+// 현재는 임시 UI만 표시
+const RisingChatTab = () => {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+      <p className="text-sm text-gray-500 mb-2">라이징 아티스트 채팅</p>
+      <p className="text-xs text-gray-400">API 연결 후 활성화됩니다</p>
+    </div>
+  );
+};
+
+const RisingRecommendTab = () => {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+      <p className="text-sm text-gray-500 mb-2">추천 팬</p>
+      <p className="text-xs text-gray-400">API 연결 후 활성화됩니다</p>
+    </div>
+  );
+};
+
+const RightSidebar = ({ artistId }: RightSidebarProps) => {
+  const [selectedTab, setSelectedTab] = useState<"chat" | "recommend">("chat");
+  const [newMessage, setNewMessage] = useState("");
+
+  const { myUser } = useUserStore();
+  const { isFollowing } = useArtistFollowStore();
+
+  const scrollContainerRef = useRef<null | HTMLDivElement>(null);
+
+  const isLoggedIn = !!myUser;
+  const isUserFollowing = isFollowing.has(artistId);
+
+  const { t } = useUiTranslate();
+
+  const handleSend = () => {
+    if (!newMessage.trim()) return;
+    // TODO: API 연결 후 메시지 전송 로직 추가
+    console.log("Message sent:", newMessage);
+    setNewMessage("");
+  };
+
+  /* ------------------------------------------------
+   * A. 브라우저 웹 – 기존 사이드바
+   * ------------------------------------------------ */
+  if (!isNativeApp) {
+    return (
+      <aside className="w-80 p-4">
+        <div className="bg-white rounded-2xl shadow p-4 flex flex-col h-[calc(100vh-6rem)]">
+          {/* 탭 선택 */}
+          <div className="flex-shrink-0 flex border-b border-gray-200 mb-2">
+            <button
+              className={`flex-1 text-sm font-semibold py-2 -mb-[1px] ${
+                selectedTab === "chat"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 border-b-2 border-transparent"
+              }`}
+              onClick={() => setSelectedTab("chat")}
+            >
+              {t("rightSidebar.tab.chat", "실시간 채팅")}
+            </button>
+            <button
+              className={`flex-1 text-sm font-semibold py-2 -mb-[1px] ${
+                selectedTab === "recommend"
+                  ? "text-purple-600 border-b-2 border-purple-600"
+                  : "text-gray-500 border-b-2 border-transparent"
+              }`}
+              onClick={() => setSelectedTab("recommend")}
+            >
+              {t("rightSidebar.tab.recommend", "추천")}
+            </button>
+          </div>
+
+          {/* 탭 내용 */}
+          <div
+            ref={scrollContainerRef}
+            className="flex-grow overflow-y-auto min-h-0"
+          >
+            {selectedTab === "chat" ? (
+              <RisingChatTab />
+            ) : (
+              <RisingRecommendTab />
+            )}
+          </div>
+
+          {/* 채팅 입력창 (채팅 탭일 때만 보임) */}
+          {selectedTab === "chat" && (
+            <div className="flex-shrink-0">
+              {isLoggedIn && isUserFollowing ? (
+                <div className="mt-4 flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                    placeholder={t(
+                      "rightSidebar.input.placeholder",
+                      "메시지를 입력하세요...",
+                    )}
+                    className="flex-1 px-4 py-2 border rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                  <button
+                    onClick={handleSend}
+                    disabled={!newMessage.trim()}
+                    className="flex-shrink-0 w-9 h-9 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex justify-center items-center disabled:bg-gray-400"
+                  >
+                    <Send size={18} />
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gray-100">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-500"
+                      >
+                        <rect
+                          width="18"
+                          height="11"
+                          x="3"
+                          y="11"
+                          rx="2"
+                          ry="2"
+                        />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        {t(
+                          "rightSidebar.locked.title",
+                          "팔로우 전용 채팅",
+                        )}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {t(
+                          "rightSidebar.locked.desc",
+                          "아티스트를 팔로우하고 대화에 참여하세요.",
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </aside>
+    );
+  }
+
+  /* ------------------------------------------------
+   * B. 앱(Capacitor) – 팬톡 페이지에서 화면 꽉 채우기
+   * ------------------------------------------------ */
+  return (
+    <aside className="w-full h-full">
+      <div className="bg-white rounded-2xl shadow-md p-4 flex flex-col h-full">
+        {/* 탭 선택 (조금 더 작은 글씨) */}
+        <div className="flex-shrink-0 flex border-b border-gray-200 mb-2">
+          <button
+            className={`flex-1 text-xs font-semibold py-2 -mb-[1px] ${
+              selectedTab === "chat"
+                ? "text-purple-600 border-b-2 border-purple-600"
+                : "text-gray-500 border-b-2 border-transparent"
+            }`}
+            onClick={() => setSelectedTab("chat")}
+          >
+            {t("rightSidebar.tab.chat", "실시간 채팅")}
+          </button>
+          <button
+            className={`flex-1 text-xs font-semibold py-2 -mb-[1px] ${
+              selectedTab === "recommend"
+                ? "text-purple-600 border-b-2 border-purple-600"
+                : "text-gray-500 border-b-2 border-transparent"
+            }`}
+            onClick={() => setSelectedTab("recommend")}
+          >
+            {t("rightSidebar.tab.recommendFans", "추천 팬")}
+          </button>
+        </div>
+
+        {/* 탭 내용 – 남은 높이 전부 사용 */}
+        <div
+          ref={scrollContainerRef}
+          className="flex-grow overflow-y-auto min-h-0"
+        >
+          {selectedTab === "chat" ? (
+            <RisingChatTab />
+          ) : (
+            <RisingRecommendTab />
+          )}
+        </div>
+
+        {/* 채팅 입력창 */}
+        {selectedTab === "chat" && (
+          <div className="flex-shrink-0 pt-2">
+            {isLoggedIn && isUserFollowing ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  placeholder={t(
+                    "rightSidebar.input.placeholder",
+                    "메시지를 입력하세요...",
+                  )}
+                  className="flex-1 px-3 py-2 border rounded-full text-xs focus:outline-none focus:ring-2 focus:ring-purple-400"
+                />
+                <button
+                  onClick={handleSend}
+                  disabled={!newMessage.trim()}
+                  className="flex-shrink-0 w-8 h-8 bg-purple-600 hover:bg-purple-700 text-white rounded-full flex justify-center items-center disabled:bg-gray-400"
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            ) : (
+              <div className="mt-2 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-gray-500"
+                    >
+                      <rect
+                        width="18"
+                        height="11"
+                        x="3"
+                        y="11"
+                        rx="2"
+                        ry="2"
+                      />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-800">
+                      {t(
+                        "rightSidebar.locked.title",
+                        "팔로우 전용 채팅",
+                      )}
+                    </p>
+                    <p className="text-[11px] text-gray-500">
+                      {t(
+                        "rightSidebar.locked.desc",
+                        "아티스트를 팔로우하고 대화에 참여하세요.",
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+};
+
+export default RightSidebar;

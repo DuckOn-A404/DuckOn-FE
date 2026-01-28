@@ -165,7 +165,7 @@ const RisingArtistListPage = () => {
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     const slug = createSlug(nameEn);
-    navigate(`/artist/${slug}`, { state: { artistId } });
+    navigate(`/rising-artist/${slug}`, { state: { emergingArtistId: artistId } });
   };
 
   const handleArtistAdded = () => {

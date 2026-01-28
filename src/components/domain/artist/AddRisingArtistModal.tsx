@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Upload, AlertCircle } from "lucide-react";
-import { addRisingArtist } from "../../../api/risingArtistService";
+import { addRisingArtist, type AddRisingArtistRequest } from "../../../api/risingArtistService";
 
 interface AddRisingArtistModalProps {
   isOpen: boolean;
@@ -45,18 +45,22 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
       return;
     }
 
+    if (!imagePreview) {
+      setError("프로필 이미지를 선택해주세요.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData();
-      formData.append("nameKr", nameKr.trim());
-      formData.append("nameEn", nameEn.trim());
-      formData.append("debutDate", debutDate);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+      const requestData: AddRisingArtistRequest = {
+        nameKr: nameKr.trim(),
+        nameEn: nameEn.trim(),
+        debutDate: debutDate,
+        imgUrl: imagePreview, // base64 데이터 URL 또는 이미지 URL
+      };
 
-      await addRisingArtist(formData);
+      await addRisingArtist(requestData);
       
       setNameKr("");
       setNameEn("");
@@ -130,7 +134,12 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
               id="nameEn"
               type="text"
               value={nameEn}
-              onChange={(e) => setNameEn(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 영문, 숫자, 공백, 일부 특수문자만 허용 (한글 제외)
+                const englishOnly = value.replace(/[^a-zA-Z0-9\s!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/g, "");
+                setNameEn(englishOnly);
+              }}
               placeholder="예: NewJeans"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
               disabled={isSubmitting}

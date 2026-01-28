@@ -13,6 +13,7 @@ import UIText from "../components/common/UIText"; //
 import AnimatedSearchBar from "../components/home/AnimatedSearchBar";
 
 import {getRandomArtists} from "../api/artistService";
+import {getRandomRisingArtists} from "../api/risingArtistService";
 import {type Artist} from "../types/artist";
 import {useTrendingRooms} from "../hooks/useTrendingRooms";
 import {createSlug} from "../utils/slugUtils";
@@ -95,8 +96,6 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    // API 미완성으로 인한 임시 비활성화 (나중에 연결 시 아래 주석 해제)
-    /*
     (async () => {
       try {
         const data = await getRandomRisingArtists(5);
@@ -107,9 +106,6 @@ const HomePage = () => {
         setIsLoadingRisingArtists(false);
       }
     })();
-    */
-    setRisingArtists([]);
-    setIsLoadingRisingArtists(false);
   }, []);
 
   return (
@@ -518,143 +514,192 @@ const HomePage = () => {
 
           {/* 웹: 기존 UI 100% 동일 유지 */}
           {!isNativeApp && (
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-              {isLoadingRisingArtists
-                ? Array.from({length: 5}).map((_, i) => (
-                  <ArtistCardSkeleton key={i} />
-                ))
-                : risingArtists.map((artist) => (
-                  <motion.div
-                    key={artist.artistId}
-                    initial={{opacity: 0, y: 10}}
-                    whileInView={{opacity: 1, y: 0}}
-                    viewport={{once: true, amount: 0.2}}
-                    transition={{duration: 0.35, ease: "easeOut"}}
-                  >
-                    <ArtistCard
-                      {...artist}
-                      onClick={() => {
-                        const slug = createSlug(artist.nameEn);
-                        navigate(`/artist/${slug}`, {
-                          state: {artistId: artist.artistId},
-                        });
-                      }}
-                    />
-                  </motion.div>
-                ))}
-            </div>
+            <>
+              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                {isLoadingRisingArtists
+                  ? Array.from({length: 5}).map((_, i) => (
+                    <ArtistCardSkeleton key={i} />
+                  ))
+                  : risingArtists.map((artist) => (
+                    <motion.div
+                      key={artist.artistId}
+                      initial={{opacity: 0, y: 10}}
+                      whileInView={{opacity: 1, y: 0}}
+                      viewport={{once: true, amount: 0.2}}
+                      transition={{duration: 0.35, ease: "easeOut"}}
+                    >
+                      <ArtistCard
+                        {...artist}
+                        onClick={() => {
+                          const slug = createSlug(artist.nameEn);
+                          navigate(`/rising-artist/${slug}`, {
+                            state: {emergingArtistId: artist.artistId},
+                          });
+                        }}
+                      />
+                    </motion.div>
+                  ))}
+              </div>
+
+              {/* CTA: 아티스트 추가하기 - 웹 */}
+              <motion.div
+                initial={{opacity: 0, y: 20}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.4, delay: 0.2}}
+                className="mt-8 mx-auto max-w-2xl"
+              >
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 border border-purple-100/50 shadow-sm hover:shadow-lg transition-all duration-300">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-fuchsia-200/30 to-purple-200/30 rounded-full blur-2xl" />
+                  
+                  <div className="relative px-6 py-5 flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-purple-900 mb-1">
+                        <UIText id="home.risingArtists.cta.title">
+                          원하는 아티스트가 없나요?
+                        </UIText>
+                      </p>
+                      <p className="text-xs text-purple-700/80">
+                        <UIText id="home.risingArtists.cta.subtitle">
+                          직접 추가하고 팬들과 함께 즐겨보세요
+                        </UIText>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate("/rising-artist-list")}
+                      className="
+                        shrink-0 px-5 py-2.5 rounded-xl
+                        bg-gradient-to-r from-purple-600 to-fuchsia-600
+                        hover:from-purple-700 hover:to-fuchsia-700
+                        text-white text-sm font-bold
+                        shadow-md hover:shadow-xl
+                        transition-all duration-200
+                        active:scale-95
+                        flex items-center gap-2
+                      "
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <UIText id="home.risingArtists.cta.button">
+                        아티스트 추가하기
+                      </UIText>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </>
           )}
 
           {/* 앱: 덕온 톤의 라이트 카드 + 동그라미 아티스트 */}
           {isNativeApp && (
-            <div className="md:hidden rounded-3xl bg-white/90 backdrop-blur-sm border border-white/70 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,.12)]">
-              <div className="grid grid-cols-3 gap-4">
-                {isLoadingRisingArtists
-                  ? // 로딩 스켈레톤
-                  Array.from({length: 5}).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="flex flex-col items-center gap-2 animate-pulse"
-                    >
-                      <div className="w-20 h-20 rounded-full bg-slate-200/80" />
-                      <div className="w-16 h-3 rounded-full bg-slate-200/80" />
-                    </div>
-                  ))
-                  : // 실제 아티스트 (최대 5명)
-                  risingArtists.slice(0, 5).map((artist) => (
-                    <button
-                      key={artist.artistId}
-                      type="button"
-                      className="flex flex-col items-center gap-2 active:scale-95 transition"
-                      onClick={() => {
-                        const slug = createSlug(artist.nameEn);
-                        navigate(`/artist/${slug}`, {
-                          state: {artistId: artist.artistId},
-                        });
-                      }}
-                    >
-                      {/* 그라데이션 링 + 둥근 썸네일 */}
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-500 to-sky-400 p-[2px]">
-                        <div className="w-full h-full rounded-full overflow-hidden bg-slate-200">
-                          <img
-                            src={artist.imgUrl || "/default_image.png"}
-                            alt={artist.nameKr || artist.nameEn}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        </div>
+            <>
+              <div className="md:hidden rounded-3xl bg-white/90 backdrop-blur-sm border border-white/70 px-5 py-5 shadow-[0_18px_40px_rgba(15,23,42,.12)]">
+                <div className="grid grid-cols-3 gap-4">
+                  {isLoadingRisingArtists
+                    ? Array.from({length: 5}).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="flex flex-col items-center gap-2 animate-pulse"
+                      >
+                        <div className="w-20 h-20 rounded-full bg-slate-200/80" />
+                        <div className="w-16 h-3 rounded-full bg-slate-200/80" />
                       </div>
-                      <p className="mt-1 text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
-                        {artist.nameKr || artist.nameEn}
-                      </p>
-                    </button>
-                  ))}
+                    ))
+                    : risingArtists.slice(0, 5).map((artist) => (
+                      <button
+                        key={artist.artistId}
+                        type="button"
+                        className="flex flex-col items-center gap-2 active:scale-95 transition"
+                        onClick={() => {
+                          const slug = createSlug(artist.nameEn);
+                          navigate(`/rising-artist/${slug}`, {
+                            state: {emergingArtistId: artist.artistId},
+                          });
+                        }}
+                      >
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-fuchsia-500 via-purple-500 to-sky-400 p-[2px]">
+                          <div className="w-full h-full rounded-full overflow-hidden bg-slate-200">
+                            <img
+                              src={artist.imgUrl || "/default_image.png"}
+                              alt={artist.nameKr || artist.nameEn}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        </div>
+                        <p className="mt-1 text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
+                          {artist.nameKr || artist.nameEn}
+                        </p>
+                      </button>
+                    ))}
 
-                {/* 전체 라이징 아티스트로 가는 '전체 보기' 동그라미 */}
-                <button
-                  type="button"
-                  onClick={() => navigate("/rising-artist-list")}
-                  className="flex flex-col items-center gap-2 active:scale-95 transition"
-                >
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-[0_10px_25px_rgba(15,23,42,.35)]">
-                    <UIText id="home.risingArtists.allArtistsCircle">
-                      전체 보기
-                    </UIText>
-                  </div>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* CTA: 아티스트 추가하기 */}
-          <motion.div
-            initial={{opacity: 0, y: 20}}
-            whileInView={{opacity: 1, y: 0}}
-            viewport={{once: true}}
-            transition={{duration: 0.4, delay: 0.2}}
-            className="mt-8 mx-auto max-w-2xl"
-          >
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 border border-purple-100/50 shadow-sm hover:shadow-lg transition-all duration-300">
-              {/* 배경 장식 */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-3xl" />
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-fuchsia-200/30 to-purple-200/30 rounded-full blur-2xl" />
-              
-              <div className="relative px-6 py-5 flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-purple-900 mb-1">
-                    <UIText id="home.risingArtists.cta.title">
-                      원하는 아티스트가 없나요?
-                    </UIText>
-                  </p>
-                  <p className="text-xs text-purple-700/80">
-                    <UIText id="home.risingArtists.cta.subtitle">
-                      직접 추가하고 팬들과 함께 즐겨보세요
-                    </UIText>
-                  </p>
+                  {/* 전체 라이징 아티스트로 가는 '전체 보기' 동그라미 */}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/rising-artist-list")}
+                    className="flex flex-col items-center gap-2 active:scale-95 transition"
+                  >
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-[0_10px_25px_rgba(15,23,42,.35)]">
+                      <UIText id="home.risingArtists.allArtistsCircle">
+                        전체 보기
+                      </UIText>
+                    </div>
+                  </button>
                 </div>
-                <button
-                  onClick={() => navigate("/rising-artist-list")}
-                  className="
-                    shrink-0 px-5 py-2.5 rounded-xl
-                    bg-gradient-to-r from-purple-600 to-fuchsia-600
-                    hover:from-purple-700 hover:to-fuchsia-700
-                    text-white text-sm font-bold
-                    shadow-md hover:shadow-xl
-                    transition-all duration-200
-                    active:scale-95
-                    flex items-center gap-2
-                  "
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <UIText id="home.risingArtists.cta.button">
-                    아티스트 추가하기
-                  </UIText>
-                </button>
               </div>
-            </div>
-          </motion.div>
+
+              {/* CTA: 아티스트 추가하기 - 앱 */}
+              <motion.div
+                initial={{opacity: 0, y: 20}}
+                whileInView={{opacity: 1, y: 0}}
+                viewport={{once: true}}
+                transition={{duration: 0.4, delay: 0.2}}
+                className="mt-4"
+              >
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 border border-purple-100/50 shadow-sm">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-200/30 to-pink-200/30 rounded-full blur-3xl" />
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-fuchsia-200/30 to-purple-200/30 rounded-full blur-2xl" />
+                  
+                  <div className="relative px-6 py-5 flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-purple-900 mb-1">
+                        <UIText id="home.risingArtists.cta.title">
+                          원하는 아티스트가 없나요?
+                        </UIText>
+                      </p>
+                      <p className="text-xs text-purple-700/80">
+                        <UIText id="home.risingArtists.cta.subtitle">
+                          직접 추가하고 팬들과 함께 즐겨보세요
+                        </UIText>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigate("/rising-artist-list")}
+                      className="
+                        shrink-0 px-5 py-2.5 rounded-xl
+                        bg-gradient-to-r from-purple-600 to-fuchsia-600
+                        hover:from-purple-700 hover:to-fuchsia-700
+                        text-white text-sm font-bold
+                        shadow-md hover:shadow-xl
+                        transition-all duration-200
+                        active:scale-95
+                        flex items-center gap-2
+                      "
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <UIText id="home.risingArtists.cta.button">
+                        아티스트 추가하기
+                      </UIText>
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </>
+          )}
         </section>
 
         {/* 빠르게 시작하기 */}
