@@ -532,8 +532,8 @@ const HomePage = () => {
                         {...artist}
                         onClick={() => {
                           const slug = createSlug(artist.nameEn);
-                          navigate(`/artist/${slug}`, {
-                            state: {artistId: artist.artistId},
+                          navigate(`/rising-artist/${slug}`, {
+                            state: {emergingArtistId: artist.artistId},
                           });
                         }}
                       />
@@ -614,8 +614,8 @@ const HomePage = () => {
                         className="flex flex-col items-center gap-2 active:scale-95 transition"
                         onClick={() => {
                           const slug = createSlug(artist.nameEn);
-                          navigate(`/artist/${slug}`, {
-                            state: {artistId: artist.artistId},
+                          navigate(`/rising-artist/${slug}`, {
+                            state: {emergingArtistId: artist.artistId},
                           });
                         }}
                       >
