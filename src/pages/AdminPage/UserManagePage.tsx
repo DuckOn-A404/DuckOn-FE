@@ -285,7 +285,7 @@ const UserManagePage: React.FC = () => {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 text-left">
+                <th className="px-6 py-4 text-left w-12">
                   <input
                     type="checkbox"
                     checked={
@@ -297,25 +297,25 @@ const UserManagePage: React.FC = () => {
                   />
                 </th>
 
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-20">
                   ID
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-32">
                   이름
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-48">
                   이메일
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-28">
                   역할
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-32">
                   가입일
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-40">
                   마지막 로그인
                 </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-24">
                   상태
                 </th>
 
@@ -340,13 +340,17 @@ const UserManagePage: React.FC = () => {
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                    {user.name}
+                    <div className="max-w-[120px] truncate" title={user.name}>
+                      {user.name}
+                    </div>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Mail size={14} />
-                      {user.email}
+                      <Mail size={14} className="flex-shrink-0" />
+                      <span className="max-w-[200px] truncate" title={user.email}>
+                        {user.email}
+                      </span>
                     </div>
                   </td>
 
