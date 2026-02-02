@@ -51,7 +51,7 @@ const LeftSidebar = () => {
 
             <button
               className="flex-shrink-0 w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
-              onClick={() => navigate("/rising-artist-list")}
+              onClick={() => navigate("/artist-list?tab=rising")}
             >
               <span>{t("leftSidebar.risingMore", "라이징 아티스트 더보기")}</span>
             </button>
@@ -63,7 +63,7 @@ const LeftSidebar = () => {
             </p>
             <button
               className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
-              onClick={() => navigate("/rising-artist-list")}
+              onClick={() => navigate("/artist-list?tab=rising")}
             >
               <span>{t("leftSidebar.risingGoFollow", "라이징 아티스트 팔로우 하러가기")}</span>
             </button>

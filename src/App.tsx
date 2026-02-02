@@ -5,7 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import MainLayout from "./layouts/MainLayout";
 import ArtistListPage from "./pages/ArtistListPage";
-import RisingArtistListPage from "./pages/RisingArtistListPage";
+// import RisingArtistListPage from "./pages/RisingArtistListPage";
 import ArtistDetailPage from "./pages/ArtistDetailPage";
 import RisingArtistDetailPage from "./pages/RisingArtistDetailPage";
 import MyPage from "./pages/MyPage";
@@ -68,7 +68,7 @@ function App() {
           <Route element={<LayoutWithoutFooter />}>
             {/* <Route path="/room-list" element={<RoomListPage />}></Route> */}
             <Route path="/artist-list" element={<ArtistListPage />} />
-            <Route path="/rising-artist-list" element={<RisingArtistListPage />} />
+            {/* <Route path="/rising-artist-list" element={<RisingArtistListPage />} /> */}
             <Route path="/room-list" element={<RoomListPage />} />
             <Route path="/followed-artists" element={<FollowedArtistsPage />} />
           </Route>
