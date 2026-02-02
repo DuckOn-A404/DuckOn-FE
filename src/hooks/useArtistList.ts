@@ -81,11 +81,11 @@ export const useArtistList = (params: ListParams) => {
     }
   };
 
-  // q/sort/order/size 변경 시 목록 초기화 후 1페이지 로드
+  // q/sort/order/size/isRising 변경 시 목록 초기화 후 1페이지 로드
   useEffect(() => {
     reset();
     fetchPage(1);
-  }, [params.q, params.sort, params.order, params.size]);
+  }, [params.q, params.sort, params.order, params.size, params.isRising]);
 
   return { artists, totalCount, fetchMore, loading, hasMore, error, reset };
 };

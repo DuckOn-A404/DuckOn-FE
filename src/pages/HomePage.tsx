@@ -504,7 +504,7 @@ const HomePage = () => {
             {/* 웹에서만 '더보기 →' 보이도록 */}
             {!isNativeApp && (
               <Link
-                to="/rising-artist-list"
+                to="/artist-list?tab=rising"
                 className="text-purple-600 hover:text-purple-800 font-semibold transition-colors"
               >
                 <UIText id="common.more">더보기 →</UIText>
@@ -567,7 +567,7 @@ const HomePage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => navigate("/rising-artist-list")}
+                      onClick={() => navigate("/artist-list?tab=rising")}
                       className="
                         shrink-0 px-5 py-2.5 rounded-xl
                         bg-gradient-to-r from-purple-600 to-fuchsia-600
@@ -638,7 +638,7 @@ const HomePage = () => {
                   {/* 전체 라이징 아티스트로 가는 '전체 보기' 동그라미 */}
                   <button
                     type="button"
-                    onClick={() => navigate("/rising-artist-list")}
+                    onClick={() => navigate("/artist-list?tab=rising")}
                     className="flex flex-col items-center gap-2 active:scale-95 transition"
                   >
                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 via-fuchsia-500 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-[0_10px_25px_rgba(15,23,42,.35)]">
@@ -676,7 +676,7 @@ const HomePage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => navigate("/rising-artist-list")}
+                      onClick={() => navigate("/artist-list?tab=rising")}
                       className="
                         shrink-0 px-5 py-2.5 rounded-xl
                         bg-gradient-to-r from-purple-600 to-fuchsia-600
