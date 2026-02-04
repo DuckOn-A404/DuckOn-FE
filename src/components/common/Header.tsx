@@ -15,6 +15,7 @@ import {
 import NicknameWithRank from "./NicknameWithRank";
 import { isNativeApp } from "../../utils/platform";
 import { useUiTranslate } from "../../hooks/useUiTranslate";
+import NotificationBell from "./NotificationBell";
 
 type HeaderProps = {
   user: User | null;
@@ -353,6 +354,8 @@ const Header = ({ user, onLogin, onSignup, onLogout }: HeaderProps) => {
               </button>
             )}
 
+            {user && <NotificationBell />}
+            
             {user ? (
               <HeadlessMenu as="div" className="relative">
                 <HeadlessMenu.Button className="group flex items-center gap-2 rounded-full pl-1 pr-2 py-1 transition-all hover:bg-black/5 focus-visible:outline-none">
