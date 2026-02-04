@@ -2229,6 +2229,7 @@ import GifModal from "../../components/domain/GifModal";
 import NicknameWithRank from "../../components/common/NicknameWithRank";
 import { translateChatMessage } from "../../api/translateService";
 import { useUiTranslate } from "../../hooks/useUiTranslate";
+import { createReport, ReportType } from "../../api/reportApi";
 
 type ChatPanelProps = {
   messages: ChatMessage[];
@@ -2339,6 +2340,48 @@ const ConfirmModal = ({
   );
 };
 
+//  --- AlertModal (알림용) ---
+const AlertModal = ({
+  isOpen,
+  onClose,
+  title,
+  message,
+  type = "info",
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+  type?: "info" | "success" | "error";
+}) => {
+  const { t } = useUiTranslate();
+
+  if (!isOpen) return null;
+
+  const bgColor = {
+    info: "bg-blue-500",
+    success: "bg-green-500",
+    error: "bg-red-500",
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
+      <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
+        <h3 className="text-lg font-bold text-white">{title}</h3>
+        <p className="text-sm text-gray-300 mt-2 whitespace-pre-line">{message}</p>
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className={`px-4 py-2 text-sm font-medium text-white ${bgColor[type]} hover:opacity-90 rounded-md transition-colors`}
+          >
+            {t("chat.button.confirm", "확인")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ChatPanel = ({
   messages,
   sendMessage,
@@ -2394,8 +2437,30 @@ const ChatPanel = ({
     id: string;
     nickname: string;
   } | null>(null);
+  const [reportTargetMessage, setReportTargetMessage] = useState<ChatMessage | null>(null);
   const [reportReason, setReportReason] = useState("");
   const [reportDone, setReportDone] = useState(false);
+
+  // 알림 모달 상태
+  const [alertModal, setAlertModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    type: "info" | "success" | "error";
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "info",
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "info" | "success" | "error" = "info"
+  ) => {
+    setAlertModal({ isOpen: true, title, message, type });
+  };
 
   const [atBottom, setAtBottom] = useState(true);
   const footerRef = useRef<HTMLDivElement | null>(null);
@@ -2785,31 +2850,72 @@ const ChatPanel = ({
     setEjectConfirm({ isOpen: false, user: null });
   };
 
-  // ✅ 신고 모달 열기
-  const openReportModal = (user: { id: string; nickname: string }) => {
+  // 신고 모달 열기
+  const openReportModal = (user: { id: string; nickname: string }, message: ChatMessage) => {
     setReportTarget(user);
+    setReportTargetMessage(message);
     setReportReason("");
     setReportDone(false);
   };
 
-  // ✅ 신고 모달 닫기
+  // 신고 모달 닫기
   const closeReportModal = () => {
     setReportTarget(null);
+    setReportTargetMessage(null);
     setReportReason("");
     setReportDone(false);
   };
 
-  // ✅ 신고 제출 (프론트에서만 사용)
-  const handleSubmitReport = () => {
-    if (!reportReason.trim() || !reportTarget) return;
+  // 신고 제출
+  const handleSubmitReport = async () => {
+    if (!reportReason.trim() || !reportTarget || !reportTargetMessage) return;
 
-    console.log("신고 접수:", {
-      targetId: reportTarget.id,
-      targetNickname: reportTarget.nickname,
-      reason: reportReason,
-    });
+    // sentAt을 timestamp로 변환하여 contentId로 사용
+    const contentId = new Date(reportTargetMessage.sentAt).getTime();
 
-    setReportDone(true);
+    try {
+      await createReport({
+        reportedId: reportTarget.id,
+        contentId: contentId,
+        reportedContent: reportTargetMessage.content,
+        reportType: ReportType.MESSAGE,
+        reportReason: reportReason.trim(),
+      });
+
+      setReportDone(true);
+      showAlert(
+        t("chat.report.success.title", "신고 완료"),
+        t("chat.report.success.message", "신고가 접수되었습니다.\n빠른 시일 내로 조치를 취하겠습니다."),
+        "success"
+      );
+
+      // 2초 후 모달 자동 닫기
+      setTimeout(() => {
+        closeReportModal();
+      }, 2000);
+    } catch (error: any) {
+      console.error("신고 실패:", error);
+      
+      if (error.response?.data?.code === 'DUPLICATE_REPORT') {
+        showAlert(
+          t("chat.report.error.duplicate.title", "중복 신고"),
+          t("chat.report.error.duplicate.message", "이미 신고한 콘텐츠입니다."),
+          "info"
+        );
+      } else if (error.response?.status === 401) {
+        showAlert(
+          t("chat.report.error.auth.title", "로그인 필요"),
+          t("chat.report.error.auth.message", "로그인이 필요합니다."),
+          "error"
+        );
+      } else {
+        showAlert(
+          t("chat.report.error.general.title", "신고 실패"),
+          t("chat.report.error.general.message", "신고 접수에 실패했습니다.\n다시 시도해주세요."),
+          "error"
+        );
+      }
+    }
   };
 
   // 게스트 GIF 안내 말풍선 3초 뒤 자동 닫힘
@@ -2871,7 +2977,16 @@ const ChatPanel = ({
         onSelectGif={handleSelectGif}
       />
 
-      {/* ✅ 신고 모달 (AlertTriangle 포함) */}
+      {/* AlertModal */}
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+      />
+
+      {/* 신고 모달 */}
       {reportTarget && (
         <div className="fixed inset-0 z-[400] flex items-center justify-center bg-black/60">
           <div className="w-11/12 max-w-md rounded-2xl bg-gray-900 shadow-2xl border border-gray-700 p-5">
@@ -2902,15 +3017,6 @@ const ChatPanel = ({
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
             />
-
-            {reportDone && (
-              <p className="mt-2 text-[11px] text-emerald-400">
-                {t(
-                  "chat.report.done",
-                  "신고되었습니다. 빠른 시일 내로 조치를 취하겠습니다."
-                )}
-              </p>
-            )}
 
             <div className="mt-4 flex justify-end gap-2 text-xs">
               <button
@@ -3085,10 +3191,13 @@ const ChatPanel = ({
                             {/* 신고하기 */}
                             <button
                               onClick={() =>
-                                openReportModal({
+                                openReportModal(
+                                  {
                                   id: senderId,
                                   nickname: msg.senderNickName,
-                                })
+                                  },
+                                  msg
+                                )
                               }
                               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-red-300 hover:bg-red-500/80 hover:text-white rounded-md"
                             >

@@ -61,16 +61,19 @@ function toUiStatus(statusRaw: string): Exclude<UiStatus, "전체"> {
   return STATUS_KO[statusRaw] ?? "대기중";
 }
 
-function formatDateTime(value: string) {
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return value;
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(d);
+function formatDateTime(iso?: string | null) {
+  if (!iso) return "-";
+  
+  // 타임존 정보가 없으면 강제로 UTC로 처리
+  const normalized = iso.endsWith('Z') ? iso : iso + 'Z';
+  const d = new Date(normalized);
+  
+  if (Number.isNaN(d.getTime())) return "-";
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+    d.getHours()
+  )}:${pad(d.getMinutes())}`;
 }
 
 const ReportManagePage: React.FC = () => {
