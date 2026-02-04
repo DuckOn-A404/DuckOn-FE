@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { X, Upload, AlertCircle } from "lucide-react";
-import { addRisingArtist, type AddRisingArtistRequest } from "../../../api/risingArtistService";
+import { addRisingArtist, uploadImageToS3, type AddRisingArtistRequest } from "../../../api/risingArtistService";
 
 interface AddRisingArtistModalProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [error, setError] = useState<string>("");
 
   if (!isOpen) return null;
@@ -40,24 +41,39 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
     e.preventDefault();
     setError("");
 
-    if (!nameKr.trim() || !nameEn.trim() || !debutDate) {
+    if (!nameKr.trim() || !nameEn.trim() || !debutDate || !debutDate.trim()) {
       setError("모든 필수 항목을 입력해주세요.");
       return;
     }
 
-    if (!imagePreview) {
+    if (!imageFile) {
       setError("프로필 이미지를 선택해주세요.");
+      return;
+    }
+
+    // 날짜 형식 검증 (YYYY-MM-DD)
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(debutDate)) {
+      setError("올바른 날짜 형식이 아닙니다.");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      // 1단계: 이미지를 S3에 업로드
+      setIsUploadingImage(true);
+      const s3ImageUrl = await uploadImageToS3(imageFile);
+      setIsUploadingImage(false);
+
+      // 2단계: 라이징 아티스트 등록
+      const formattedDate = debutDate.trim();
+      
       const requestData: AddRisingArtistRequest = {
         nameKr: nameKr.trim(),
         nameEn: nameEn.trim(),
-        debutDate: debutDate,
-        imgUrl: imagePreview, // base64 데이터 URL 또는 이미지 URL
+        debutDate: formattedDate,
+        imgUrl: s3ImageUrl, // S3 CDN URL
       };
 
       await addRisingArtist(requestData);
@@ -70,9 +86,14 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
       onSuccess();
       onClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || "아티스트 추가에 실패했습니다.");
+      if (isUploadingImage) {
+        setError(err.response?.data?.message || "이미지 업로드에 실패했습니다.");
+      } else {
+        setError(err.response?.data?.message || "아티스트 추가에 실패했습니다.");
+      }
     } finally {
       setIsSubmitting(false);
+      setIsUploadingImage(false);
     }
   };
 
@@ -155,7 +176,11 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
               id="debutDate"
               type="date"
               value={debutDate}
-              onChange={(e) => setDebutDate(e.target.value)}
+              onChange={(e) => {
+                console.log("Date selected:", e.target.value); // 디버깅용
+                setDebutDate(e.target.value);
+              }}
+              max={new Date().toISOString().split('T')[0]}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
               disabled={isSubmitting}
               required
@@ -178,7 +203,9 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
               )}
               <label
                 htmlFor="image"
-                className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition cursor-pointer"
+                className={`flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition ${
+                  isSubmitting ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                }`}
               >
                 <Upload className="h-5 w-5 text-gray-500" />
                 <span className="text-sm text-gray-600">
@@ -210,7 +237,11 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
               disabled={isSubmitting}
               className="flex-1 px-4 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "추가 중..." : "추가하기"}
+              {isUploadingImage
+                ? "이미지 업로드 중..."
+                : isSubmitting
+                ? "등록 중..."
+                : "추가하기"}
             </button>
           </div>
         </form>

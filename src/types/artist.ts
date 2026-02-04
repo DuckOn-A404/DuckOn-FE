@@ -4,4 +4,5 @@ export interface Artist {
   nameKr: string;
   debutDate: string;
   imgUrl: string;
+  followerCount?: number;
 }

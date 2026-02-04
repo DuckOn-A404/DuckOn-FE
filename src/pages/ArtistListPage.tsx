@@ -259,7 +259,7 @@ import {
   type TouchEvent,
   useMemo,
 } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Users } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
 import { useDebounce } from "../hooks/useDebounce";
 import { createSlug } from "../utils/slugUtils";
@@ -602,9 +602,17 @@ const ArtistListPage = () => {
                   />
                 </div>
               </div>
-              <p className="text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
-                {artist.nameKr || artist.nameEn}
-              </p>
+              <div className="flex flex-col items-center gap-0.5 w-full">
+                <p className="text-[12px] text-slate-900 font-bold text-center leading-tight line-clamp-1 px-1">
+                  {artist.nameKr || artist.nameEn}
+                </p>
+                {typeof artist.followerCount === "number" && (
+                  <div className="flex items-center gap-0.5 text-[10px] text-purple-600 font-medium">
+                    <Users className="h-3 w-3" />
+                    <span>{artist.followerCount.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
             </button>
           ))}
         </div>

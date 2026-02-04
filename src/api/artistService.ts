@@ -100,7 +100,11 @@ export async function getArtistList(
   });
 
   const data = response.data || {};
-  const artistList: Artist[] = data.artistList ?? [];
+  const rawArtistList = data.artistList ?? [];
+  const artistList: Artist[] = rawArtistList.map((a: any) => ({
+    ...a,
+    followerCount: a.followerCount ?? undefined
+  }));
   const pageResp = data.page ?? page;
   const sizeResp = data.size ?? size;
   const totalPages = data.totalPages ?? 1;
