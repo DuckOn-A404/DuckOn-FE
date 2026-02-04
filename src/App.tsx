@@ -27,6 +27,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import ChildSafetyPage from "./pages/ChildSafetyPage";
 import AccountDeletePage from "./pages/AccountDeletePage";
 import SearchResultsPage from "./pages/SearchResultsPage";
+import MyChangeRequestsPage from "./pages/MyChangeRequestsPage";
 import AdminRouteGuard from "./routes/AdminRouteGuard";
 import PublicRoute from "./components/common/PublicRoute";
 
@@ -61,6 +62,7 @@ function App() {
             <Route path="/rising-artist/:nameEn" element={<RisingArtistDetailPage />} />
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
+            <Route path="/my-change-requests" element={<MyChangeRequestsPage />} />
             {/* <Route path="/account/delete" element={<AccountDeletePage />} /> */}
           </Route>
 

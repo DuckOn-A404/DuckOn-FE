@@ -269,6 +269,7 @@ const MyPage = () => {
             onChangePasswordClick={() =>
               setIsChangePasswordModalOpen(true)
             }
+            onMyRequestsClick={() => navigate("/my-change-requests")}
           />
         ) : (
           <EditProfileCard
