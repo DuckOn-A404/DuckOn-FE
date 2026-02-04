@@ -19,6 +19,7 @@ export interface EmergingArtistDetailResponse {
     status: string;
     createdByUserNickName: string;
     followerCount: number;
+    following: boolean;
   };
 }
 
@@ -32,16 +33,14 @@ export interface EmergingArtistDetail {
   status: string;
   createdByUserNickName: string;
   followerCount: number;
+  following: boolean;
 }
 
 export const getEmergingArtistDetail = async (
   emergingArtistId: number
 ): Promise<EmergingArtistDetail> => {
   const response = await api.get<EmergingArtistDetailResponse>(
-    `/emerging-artists/${emergingArtistId}`,
-    {
-      skipAuth: true,
-    }
+    `/emerging-artists/${emergingArtistId}`
   );
 
   return response.data.data;
