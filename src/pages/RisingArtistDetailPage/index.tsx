@@ -8,8 +8,9 @@ import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import type { Artist } from "../../types/artist";
-import { Video, Plus } from "lucide-react";
+import { Video, Plus, Edit } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
+import ArtistChangeRequestModal from "../../components/domain/artist/ArtistChangeRequestModal";
 import { isNativeApp } from "../../utils/platform";
 import { Capacitor } from "@capacitor/core";
 import { useUiTranslate } from "../../hooks/useUiTranslate";
@@ -86,6 +87,7 @@ const RisingArtistDetailPage = () => {
   const [artist, setArtist] = useState<RisingArtistDetailInfo | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false);
 
   const { myUser } = useUserStore();
   const {
@@ -213,7 +215,16 @@ const RisingArtistDetailPage = () => {
         onTouchEnd={handleTouchEnd}
       >
         <main className="px-4 pt-4 pb-6 space-y-6">
-          <section className="bg-white rounded-2xl shadow-md p-5 flex items-center gap-4">
+          <section className="relative bg-white rounded-2xl shadow-md p-5 flex items-center gap-4">
+            {isLoggedIn && (
+              <button
+                onClick={() => setIsChangeRequestModalOpen(true)}
+                className="absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <Edit size={12} />
+                <span>수정요청</span>
+              </button>
+            )}
             <img
               src={artist.imgUrl || PLACEHOLDER_URL}
               alt={artist.nameEn}
@@ -240,21 +251,23 @@ const RisingArtistDetailPage = () => {
               </div>
 
               {isLoggedIn && (
-                <button
-                  onClick={handleFollowToggle}
-                  className={
-                    isFollowing
-                      ? "mt-2 inline-flex items-center justify-center px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold"
-                      : "mt-2 inline-flex items-center justify-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-semibold shadow-sm"
-                  }
-                >
-                  {isFollowing
-                    ? t(
-                        "artistDetail.following",
-                        "팔로우 중",
-                      )
-                    : t("artistDetail.follow", "+ 팔로우")}
-                </button>
+                <div className="flex flex-col">
+                  <button
+                    onClick={handleFollowToggle}
+                    className={
+                      isFollowing
+                        ? "inline-flex items-center justify-center px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-xs font-semibold"
+                        : "inline-flex items-center justify-center px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-semibold shadow-sm"
+                    }
+                  >
+                    {isFollowing
+                      ? t(
+                          "artistDetail.following",
+                          "팔로우 중",
+                        )
+                      : t("artistDetail.follow", "+ 팔로우")}
+                  </button>
+                </div>
               )}
             </div>
           </section>
@@ -373,6 +386,16 @@ const RisingArtistDetailPage = () => {
           hostId={myUser?.userId ?? ""}
           hostNickname={myUser?.nickname ?? ""}
         />
+
+        <ArtistChangeRequestModal
+          isOpen={isChangeRequestModalOpen}
+          onClose={() => setIsChangeRequestModalOpen(false)}
+          onSuccess={() => {
+            alert("아티스트 정보 수정 요청이 완료되었습니다.");
+          }}
+          targetType="EMERGING_ARTIST"
+          targetId={artist.emergingArtistId}
+        />
       </div>
     );
   }
@@ -384,7 +407,16 @@ const RisingArtistDetailPage = () => {
       </div>
 
       <main className="w-full lg:flex-1 p-4 sm:p-6 space-y-8">
-        <div className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
+        <div className="relative bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
+          {isLoggedIn && (
+            <button
+              onClick={() => setIsChangeRequestModalOpen(true)}
+              className="absolute top-4 right-6 inline-flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <Edit size={13} />
+              <span>수정요청</span>
+            </button>
+          )}
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <img
               src={artist.imgUrl || PLACEHOLDER_URL}
@@ -410,7 +442,7 @@ const RisingArtistDetailPage = () => {
             </div>
           </div>
           {isLoggedIn && (
-            <div className="w-full sm:w-auto flex-shrink-0">
+            <div className="w-full sm:w-auto flex-shrink-0 flex flex-col">
               {isFollowing ? (
                 <button
                   className="w-full sm:w-auto bg-purple-100 text-purple-700 font-semibold px-4 py-2 rounded-lg cursor-pointer transition-colors hover:bg-purple-200"
@@ -543,6 +575,16 @@ const RisingArtistDetailPage = () => {
         artistId={artist.emergingArtistId}
         hostId={myUser?.userId ?? ""}
         hostNickname={myUser?.nickname ?? ""}
+      />
+
+      <ArtistChangeRequestModal
+        isOpen={isChangeRequestModalOpen}
+        onClose={() => setIsChangeRequestModalOpen(false)}
+        onSuccess={() => {
+          alert("아티스트 정보 수정 요청이 완료되었습니다.");
+        }}
+        targetType="EMERGING_ARTIST"
+        targetId={artist.emergingArtistId}
       />
     </div>
   );
