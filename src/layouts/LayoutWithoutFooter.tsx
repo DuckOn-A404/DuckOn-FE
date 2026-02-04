@@ -1,7 +1,9 @@
 import Header from "../components/common/Header";
 import {Outlet, useNavigate} from "react-router-dom";
 import {useUserStore} from "../store/useUserStore";
+import {useArtistFollowStore} from "../store/useArtistFollowStore";
 import {logoutUser} from "../api/authService";
+import { emitTokenRefreshed } from "../api/axiosInstance";
 
 /**
  * 푸터(Footer)가 없는 페이지를 위한 레이아웃 컴포넌트입니다.
@@ -10,6 +12,7 @@ import {logoutUser} from "../api/authService";
 const LayoutWithoutFooter = () => {
   const navigate = useNavigate();
   const {myUser, setMyUser} = useUserStore();
+  const {clearFollows} = useArtistFollowStore();
 
   const handleLogin = () => navigate("/login");
 
@@ -22,6 +25,9 @@ const LayoutWithoutFooter = () => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user-storage");
+      emitTokenRefreshed(null);
+      clearFollows();
+      
       setMyUser(null);
       navigate("/");
     }

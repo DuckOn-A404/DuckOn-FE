@@ -25,6 +25,7 @@ interface RisingArtistDetailInfo {
   nameKr: string;
   debutDate: string;
   imgUrl: string | null;
+  following: boolean;
   followedAt?: string | null;
   isFollowed?: boolean;
   followerCount?: number;
@@ -105,7 +106,7 @@ const RisingArtistDetailPage = () => {
   } = useArtistRooms(artist?.emergingArtistId);
 
   const isFollowing = artist
-    ? !!artist.followedAt || followingSet.has(artist.emergingArtistId)
+    ? artist.following || followingSet.has(artist.emergingArtistId)
     : false;
 
   useEffect(() => {
@@ -178,7 +179,7 @@ const RisingArtistDetailPage = () => {
       if (isFollowing) {
         await unfollowEmergingArtist(artist.emergingArtistId);
         removeFollow(artist.emergingArtistId);
-        setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
+        setArtist((prev) => (prev ? { ...prev, following: false, followedAt: null } : prev));
       } else {
         await followEmergingArtist(artist.emergingArtistId);
         addFollow({
@@ -190,7 +191,7 @@ const RisingArtistDetailPage = () => {
           followerCount: artist.followerCount ?? 0,
         } as Artist);
         setArtist((prev) =>
-          prev ? { ...prev, followedAt: new Date().toISOString() } : prev,
+          prev ? { ...prev, following: true, followedAt: new Date().toISOString() } : prev,
         );
       }
     } catch {

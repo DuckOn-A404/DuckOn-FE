@@ -2,12 +2,14 @@ import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
 import {Outlet, useNavigate} from "react-router-dom";
 import {useUserStore} from "../store/useUserStore";
+import {useArtistFollowStore} from "../store/useArtistFollowStore";
 import {logoutUser} from "../api/authService";
 import { emitTokenRefreshed } from "../api/axiosInstance";
 
 const MainLayout = () => {
   const navigate = useNavigate();
   const {myUser, setMyUser} = useUserStore();
+  const {clearFollows} = useArtistFollowStore();
 
   const handleLogin = () => navigate("/login");
 
@@ -20,7 +22,8 @@ const MainLayout = () => {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user-storage");
-      emitTokenRefreshed(null)
+      emitTokenRefreshed(null);
+      clearFollows();
       
       setMyUser(null);
       navigate("/");
