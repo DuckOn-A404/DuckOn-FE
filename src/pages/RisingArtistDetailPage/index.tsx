@@ -3,11 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../store/useUserStore";
 import { useArtistFollowStore } from "../../store/useArtistFollowStore";
 import { useArtistRooms } from "../../hooks/useArtistRooms";
-import {
-  followArtist,
-  unfollowArtist,
-} from "../../api/artistService";
-import { getEmergingArtistDetail } from "../../api/emergingArtistService";
+import { getEmergingArtistDetail, followEmergingArtist, unfollowEmergingArtist } from "../../api/emergingArtistService";
 import VideoCard from "../../components/domain/video/VideoCard";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
@@ -180,11 +176,11 @@ const RisingArtistDetailPage = () => {
 
     try {
       if (isFollowing) {
-        await unfollowArtist(artist.emergingArtistId);
+        await unfollowEmergingArtist(artist.emergingArtistId);
         removeFollow(artist.emergingArtistId);
         setArtist((prev) => (prev ? { ...prev, followedAt: null } : prev));
       } else {
-        await followArtist(artist.emergingArtistId);
+        await followEmergingArtist(artist.emergingArtistId);
         addFollow({
           artistId: artist.emergingArtistId,
           nameEn: artist.nameEn,
