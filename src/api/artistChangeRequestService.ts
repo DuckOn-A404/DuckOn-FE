@@ -23,3 +23,39 @@ export const createArtistChangeRequest = async (
   });
   return response.data;
 };
+
+export interface ArtistChangeRequestItem {
+  id: number;
+  targetType: "ARTIST" | "EMERGING_ARTIST";
+  targetId: number;
+  artistNameEn: string;
+  artistNameKr: string;
+  content: string;
+  attachment: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+}
+
+export interface ArtistChangeRequestListResponse {
+  status: number;
+  message: string;
+  data: {
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    items: ArtistChangeRequestItem[];
+  };
+}
+
+export const getMyArtistChangeRequests = async (params: {
+  page?: number;
+  size?: number;
+}): Promise<ArtistChangeRequestListResponse> => {
+  const response = await api.get("/artist-change-requests/me", {
+    params: {
+      page: params.page ?? 1,
+      size: params.size ?? 10,
+    },
+  });
+  return response.data;
+};
