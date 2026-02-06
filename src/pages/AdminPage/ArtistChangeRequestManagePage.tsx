@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { AlertTriangle, X } from "lucide-react";
+import { useToast } from "../../hooks/useToast";
+import Toast from "../../components/common/Toast";
 import {
   getAdminArtistChangeRequests,
   getAdminArtistChangeRequestDetail,
@@ -8,23 +11,108 @@ import {
 
 type StatusFilter = "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED" | "APPLIED";
 
-// 알림 모달 타입
-interface AlertModal {
-  show: boolean;
+// Confirm Modal 타입 (기존 유지)
+type ConfirmModalProps = {
+  open: boolean;
   title: string;
-  message: string;
-  type: "success" | "error" | "warning" | "info";
-  onConfirm?: () => void;
-}
-
-// 확인 모달 타입
-interface ConfirmModal {
-  show: boolean;
-  title: string;
-  message: string;
+  description?: string;
+  confirmText?: string;
+  cancelText?: string;
+  isDanger?: boolean;
+  loading?: boolean;
+  onClose: () => void;
   onConfirm: () => void;
-  onCancel: () => void;
-}
+};
+
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  open,
+  title,
+  description,
+  confirmText = "확인",
+  cancelText = "취소",
+  isDanger = false,
+  loading = false,
+  onClose,
+  onConfirm,
+}) => {
+  if (!open) return null;
+
+  const handleBackdrop = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget && !loading) onClose();
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+      onMouseDown={handleBackdrop}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+        <div className="flex items-start justify-between p-5 border-b border-gray-100">
+          <div className="flex items-start gap-3">
+            <div
+              className={[
+                "mt-0.5 flex h-10 w-10 items-center justify-center rounded-full",
+                isDanger ? "bg-red-50" : "bg-purple-50",
+              ].join(" ")}
+            >
+              <AlertTriangle
+                size={20}
+                className={isDanger ? "text-red-600" : "text-purple-600"}
+              />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+              {description && (
+                <p className="mt-1 text-sm text-gray-600 leading-relaxed">
+                  {description}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="p-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+            aria-label="close"
+          >
+            <X size={18} className="text-gray-600" />
+          </button>
+        </div>
+
+        <div className="p-5">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition disabled:opacity-50"
+            >
+              {cancelText}
+            </button>
+
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={loading}
+              className={[
+                "flex-1 px-4 py-2.5 rounded-xl transition disabled:opacity-60",
+                isDanger
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "bg-purple-600 text-white hover:bg-purple-700",
+              ].join(" ")}
+            >
+              {loading ? "처리 중..." : confirmText}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ArtistChangeRequestManagePage: React.FC = () => {
   const [requests, setRequests] = useState<AdminArtistChangeRequestItem[]>([]);
@@ -39,21 +127,20 @@ const ArtistChangeRequestManagePage: React.FC = () => {
   const [reviewComment, setReviewComment] = useState("");
   const [processing, setProcessing] = useState(false);
 
-  // 알림 모달
-  const [alertModal, setAlertModal] = useState<AlertModal>({
-    show: false,
-    title: "",
-    message: "",
-    type: "info",
-  });
+  // Toast (공통 훅 사용)
+  const { toast, showToast, hideToast } = useToast();
 
-  // 확인 모달
-  const [confirmModal, setConfirmModal] = useState<ConfirmModal>({
-    show: false,
+  // Confirm Modal
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    action: "APPROVE" | "REJECT" | null;
+  }>({
+    open: false,
     title: "",
-    message: "",
-    onConfirm: () => {},
-    onCancel: () => {},
+    description: "",
+    action: null,
   });
 
   // 페이지네이션
@@ -61,27 +148,6 @@ const ArtistChangeRequestManagePage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const pageSize = 20;
-
-  // 알림 모달 표시
-  const showAlert = (title: string, message: string, type: AlertModal["type"] = "info", onConfirm?: () => void) => {
-    setAlertModal({ show: true, title, message, type, onConfirm });
-  };
-
-  // 확인 모달 표시
-  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
-    setConfirmModal({
-      show: true,
-      title,
-      message,
-      onConfirm: () => {
-        onConfirm();
-        setConfirmModal({ ...confirmModal, show: false });
-      },
-      onCancel: () => {
-        setConfirmModal({ ...confirmModal, show: false });
-      },
-    });
-  };
 
   // 데이터 로드
   const loadRequests = async () => {
@@ -96,7 +162,7 @@ const ArtistChangeRequestManagePage: React.FC = () => {
       setTotalElements(response.data.totalElements);
     } catch (error) {
       console.error("요청 목록 로드 실패:", error);
-      alert("데이터를 불러오는데 실패했습니다.");
+      showToast("데이터를 불러오는데 실패했습니다.", "error");
     } finally {
       setLoading(false);
     }
@@ -125,14 +191,14 @@ const ArtistChangeRequestManagePage: React.FC = () => {
       setReviewComment("");
     } catch (error) {
       console.error("상세 정보 로드 실패:", error);
-      alert("상세 정보를 불러오는데 실패했습니다.");
+      showToast("상세 정보를 불러오는데 실패했습니다.", "error");
     }
   };
 
   // 승인/거부 처리
   const handleReview = async (action: "APPROVE" | "REJECT") => {
     if (!reviewComment.trim()) {
-      showAlert("입력 필요", "검토 의견을 입력해주세요.", "warning");
+      showToast("검토 의견을 입력해주세요.", "error");
       return;
     }
 
@@ -140,28 +206,37 @@ const ArtistChangeRequestManagePage: React.FC = () => {
 
     const actionText = action === "APPROVE" ? "승인" : "거부";
     
-    showConfirm(
-      `${actionText} 확인`,
-      `이 요청을 ${actionText}하시겠습니까?`,
-      async () => {
-        setProcessing(true);
-        try {
-          await updateArtistChangeRequestStatus(selectedRequest, {
-            action,
-            reviewComment: reviewComment.trim(),
-          });
-          showAlert("완료", `${actionText}되었습니다.`, "success", () => {
-            setShowDetailModal(false);
-            loadRequests();
-          });
-        } catch (error) {
-          console.error("처리 실패:", error);
-          showAlert("오류", "처리 중 오류가 발생했습니다.", "error");
-        } finally {
-          setProcessing(false);
-        }
-      }
-    );
+    setConfirmModal({
+      open: true,
+      title: `${actionText} 확인`,
+      description: `이 요청을 ${actionText}하시겠습니까?`,
+      action,
+    });
+  };
+
+  const confirmReview = async () => {
+    if (!selectedRequest || !confirmModal.action) return;
+
+    const action = confirmModal.action;
+    const actionText = action === "APPROVE" ? "승인" : "거부";
+
+    setProcessing(true);
+    try {
+      await updateArtistChangeRequestStatus(selectedRequest, {
+        action,
+        reviewComment: reviewComment.trim(),
+      });
+      
+      setConfirmModal({ open: false, title: "", description: "", action: null });
+      showToast(`${actionText}되었습니다.`, "success");
+      setShowDetailModal(false);
+      loadRequests();
+    } catch (error) {
+      console.error("처리 실패:", error);
+      showToast("처리 중 오류가 발생했습니다.", "error");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   // 상태 변환
@@ -452,7 +527,7 @@ const ArtistChangeRequestManagePage: React.FC = () => {
 
                 {/* 상태별 안내 메시지 */}
                 {detailData.status === "APPROVED" && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-800">
                       ✓ 이 요청은 승인되었습니다. 적용 대기 중입니다.
                     </p>
@@ -476,7 +551,7 @@ const ArtistChangeRequestManagePage: React.FC = () => {
                 )}
 
                 {detailData.status === "APPLIED" && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <p className="text-sm text-green-800">
                       ✓ 이 요청은 승인되어 적용이 완료되었습니다.
                     </p>
@@ -506,7 +581,6 @@ const ArtistChangeRequestManagePage: React.FC = () => {
                 >
                   닫기
                 </button>
-                {/* PENDING 상태일 때만 승인/거부 버튼 표시 */}
                 {detailData.status === "PENDING" && (
                   <>
                     <button
@@ -519,7 +593,7 @@ const ArtistChangeRequestManagePage: React.FC = () => {
                     <button
                       onClick={() => handleReview("APPROVE")}
                       disabled={processing}
-                      className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                      className="px-5 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 font-medium"
                     >
                       {processing ? "처리중..." : "승인"}
                     </button>
@@ -531,84 +605,26 @@ const ArtistChangeRequestManagePage: React.FC = () => {
         </div>
       )}
 
-      {/* 알림 모달 */}
-      {alertModal.show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
-            <div className="flex flex-col items-center text-center">
-              {/* 아이콘 */}
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
-                alertModal.type === "success" ? "bg-green-100" :
-                alertModal.type === "error" ? "bg-red-100" :
-                alertModal.type === "warning" ? "bg-yellow-100" :
-                "bg-blue-100"
-              }`}>
-                <span className="text-3xl">
-                  {alertModal.type === "success" ? "✓" :
-                   alertModal.type === "error" ? "✕" :
-                   alertModal.type === "warning" ? "⚠" :
-                   "ⓘ"}
-                </span>
-              </div>
-              
-              {/* 제목 */}
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {alertModal.title}
-              </h3>
-              
-              {/* 메시지 */}
-              <p className="text-gray-600 mb-6">
-                {alertModal.message}
-              </p>
-              
-              {/* 확인 버튼 */}
-              <button
-                onClick={() => {
-                  setAlertModal({ ...alertModal, show: false });
-                  if (alertModal.onConfirm) alertModal.onConfirm();
-                }}
-                className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirm Modal */}
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        confirmText={confirmModal.action === "APPROVE" ? "승인" : "거부"}
+        cancelText="취소"
+        isDanger={confirmModal.action === "REJECT"}
+        loading={processing}
+        onClose={() => setConfirmModal({ open: false, title: "", description: "", action: null })}
+        onConfirm={confirmReview}
+      />
 
-      {/* 확인 모달 */}
-      {confirmModal.show && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 animate-scale-in">
-            <div className="flex flex-col">
-              {/* 제목 */}
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {confirmModal.title}
-              </h3>
-              
-              {/* 메시지 */}
-              <p className="text-gray-600 mb-6">
-                {confirmModal.message}
-              </p>
-              
-              {/* 버튼 */}
-              <div className="flex gap-3">
-                <button
-                  onClick={confirmModal.onCancel}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={confirmModal.onConfirm}
-                  className="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium transition-colors"
-                >
-                  확인
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Toast */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={hideToast} 
+        />
       )}
     </div>
   );

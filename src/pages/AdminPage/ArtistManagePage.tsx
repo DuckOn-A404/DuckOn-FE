@@ -4,8 +4,6 @@ import {
   Plus,
   Edit2,
   Trash2,
-  CheckCircle,
-  XCircle,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -16,6 +14,8 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { api } from "../../api/axiosInstance";
+import { useToast } from "../../hooks/useToast";
+import Toast from "../../components/common/Toast";
 
 interface Artist {
   artistId: number;
@@ -48,9 +48,6 @@ interface UploadResponse {
   message: string;
   data: UploadResult;
 }
-
-type ToastType = "success" | "error";
-type ToastState = { message: string; type: ToastType } | null;
 
 const PAGE_SIZE = 21;
 const PAGE_WINDOW = 5;
@@ -171,11 +168,7 @@ const ArtistManagePage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
 
   /** ===== Toast ===== */
-  const [toast, setToast] = useState<ToastState>(null);
-  const showToast = (message: string, type: ToastType = "success") => {
-    setToast({ message, type });
-    window.setTimeout(() => setToast(null), 2500);
-  };
+  const { toast, showToast, hideToast } = useToast();
 
   /** ===== Create Modal State ===== */
   const [showAddModal, setShowAddModal] = useState(false);
@@ -1054,21 +1047,11 @@ const ArtistManagePage: React.FC = () => {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <div
-            className={[
-              "flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-white text-sm",
-              toast.type === "success" ? "bg-green-600" : "bg-red-600",
-            ].join(" ")}
-          >
-            {toast.type === "success" ? (
-              <CheckCircle size={18} />
-            ) : (
-              <XCircle size={18} />
-            )}
-            <span className="font-medium">{toast.message}</span>
-          </div>
-        </div>
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={hideToast} 
+        />
       )}
     </div>
   );
