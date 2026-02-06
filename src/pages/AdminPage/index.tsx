@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   LogOut,
   Menu,
+  FileEdit
 } from 'lucide-react';
 
 const AdminPage: React.FC = () => {
@@ -21,6 +22,7 @@ const AdminPage: React.FC = () => {
     { path: '/admin', icon: LayoutDashboard, label: '대시보드', exact: true },
     { path: '/admin/users', icon: Users, label: '사용자 관리' },
     { path: '/admin/artists', icon: Palette, label: '아티스트 관리' },
+    { path: '/admin/artists-requests', icon: FileEdit, label: '아티스트 정보 변경 요청' },
     { path: '/admin/reports', icon: Flag, label: '신고 관리' },
     { path: '/admin/banners', icon: ImageIcon, label: '배너 관리' },
     { path: '/admin/settings', icon: Settings, label: '설정' },
@@ -30,7 +32,7 @@ const AdminPage: React.FC = () => {
     if (exact) {
       return location.pathname === path;
     }
-    return location.pathname.startsWith(path);
+    return location.pathname === path || location.pathname.startsWith(path + '/')
   };
 
   return (

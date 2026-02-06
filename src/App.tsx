@@ -38,6 +38,7 @@ import ArtistManagePage from "./pages/AdminPage/ArtistManagePage";
 import ReportManagePage from "./pages/AdminPage/ReportManagePage";
 import BannersManagePage from "./pages/AdminPage/BannersManagePage";
 import SettingsManagePage from "./pages/AdminPage/SettingsManagePage";
+import ArtistChangeRequestManagePage from "./pages/AdminPage/ArtistChangeRequestManagePage";
 
 function RouteChangeTracker() {
   const loc = useLocation();
@@ -99,6 +100,7 @@ function App() {
               <Route index element={<DashboardManagePage />} />
               <Route path="users" element={<UserManagePage />} />
               <Route path="artists" element={<ArtistManagePage />} />
+              <Route path="artists-requests" element={<ArtistChangeRequestManagePage />} />
               <Route path="reports" element={<ReportManagePage />} />
               <Route path="banners" element={<BannersManagePage />} />
               <Route path="settings" element={<SettingsManagePage />} />
