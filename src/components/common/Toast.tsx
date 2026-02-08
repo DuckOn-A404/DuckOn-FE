@@ -7,12 +7,22 @@ type ToastType = "success" | "error";
 interface ToastProps {
   message: string;
   type: ToastType;
+  position?: "top-center" | "bottom-right";
   onClose: () => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
+const Toast: React.FC<ToastProps> = ({ 
+  message, 
+  type, 
+  position = "bottom-right", // 기본값은 우측 하단
+  onClose 
+}) => {
+  const positionClasses = position === "top-center"
+    ? "top-6 left-1/2 -translate-x-1/2" // 가운데 상단
+    : "bottom-6 right-6"; // 우측 하단
+
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className={`fixed ${positionClasses} z-50`}>
       <div
         className={[
           "flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-white text-sm",
