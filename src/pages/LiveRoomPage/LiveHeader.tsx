@@ -209,7 +209,7 @@
 
 // export default LiveHeader;
 
-import { User, Pencil } from "lucide-react";
+import { User, Pencil, Siren } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
@@ -225,6 +225,7 @@ type LiveHeaderProps = {
   onExit: () => void;
   onDelete?: () => void;
   onSaveTitle: (nextTitle: string) => Promise<void> | void;
+  onReport?: () => void
 
   hostRankLevel?: "VIP" | "GOLD" | "PURPLE" | "YELLOW" | "GREEN";
 };
@@ -240,6 +241,7 @@ const LiveHeader = ({
   onExit,
   onDelete,
   onSaveTitle,
+  onReport,
   hostRankLevel,
 }: LiveHeaderProps) => {
   const { t } = useUiTranslate();
@@ -412,6 +414,17 @@ const LiveHeader = ({
 
       {/* 오른쪽 버튼들 */}
       <div className="flex items-center gap-x-3">
+        {/* 신고 버튼 (게스트만) */}
+        {!isHost && onReport && (
+          <button
+            type="button"
+            onClick={onReport}
+            className="p-2.5 rounded-lg border border-red-500/60 hover:border-red-400 hover:bg-red-500/10 transition-colors"
+            title={t("live.header.button.report", "방 신고")}
+          >
+            <Siren className="w-5 h-5 text-red-500" />
+          </button>
+        )}
         {isHost ? (
           onDelete && (
             <button
