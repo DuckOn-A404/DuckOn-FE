@@ -172,7 +172,9 @@ const MyChangeRequestsPage = () => {
                             state: { emergingArtistId: request.targetId },
                           });
                         } else {
-                          navigate(`/artist/${request.targetId}`);
+                          navigate(`/artist/${request.targetId}`, {
+                            state: { artistId: request.targetId },
+                          });
                         }
                       }}
                       className="text-sm text-purple-600 hover:text-purple-700 font-semibold hover:underline"

@@ -522,8 +522,9 @@ import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
 import type { ArtistDetailInfo } from "../../api/artistService";
 import type { Artist } from "../../types/artist";
-import { Video, Plus, MessageCircle } from "lucide-react";
+import { Video, Plus, MessageCircle, Edit } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
+import ArtistChangeRequestModal from "../../components/domain/artist/ArtistChangeRequestModal";
 import { isNativeApp } from "../../utils/platform";
 import { Capacitor } from "@capacitor/core";
 
@@ -592,6 +593,7 @@ const ArtistDetailPage = () => {
   const [artist, setArtist] = useState<ArtistDetailInfo | null>(null);
   const [isLoadingPage, setIsLoadingPage] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChangeRequestModalOpen, setIsChangeRequestModalOpen] = useState(false);
 
   const { myUser } = useUserStore();
   const {
@@ -732,7 +734,16 @@ const ArtistDetailPage = () => {
       >
         <main className="px-4 pt-4 pb-6 space-y-6">
           {/* ① 아티스트 헤더 */}
-          <section className="bg-white rounded-2xl shadow-md p-5 flex items-center gap-4">
+          <section className="relative bg-white rounded-2xl shadow-md p-5 flex items-center gap-4">
+            {isLoggedIn && (
+              <button
+                onClick={() => setIsChangeRequestModalOpen(true)}
+                className="absolute top-4 right-4 inline-flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <Edit size={12} />
+                <span>{t("artistDetail.requestEditShort", "수정요청")}</span>
+              </button>
+            )}
             <img
               src={artist.imgUrl || PLACEHOLDER_URL}
               alt={artist.nameEn}
@@ -918,6 +929,16 @@ const ArtistDetailPage = () => {
           hostId={myUser?.userId ?? ""}
           hostNickname={myUser?.nickname ?? ""}
         />
+
+        <ArtistChangeRequestModal
+          isOpen={isChangeRequestModalOpen}
+          onClose={() => setIsChangeRequestModalOpen(false)}
+          onSuccess={() => {
+            alert("아티스트 정보 수정 요청이 완료되었습니다.");
+          }}
+          targetType="ARTIST"
+          targetId={artist.artistId}
+        />
       </div>
     );
   }
@@ -935,7 +956,16 @@ const ArtistDetailPage = () => {
 
       {/* 가운데: 아티스트 카드 + 라이브/예정 */}
       <main className="w-full lg:flex-1 p-4 sm:p-6 space-y-8">
-        <div className="bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
+        <div className="relative bg-white p-6 rounded-2xl shadow flex flex-col sm:flex-row justify-between items-center text-center sm:text-left gap-4">
+          {isLoggedIn && (
+            <button
+              onClick={() => setIsChangeRequestModalOpen(true)}
+              className="absolute top-4 right-6 inline-flex items-center justify-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <Edit size={13} />
+              <span>{t("artistDetail.requestEditShort", "수정요청")}</span>
+            </button>
+          )}
           <div className="flex flex-col sm:flex-row items-center gap-6">
             <img
               src={artist.imgUrl || PLACEHOLDER_URL}
@@ -1093,6 +1123,16 @@ const ArtistDetailPage = () => {
         artistId={artist.artistId}
         hostId={myUser?.userId ?? ""}
         hostNickname={myUser?.nickname ?? ""}
+      />
+
+      <ArtistChangeRequestModal
+        isOpen={isChangeRequestModalOpen}
+        onClose={() => setIsChangeRequestModalOpen(false)}
+        onSuccess={() => {
+          alert("아티스트 정보 수정 요청이 완료되었습니다.");
+        }}
+        targetType="ARTIST"
+        targetId={artist.artistId}
       />
     </div>
   );
