@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, Upload, AlertCircle } from "lucide-react";
 import { createArtistChangeRequest, type ArtistChangeRequestCreateRequest } from "../../../api/artistChangeRequestService";
-import { uploadImageToS3 } from "../../../api/risingArtistService";
+import { uploadImage } from "../../../utils/uploadImage";
 
 interface ArtistChangeRequestModalProps {
   isOpen: boolean;
@@ -60,7 +60,12 @@ const ArtistChangeRequestModal = ({
 
       if (imageFile) {
         setIsUploadingImage(true);
-        attachmentUrl = await uploadImageToS3(imageFile);
+        const { fileUrl } = await uploadImage({
+          file: imageFile,
+          purpose: "ARTIST_CHANGE",
+          refId: targetId,
+        });
+        attachmentUrl = fileUrl;
         setIsUploadingImage(false);
       }
 

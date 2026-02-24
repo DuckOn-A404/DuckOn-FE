@@ -71,32 +71,6 @@ export const getRisingArtistList = async (params: {
   };
 };
 
-export interface UploadImageToS3Response {
-  status: number;
-  message: string;
-  data: {
-    key: string;
-    cdnUrl: string;
-  };
-}
-
-export const uploadImageToS3 = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const response = await api.post<UploadImageToS3Response>(
-    "/memes/upload-s3-only",
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
-
-  return response.data.data.cdnUrl;
-};
-
 export interface AddRisingArtistRequest {
   nameKr: string;
   nameEn: string;
