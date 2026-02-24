@@ -325,7 +325,7 @@ const ArtistManagePage: React.FC = () => {
       const { fileUrl } = await uploadImage({
         file,
         purpose: "RISING_ARTIST_IMAGE_TEMP",
-        refId: editingArtist!.artistId, // ← 수정 시엔 id 있으니 바로 사용
+        refId: null,
       });
       setEditImageUrl(fileUrl);
       setEditImageFileName(file.name);
