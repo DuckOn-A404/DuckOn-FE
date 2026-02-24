@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Upload, AlertCircle } from "lucide-react";
-import { addRisingArtist, uploadImageToS3, type AddRisingArtistRequest } from "../../../api/risingArtistService";
+import { addRisingArtist, type AddRisingArtistRequest } from "../../../api/risingArtistService";
+import { uploadImage } from "../../../utils/uploadImage";
 
 interface AddRisingArtistModalProps {
   isOpen: boolean;
@@ -63,7 +64,11 @@ const AddRisingArtistModal = ({ isOpen, onClose, onSuccess }: AddRisingArtistMod
     try {
       // 1단계: 이미지를 S3에 업로드
       setIsUploadingImage(true);
-      const s3ImageUrl = await uploadImageToS3(imageFile);
+      const { fileUrl: s3ImageUrl } = await uploadImage({
+        file: imageFile,
+        purpose: "RISING_ARTIST_IMAGE_TEMP",
+        refId: null,
+      });
       setIsUploadingImage(false);
 
       // 2단계: 라이징 아티스트 등록

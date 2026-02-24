@@ -2,7 +2,7 @@ import { api } from "../api/axiosInstance";
 
 export type UploadPurpose =
   | "ARTIST_CHANGE"
-  | "ARTIST_IMAGE_TEMP"
+  | "RISING_ARTIST_IMAGE_TEMP"
   | "REPORT"
   | "FEEDBACK";
 

@@ -1,4 +1,4 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef, useCallback} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {Search, ArrowLeft, Play, Check} from "lucide-react";
 import {motion, AnimatePresence} from "framer-motion";
@@ -23,6 +23,7 @@ const SearchResultsPage = () => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [displayQuery, setDisplayQuery] = useState(initialQuery);
   const [ytResults, setYtResults] = useState<YtSearchItem[]>([]);
+  const [displayCount, setDisplayCount] = useState(15);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,6 +38,22 @@ const SearchResultsPage = () => {
   const user = useUserStore((state) => state.myUser);
 
   const navigate = useNavigate();
+
+  // 무한 스크롤 옵저버
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback(
+    (node: any) => {
+      if (isLoading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && displayCount < ytResults.length) {
+          setDisplayCount((prev) => prev + 10);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isLoading, displayCount, ytResults.length]
+  );
 
   // 페이지 로드 시 localStorage에서 선택된 영상 복원
   useEffect(() => {
@@ -66,6 +83,7 @@ const SearchResultsPage = () => {
     setIsLoading(true);
     setError("");
     setDisplayQuery(query);
+    setDisplayCount(15);
 
     try {
       const res = await api.get("/public/youtube/search", {
@@ -243,14 +261,16 @@ const SearchResultsPage = () => {
         {/* 검색 결과 그리드 */}
         {!isLoading && !error && ytResults.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-32">
-            {ytResults.map((item, index) => {
+            {ytResults.slice(0, displayCount).map((item, index) => {
               const selectedIndex = selectedVideos.findIndex(
                 (v) => v.videoId === item.videoId
               );
               const isSelected = selectedIndex >= 0;
+              const isLastElement = index === ytResults.slice(0, displayCount).length - 1;
 
               return (
                 <motion.button
+                  ref={isLastElement ? (lastElementRef as any) : null}
                   key={item.videoId}
                   initial={{opacity: 0, y: 20}}
                   animate={{opacity: 1, y: 0}}
