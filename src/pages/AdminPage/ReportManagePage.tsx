@@ -15,6 +15,7 @@ interface PageResponse<T> {
   size: number;
   totalPages: number;
   totalCount: number;
+  totalElements?: number
 }
 
 interface ReportDTO {
@@ -36,8 +37,8 @@ const STATUS_KO: Record<string, Exclude<UiStatus, "전체">> = {
   WAITING: "대기중",
   PENDING: "대기중",
   IN_PROGRESS: "조사중",
-  INVESTIGATING: "조사중",
-  RESOLVED: "해결됨",
+  CHECKING: "조사중",
+  APPROVED: "해결됨",
   DONE: "해결됨",
   REJECTED: "반려됨",
   DENIED: "반려됨",
@@ -45,10 +46,11 @@ const STATUS_KO: Record<string, Exclude<UiStatus, "전체">> = {
 
 const STATUS_TO_ENUM: Record<Exclude<UiStatus, "전체">, string> = {
   대기중: "PENDING",
-  조사중: "INVESTIGATING",
-  해결됨: "RESOLVED",
+  조사중: "CHECKING",
+  해결됨: "APPROVED",
   반려됨: "REJECTED",
 };
+
 
 function toUiStatus(statusRaw: string): Exclude<UiStatus, "전체"> {
   if (statusRaw === "대기중" || statusRaw === "조사중" || statusRaw === "해결됨" || statusRaw === "반려됨") {
@@ -74,10 +76,9 @@ const ReportManagePage: React.FC = () => {
   const [detailReport, setDetailReport] = useState<ReportDTO | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  // 검색 상태
+  // 검색 상태 (클라이언트 사이드)
   const [searchType, setSearchType] = useState<SearchType>("reporter");
   const [searchInput, setSearchInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState({ type: "reporter" as SearchType, value: "" });
 
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(20);
@@ -94,28 +95,27 @@ const ReportManagePage: React.FC = () => {
     setError(null);
 
     try {
-      let url = "/admin/reports";
       const params: Record<string, any> = { page, size };
 
-      if (searchQuery.value) {
-        // 유저 검색이 최우선
-        url = `/admin/reports/${searchQuery.type === "reporter" ? "reporter" : "reported"}/${searchQuery.value}`;
-      } else if (filterContentType !== "전체") {
-        // 유형 필터
-        url = `/admin/reports/content/${filterContentType}`;
-      } else if (filterStatus !== "전체") {
-        // 상태 필터
-        url = `/admin/reports/status/${STATUS_TO_ENUM[filterStatus]}`;
+      if (filterStatus !== "전체") {
+        params.status = STATUS_TO_ENUM[filterStatus];
       }
 
-      const res = await api.get<ApiResponseDTO<PageResponse<ReportDTO>>>(url, { params });
+      if (filterContentType !== "전체") {
+        params.type = filterContentType;
+      }
+
+      const res = await api.get<ApiResponseDTO<PageResponse<ReportDTO>>>(
+        "/admin/reports/search",
+        { params }
+      );
       const data = res.data.data;
       const list = data.reportList ?? data.items ?? [];
       const safeTotalPages = Math.max(1, data.totalPages ?? 0);
 
       setReports(list);
       setTotalPages(safeTotalPages);
-      setTotalCount(data.totalCount ?? 0);
+      setTotalCount(data.totalCount ?? data.totalElements ?? 0);
     } catch (e: any) {
       const msg = e?.response?.data?.message ?? e?.message ?? "신고 목록 조회 중 오류가 발생했습니다.";
       setError(msg);
@@ -130,7 +130,7 @@ const ReportManagePage: React.FC = () => {
   useEffect(() => {
     fetchReports();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, size, filterStatus, filterContentType, searchQuery]);
+  }, [page, size, filterStatus, filterContentType]);
 
   useEffect(() => {
     if (!selectedReportId) return;
@@ -147,17 +147,19 @@ const ReportManagePage: React.FC = () => {
     else if (page > safeTotalPages) setPage(safeTotalPages);
   }, [totalPages, page]);
 
-  const handleSearch = () => {
-    setPage(1);
-    setFilterStatus("전체");
-    setFilterContentType("전체");
-    setSearchQuery({ type: searchType, value: searchInput.trim() });
-  };
+  // 클라이언트 사이드 부분 검색 (UserManagePage와 동일한 방식)
+  const filteredReports = useMemo(() => {
+    const q = searchInput.trim().toLowerCase();
+    if (!q) return reports;
+    return reports.filter((r) => {
+      if (searchType === "reporter") return r.reporterId.toLowerCase().includes(q);
+      return r.reportedId.toLowerCase().includes(q);
+    });
+  }, [reports, searchInput, searchType]);
 
   const handleReset = () => {
     setSearchInput("");
     setSearchType("reporter");
-    setSearchQuery({ type: "reporter", value: "" });
     setFilterStatus("전체");
     setFilterContentType("전체");
     setPage(1);
@@ -166,13 +168,10 @@ const ReportManagePage: React.FC = () => {
   const handleIdClick = (type: SearchType, value: string) => {
     setSearchType(type);
     setSearchInput(value);
-    setSearchQuery({ type, value });
-    setFilterStatus("전체");
-    setFilterContentType("전체");
     setPage(1);
   };
 
-  const isSearchActive = !!searchQuery.value;
+  const isSearchActive = !!searchInput.trim();
 
   const getStatusBadge = (statusRaw: string) => {
     const status = toUiStatus(statusRaw);
@@ -238,22 +237,19 @@ const ReportManagePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Search Bar - 두 번째 사진 스타일 */}
+      {/* Search Bar */}
       <div className="bg-white rounded-xl p-6 shadow-sm mb-4">
         <div className="flex gap-3 items-center">
-          {/* 검색 입력창 - 아이콘 내장 */}
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder={searchType === "reporter" ? "신고자 ID로 검색..." : "피신고자 ID로 검색..."}
               className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-300"
             />
           </div>
-          {/* 드롭다운 - 오른쪽 */}
           <select
             value={searchType}
             onChange={(e) => setSearchType(e.target.value as SearchType)}
@@ -262,30 +258,23 @@ const ReportManagePage: React.FC = () => {
             <option value="reporter">신고자</option>
             <option value="reported">피신고자</option>
           </select>
-          <button
-            onClick={handleSearch}
-            className="px-4 py-2.5 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition"
-          >
-            검색
-          </button>
-          {isSearchActive && (
+          {(isSearchActive || filterStatus !== "전체" || filterContentType !== "전체") && (
             <button
               onClick={handleReset}
               className="px-4 py-2.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
             >
-              초기화
+              전체 초기화
             </button>
           )}
         </div>
-        {/* 검색 중 안내 */}
         {isSearchActive && (
           <p className="mt-2 text-sm text-purple-600 font-medium">
-            {searchQuery.type === "reporter" ? "신고자" : "피신고자"}: {searchQuery.value} 검색 결과
+            {searchType === "reporter" ? "신고자" : "피신고자"}: {searchInput}
           </p>
         )}
       </div>
 
-      {/* Filter Bar - 상태 + 유형 */}
+      {/* Filter Bar */}
       <div className="bg-white rounded-xl p-6 shadow-sm mb-6 space-y-4">
         {/* 상태 필터 */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -294,15 +283,9 @@ const ReportManagePage: React.FC = () => {
             {(["전체", "대기중", "조사중", "해결됨", "반려됨"] as UiStatus[]).map((status) => (
               <button
                 key={status}
-                onClick={() => {
-                  setFilterStatus(status);
-                  setFilterContentType("전체");
-                  setSearchInput("");
-                  setSearchQuery({ type: "reporter", value: "" });
-                  setPage(1);
-                }}
+                onClick={() => { setFilterStatus(status); setPage(1); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  filterStatus === status && filterContentType === "전체" && !isSearchActive
+                  filterStatus === status
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -320,15 +303,9 @@ const ReportManagePage: React.FC = () => {
             {(["전체", "MESSAGE", "ROOM", "MEME"] as UiContentType[]).map((type) => (
               <button
                 key={type}
-                onClick={() => {
-                  setFilterContentType(type);
-                  setFilterStatus("전체");
-                  setSearchInput("");
-                  setSearchQuery({ type: "reporter", value: "" });
-                  setPage(1);
-                }}
+                onClick={() => { setFilterContentType(type); setPage(1); }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                  filterContentType === type && filterStatus === "전체" && !isSearchActive
+                  filterContentType === type
                     ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
@@ -368,12 +345,12 @@ const ReportManagePage: React.FC = () => {
                 <tr>
                   <td className="px-6 py-10 text-center text-gray-500" colSpan={8}>불러오는 중…</td>
                 </tr>
-              ) : reports.length === 0 ? (
+              ) : filteredReports.length === 0 ? (
                 <tr>
                   <td className="px-6 py-10 text-center text-gray-500" colSpan={8}>신고 내역이 없습니다</td>
                 </tr>
               ) : (
-                reports.map((r) => (
+                filteredReports.map((r) => (
                   <tr key={r.reportId} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">#{r.reportId}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{r.reportType}</td>
