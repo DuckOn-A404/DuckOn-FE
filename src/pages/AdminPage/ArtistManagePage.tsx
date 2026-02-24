@@ -16,6 +16,7 @@ import {
 import { api } from "../../api/axiosInstance";
 import { useToast } from "../../hooks/useToast";
 import Toast from "../../components/common/Toast";
+import { uploadImage } from "../../utils/uploadImage";
 
 interface Artist {
   artistId: number;
@@ -39,15 +40,15 @@ interface ApiResponse<T> {
   data: T;
 }
 
-interface UploadResult {
-  key: string;
-  cdnUrl: string;
-}
-interface UploadResponse {
-  status: number;
-  message: string;
-  data: UploadResult;
-}
+// interface UploadResult {
+//   key: string;
+//   cdnUrl: string;
+// }
+// interface UploadResponse {
+//   status: number;
+//   message: string;
+//   data: UploadResult;
+// }
 
 const PAGE_SIZE = 21;
 const PAGE_WINDOW = 5;
@@ -196,6 +197,8 @@ const ArtistManagePage: React.FC = () => {
   const [editUploading, setEditUploading] = useState(false);
   const [editUploadStatusText, setEditUploadStatusText] = useState<string | null>(null);
 
+  // const [imageFile, setImageFile] = useState<File | null>(null);
+
   // File input refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
@@ -238,19 +241,19 @@ const ArtistManagePage: React.FC = () => {
     });
   }, [artists, searchQuery]);
 
-  /** ===== Upload to S3 ===== */
-  const uploadArtistImage = async (file: File) => {
-    const form = new FormData();
-    form.append("file", file);
+  /** ===== new upload to S3 ===== */
+  // const uploadArtistImage = async (file: File) => {
+  //   const form = new FormData();
+  //   form.append("file", file);
 
-    const res = await api.post<UploadResponse>("/memes/upload-s3-only", form, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  //   const res = await api.post<UploadResponse>("/memes/upload-s3-only", form, {
+  //     headers: { "Content-Type": "multipart/form-data" },
+  //   });
 
-    const cdnUrl = res.data?.data?.cdnUrl;
-    if (!cdnUrl) throw new Error("cdnUrl not found in upload response");
-    return cdnUrl;
-  };
+  //   const cdnUrl = res.data?.data?.cdnUrl;
+  //   if (!cdnUrl) throw new Error("cdnUrl not found in upload response");
+  //   return cdnUrl;
+  // };
 
   const handlePickImageFile = async (file: File | null) => {
     if (!file) return;
@@ -263,8 +266,14 @@ const ArtistManagePage: React.FC = () => {
     setUploading(true);
     setUploadStatusText("이미지 업로드 중...");
     try {
-      const cdnUrl = await uploadArtistImage(file);
-      setImageUrl(cdnUrl);
+      // const cdnUrl = await uploadArtistImage(file);
+      // setImageUrl(cdnUrl);
+      const { fileUrl } = await uploadImage({
+        file,
+        purpose: "ARTIST_IMAGE_TEMP",
+        // refId: 0,
+      });
+      setImageUrl(fileUrl);
       setImageFileName(file.name);
       showToast("이미지가 업로드되었습니다.", "success");
     } catch (e) {
@@ -278,9 +287,23 @@ const ArtistManagePage: React.FC = () => {
     }
   };
 
+  // const handlePickImageFile = async (file: File | null) => {
+  //   if (!file) return;
+  
+  //   if (!file.type.startsWith("image/")) {
+  //     showToast("이미지 파일만 업로드할 수 있습니다.", "error");
+  //     return;
+  //   }
+  
+  //   setImageFile(file); // 파일 저장
+  //   setImageUrl(URL.createObjectURL(file)); // 미리보기용 URL
+  //   setImageFileName(file.name);
+  // };
+
   const handleRemoveImage = () => {
     setImageUrl("");
     setImageFileName("");
+    // setImageFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -297,8 +320,14 @@ const ArtistManagePage: React.FC = () => {
     setEditUploading(true);
     setEditUploadStatusText("이미지 업로드 중...");
     try {
-      const cdnUrl = await uploadArtistImage(file);
-      setEditImageUrl(cdnUrl);
+      // const cdnUrl = await uploadArtistImage(file);
+      // setEditImageUrl(cdnUrl);
+      const { fileUrl } = await uploadImage({
+        file,
+        purpose: "ARTIST_IMAGE_TEMP",
+        refId: editingArtist!.artistId, // ← 수정 시엔 id 있으니 바로 사용
+      });
+      setEditImageUrl(fileUrl);
       setEditImageFileName(file.name);
       showToast("이미지가 업로드되었습니다.", "success");
     } catch (e) {
@@ -360,6 +389,54 @@ const ArtistManagePage: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  // const handleCreateArtist = async () => {
+  //   if (!nameKr.trim() || !nameEn.trim() || !debutDate.trim()) {
+  //     showToast("이름(한/영), 데뷔일은 필수입니다.", "error");
+  //     return;
+  //   }
+  
+  //   setSubmitting(true);
+  //   try {
+  //     // 1) 아티스트 먼저 생성 → artistId 발급
+  //     const createRes = await api.post("/admin/artists", {
+  //       nameKr: nameKr.trim(),
+  //       nameEn: nameEn.trim(),
+  //       debutDate: debutDate.trim(),
+  //     });
+  
+  //     const newArtistId = createRes.data.data.artistId;
+  
+  //     // 2) 이미지 있으면 presign → S3 업로드
+  //     if (imageFile) {
+  //       const { fileUrl } = await uploadImage({
+  //         file: imageFile,
+  //         purpose: "ARTIST_IMAGE_TEMP",
+  //         refId: newArtistId, // 이제 ID 있음!
+  //       });
+  
+  //       // 3) 이미지 URL 업데이트
+  //       await api.patch(`/admin/artists/${newArtistId}`, null, {
+  //         params: { imgUrl: fileUrl },
+  //       });
+  //     }
+  
+  //     showToast("아티스트가 등록되었습니다.", "success");
+  //     setShowAddModal(false);
+  //     setNameKr("");
+  //     setNameEn("");
+  //     setDebutDate("");
+  //     setImageUrl("");
+  //     setImageFileName("");
+  //     setImageFile(null);
+  //     if (fileInputRef.current) fileInputRef.current.value = "";
+  //     fetchArtists();
+  //   } catch (e) {
+  //     showToast("아티스트 등록에 실패했습니다.", "error");
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
 
   // Delete: 모달 열기
   const openDeleteModal = (artist: Artist) => {
