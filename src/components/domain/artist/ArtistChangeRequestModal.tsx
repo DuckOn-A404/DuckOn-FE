@@ -63,7 +63,7 @@ const ArtistChangeRequestModal = ({
         const { fileUrl } = await uploadImage({
           file: imageFile,
           purpose: "ARTIST_CHANGE",
-          refId: null,
+          refId: targetId,
         });
         attachmentUrl = fileUrl;
         setIsUploadingImage(false);
