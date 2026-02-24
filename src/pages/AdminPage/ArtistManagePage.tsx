@@ -270,8 +270,8 @@ const ArtistManagePage: React.FC = () => {
       // setImageUrl(cdnUrl);
       const { fileUrl } = await uploadImage({
         file,
-        purpose: "ARTIST_IMAGE_TEMP",
-        // refId: 0,
+        purpose: "RISING_ARTIST_IMAGE_TEMP",
+        refId: null,
       });
       setImageUrl(fileUrl);
       setImageFileName(file.name);
@@ -324,7 +324,7 @@ const ArtistManagePage: React.FC = () => {
       // setEditImageUrl(cdnUrl);
       const { fileUrl } = await uploadImage({
         file,
-        purpose: "ARTIST_IMAGE_TEMP",
+        purpose: "RISING_ARTIST_IMAGE_TEMP",
         refId: editingArtist!.artistId, // ← 수정 시엔 id 있으니 바로 사용
       });
       setEditImageUrl(fileUrl);
