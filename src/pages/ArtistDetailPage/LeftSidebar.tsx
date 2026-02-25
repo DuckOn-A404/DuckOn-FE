@@ -82,9 +82,13 @@ const LeftSidebar = () => {
   const { followedArtists } = useArtistFollowStore();
   const { t } = useUiTranslate();
 
-  const handleArtistClick = (artistId: number, nameEn: string) => {
-    const slug = createSlug(nameEn);
-    navigate(`/artist/${slug}`, { state: { artistId } });
+  const handleArtistClick = (artist: any) => {
+    const slug = createSlug(artist.nameEn);
+    if (artist.isEmerging) {
+      navigate(`/rising-artist/${slug}`, { state: { emergingArtistId: artist.artistId } });
+    } else {
+      navigate(`/artist/${slug}`, { state: { artistId: artist.artistId } });
+    }
   };
 
   return (
@@ -101,11 +105,9 @@ const LeftSidebar = () => {
             <ul className="space-y-2 text-sm mb-4 flex-grow overflow-y-auto custom-scrollbar">
               {followedArtists.map((artist) => (
                 <li
-                  key={artist.artistId}
+                  key={`${artist.isEmerging ? 'emerging' : 'normal'}-${artist.artistId}`}
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100"
-                  onClick={() =>
-                    handleArtistClick(artist.artistId, artist.nameEn)
-                  }
+                  onClick={() => handleArtistClick(artist)}
                 >
                   <img
                     src={artist.imgUrl || "https://placehold.co/32x32"}

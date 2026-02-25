@@ -5,4 +5,5 @@ export interface Artist {
   debutDate: string;
   imgUrl: string;
   followerCount?: number;
+  isEmerging?: boolean;
 }
