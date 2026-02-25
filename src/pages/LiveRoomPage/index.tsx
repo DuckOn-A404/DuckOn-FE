@@ -300,6 +300,11 @@ const LiveRoomPage = () => {
   const handleSubmitAnswer = async (answer: string) => {
     try {
       const data = await enterRoom(roomId!, answer);
+
+      if (data?.locked === true) {
+        throw new Error("wrong_answer");
+      }
+
       const normalized = normalizeRoomResponse(data);
       if (!normalized) return;
   
@@ -330,47 +335,6 @@ const LiveRoomPage = () => {
       throw error;
     }
   };
-  // const handleSubmitAnswer = async (answer: string) => {
-  //   try {
-  //     const data = await enterRoom(roomId!, answer);
-  //     const raw = data?.room ?? data;
-  
-  //     // 추가: 정답 오답 체크
-  //     if (raw?.locked === true) {
-  //       throw new Error("wrong_answer");
-  //     }
-  
-  //     const normalized = normalizeRoomResponse(data);
-  //     if (!normalized) return;
-  
-  //     setRoom(normalized);
-  //     if (normalized.hostNickname) setHostNickname(normalized.hostNickname);
-  //     if ((data.room ?? data).artistNameEn) {
-  //       setArtistSlug((data.room ?? data).artistNameEn);
-  //     }
-  //     setIsQuizModalOpen(false);
-  //     joinedRef.current = true;
-  //   } catch (error: any) {
-  //     // 기존 에러 처리 유지 (혹시 모를 403 대비)
-  //     if (error.message === "wrong_answer") throw error;
-  
-  //     const status = error.response?.status;
-  //     if (status === 400) {
-  //       setKickedOpen(true);
-  //       return;
-  //     }
-  //     if (status === 401 || status === 403) {
-  //       const data = error.response?.data || {};
-  //       const msg = (data?.message ?? "").toString();
-  //       if (msg.includes("정답")) throw new Error("wrong_answer");
-  //       const raw = (data.entryQuestion ?? data.question ?? "")?.toString()?.trim() || "";
-  //       setEntryQuestion(raw || DEFAULT_QUIZ_PROMPT);
-  //       setIsQuizModalOpen(true);
-  //       return;
-  //     }
-  //     throw error;
-  //   }
-  // };
 
   // 제목 저장
   const handleSaveTitle = async (nextTitle: string) => {
@@ -992,11 +956,12 @@ const LiveRoomPage = () => {
 
         const data = await enterRoom(roomId, "");
         if (!isMounted) return;
-        const raw = data?.room ?? data;
-        if (raw?.locked === true) {
+        // const raw = data?.room ?? data;
+        if (data?.locked === true) {
+          const raw = data?.room ?? data;
           const question = (raw.entryQuestion ?? "")?.toString()?.trim();
           setEntryQuestion(question || DEFAULT_QUIZ_PROMPT);
-          setIsQuizModalOpen(true)
+          setIsQuizModalOpen(true);
           return;
         }
         const normalized = normalizeRoomResponse(data);
