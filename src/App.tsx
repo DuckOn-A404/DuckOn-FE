@@ -40,6 +40,8 @@ import BannersManagePage from "./pages/AdminPage/BannersManagePage";
 import SettingsManagePage from "./pages/AdminPage/SettingsManagePage";
 import ArtistChangeRequestManagePage from "./pages/AdminPage/ArtistChangeRequestManagePage";
 
+import NotificationDetailPage from "./pages/NotificationDetailPage";
+
 function RouteChangeTracker() {
   const loc = useLocation();
   useEffect(() => {
@@ -64,6 +66,7 @@ function App() {
             <Route path="mypage" element={<MyPage />} />
             <Route path="/user/:userId" element={<OtherUserPage />} />
             <Route path="/my-change-requests" element={<MyChangeRequestsPage />} />
+            <Route path="/my-notifications/:notificationId" element={<NotificationDetailPage />} />
             {/* <Route path="/account/delete" element={<AccountDeletePage />} /> */}
           </Route>
 

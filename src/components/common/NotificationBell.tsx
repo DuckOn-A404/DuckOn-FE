@@ -3,26 +3,25 @@ import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 
 import {
-  getMyNotifications,
-  markNotificationAsRead,
+  getMyNotifications
 } from "../../api/notificationService";
-import type { NotificationItem, NotificationSourceType } from "../../types/notification";
+import type { NotificationItem } from "../../types/notification";
 
-const buildRouteBySource = (sourceType: NotificationSourceType, sourceId: number) => {
-  switch (sourceType) {
-    case "ARTIST_PROFILE_CHANGE_REQUEST":
-      return `/me/artist-change-requests/${sourceId}`;
+// const buildRouteBySource = (sourceType: NotificationSourceType, sourceId: number) => {
+//   switch (sourceType) {
+//     case "ARTIST_PROFILE_CHANGE_REQUEST":
+//       return `/me/artist-change-requests/${sourceId}`;
 
-    case "REPORT":
-      return `/me/reports/${sourceId}`;
+//     case "REPORT":
+//       return `/me/reports/${sourceId}`;
 
-    case "PENALTY":
-      return `/me/penalties/${sourceId}`;
+//     case "PENALTY":
+//       return `/me/penalties/${sourceId}`;
 
-    default:
-      return "/";
-  }
-};
+//     default:
+//       return "/";
+//   }
+// };
 
 // 상대적 시간 포맷팅 헬퍼 함수
 const formatRelativeTime = (dateString: string) => {
@@ -108,26 +107,35 @@ const NotificationBell = () => {
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
-  const handleClick = async (n: NotificationItem) => {
-    try {
-      // 1) 읽음 처리 (PATCH)
-      if (n.readAt === null) {
-        await markNotificationAsRead(n.id);
-      }
+  // const handleClick = async (n: NotificationItem) => {
+  //   try {
+  //     // 1) 읽음 처리 (PATCH)
+  //     if (n.readAt === null) {
+  //       await markNotificationAsRead(n.id);
+  //     }
 
-      // 2) 프론트 상태 즉시 업데이트
-      setItems((prev) =>
-        prev.map((x) => (x.id === n.id ? { ...x, readAt: new Date().toISOString() } : x))
-      );
+  //     // 2) 프론트 상태 즉시 업데이트
+  //     setItems((prev) =>
+  //       prev.map((x) => (x.id === n.id ? { ...x, readAt: new Date().toISOString() } : x))
+  //     );
 
-      setOpen(false);
+  //     setOpen(false);
 
-      // 3) 이동 (우선순위: linkUrl 있으면 사용, 없으면 sourceType 기반)
-      const target = n.linkUrl ?? buildRouteBySource(n.sourceType, n.sourceId);
-      if (target) navigate(target);
-    } catch (e) {
-      console.error("알림 읽음 처리 실패", e);
-    }
+  //     // 3) 이동 (우선순위: linkUrl 있으면 사용, 없으면 sourceType 기반)
+  //     const target = n.linkUrl ?? buildRouteBySource(n.sourceType, n.sourceId);
+  //     if (target) navigate(target);
+  //   } catch (e) {
+  //     console.error("알림 읽음 처리 실패", e);
+  //   }
+  // };
+
+  const handleClick = (n: NotificationItem) => {
+    // 클릭 즉시 로컬 상태 읽음 처리 → 빨간 점 바로 사라짐
+    setItems((prev) =>
+      prev.map((x) => (x.id === n.id ? { ...x, readAt: new Date().toISOString() } : x))
+    );
+    setOpen(false);
+    navigate(`/my-notifications/${n.id}`);
   };
 
   return (

@@ -4,6 +4,7 @@ import type {
   ApiResponse,
   PageResponse,
   NotificationItem,
+  NotificationDetail,
 } from "../types/notification"
 
 /**
@@ -24,9 +25,19 @@ export const getMyNotifications = async (
   return res.data.data;
 };
 
-/** 알림 읽음 처리(PATCH) */
-export const markNotificationAsRead = async (
+/** 알림 상세 조회(GET -> 읽음 처리 자동) */
+export const getNotificationDetail = async (
   notificationId: number | string
-): Promise<void> => {
-  await api.patch<ApiResponse<void>>(`/notifications/${notificationId}`);
+): Promise<NotificationDetail> => {
+  const res = await api.get<ApiResponse<NotificationDetail>>(
+    `/notifications/${notificationId}`
+  );
+  return res.data.data;
 };
+
+/** 알림 읽음 처리(PATCH) */
+// export const markNotificationAsRead = async (
+//   notificationId: number | string
+// ): Promise<void> => {
+//   await api.patch<ApiResponse<void>>(`/notifications/${notificationId}`);
+// };
