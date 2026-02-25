@@ -74,9 +74,13 @@ const FollowedArtistsPage = () => {
     return null;
   }
 
-  const handleArtistClick = (artistId: number, nameEn: string) => {
-    const slug = createSlug(nameEn);
-    navigate(`/artist/${slug}`, { state: { artistId } });
+  const handleArtistClick = (artist: any) => {
+    const slug = createSlug(artist.nameEn);
+    if (artist.isEmerging) {
+      navigate(`/rising-artist/${slug}`, { state: { emergingArtistId: artist.artistId } });
+    } else {
+      navigate(`/artist/${slug}`, { state: { artistId: artist.artistId } });
+    }
   };
 
   const count = followedArtists.length;
@@ -146,8 +150,8 @@ const FollowedArtistsPage = () => {
           <div className="mt-1 space-y-3">
             {followedArtists.map((artist) => (
               <button
-                key={artist.artistId}
-                onClick={() => handleArtistClick(artist.artistId, artist.nameEn)}
+                key={`${artist.isEmerging ? 'emerging' : 'normal'}-${artist.artistId}`}
+                onClick={() => handleArtistClick(artist)}
                 className="w-full text-left active:scale-[0.985] transition-transform group"
               >
                 <div

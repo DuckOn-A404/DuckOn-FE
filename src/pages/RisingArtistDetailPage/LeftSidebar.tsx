@@ -8,13 +8,13 @@ const LeftSidebar = () => {
   const { followedArtists } = useArtistFollowStore();
   const { t } = useUiTranslate();
 
-  // TODO: API 연결 후 라이징 아티스트만 필터링
-  // 현재는 임시로 모든 팔로우 아티스트 표시
-  const risingArtists = followedArtists;
-
-  const handleArtistClick = (artistId: number, nameEn: string) => {
-    const slug = createSlug(nameEn);
-    navigate(`/rising-artist/${slug}`, { state: { emergingArtistId: artistId } });
+  const handleArtistClick = (artist: any) => {
+    const slug = createSlug(artist.nameEn);
+    if (artist.isEmerging) {
+      navigate(`/rising-artist/${slug}`, { state: { emergingArtistId: artist.artistId } });
+    } else {
+      navigate(`/artist/${slug}`, { state: { artistId: artist.artistId } });
+    }
   };
 
   return (
@@ -22,20 +22,18 @@ const LeftSidebar = () => {
       <div className="bg-white rounded-2xl shadow p-4 flex flex-col h-[calc(100vh-6rem)]">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-bold">
-            {t("leftSidebar.risingTitle", "팔로우한 라이징 아티스트")}
+            {t("leftSidebar.title", "팔로우한 아티스트")}
           </h2>
         </div>
 
-        {risingArtists.length > 0 ? (
+        {followedArtists.length > 0 ? (
           <>
             <ul className="space-y-2 text-sm mb-4 flex-grow overflow-y-auto custom-scrollbar">
-              {risingArtists.map((artist) => (
+              {followedArtists.map((artist) => (
                 <li
-                  key={artist.artistId}
+                  key={`${artist.isEmerging ? 'emerging' : 'normal'}-${artist.artistId}`}
                   className="flex items-center gap-3 p-2 rounded-lg cursor-pointer hover:bg-gray-100"
-                  onClick={() =>
-                    handleArtistClick(artist.artistId, artist.nameEn)
-                  }
+                  onClick={() => handleArtistClick(artist)}
                 >
                   <img
                     src={artist.imgUrl || "https://placehold.co/32x32"}
@@ -51,21 +49,21 @@ const LeftSidebar = () => {
 
             <button
               className="flex-shrink-0 w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
-              onClick={() => navigate("/artist-list?tab=rising")}
+              onClick={() => navigate("/artist-list")}
             >
-              <span>{t("leftSidebar.risingMore", "라이징 아티스트 더보기")}</span>
+              <span>{t("leftSidebar.more", "아티스트 더보기")}</span>
             </button>
           </>
         ) : (
           <div className="flex flex-col items-center justify-center text-center flex-grow">
             <p className="text-sm text-gray-500 mb-4">
-              {t("leftSidebar.risingEmpty", "팔로우한 라이징 아티스트가 없습니다.")}
+              {t("leftSidebar.empty", "팔로우한 아티스트가 없습니다.")}
             </p>
             <button
               className="mt-auto w-full flex items-center justify-center gap-2 bg-purple-600 text-white text-sm font-semibold py-2.5 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:bg-purple-700 hover:shadow-md hover:-translate-y-0.5"
-              onClick={() => navigate("/artist-list?tab=rising")}
+              onClick={() => navigate("/artist-list")}
             >
-              <span>{t("leftSidebar.risingGoFollow", "라이징 아티스트 팔로우 하러가기")}</span>
+              <span>{t("leftSidebar.goFollow", "아티스트 팔로우 하러가기")}</span>
             </button>
           </div>
         )}

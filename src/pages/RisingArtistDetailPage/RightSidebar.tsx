@@ -34,7 +34,7 @@ const RightSidebar = ({ artistId }: RightSidebarProps) => {
   const [newMessage, setNewMessage] = useState("");
 
   const { myUser } = useUserStore();
-  const { isFollowing } = useArtistFollowStore();
+  const { isFollowingEmerging: isFollowing } = useArtistFollowStore();
 
   const scrollContainerRef = useRef<null | HTMLDivElement>(null);
 
