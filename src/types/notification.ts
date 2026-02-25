@@ -38,7 +38,48 @@ export type NotificationItem = {
   body: string;
   createdAt: string;
   readAt: string | null;
-  linkUrl: string | null;
+  // linkUrl: string | null;
   sourceId: number;
-  sourceType: NotificationSourceType;
+  // sourceType: NotificationSourceType;
 };
+
+/** payload 타입들 */
+export interface ArtistChangeRequestPayload {
+  requestId: number;
+  content: string;
+  attachmentUrl: string | null;
+  requestStatus: "PENDING" | "APPROVED" | "REJECTED" | "CANCELED" | "APPLIED";
+  reviewComment: string | null;
+  reviewedAt: string | null;
+  requestCreatedAt: string;
+  requestUpdatedAt: string;
+  artist: {
+    targetType: "ARTIST" | "EMERGING_ARTIST";
+    id: number;
+    nameEn: string;
+    nameKr: string;
+  };
+}
+
+export interface PenaltyPayload {
+  penaltyId: number;
+  penaltyType: "CHAT_BAN" | "ROOM_CREATION_BAN" | "ACCOUNT_SUSPENSION";
+  penaltyStatus: "ACTIVE" | "RELEASED" | "EXPIRED";
+  reason: string;
+  startAt: string | null;
+  endAt: string | null;
+}
+
+// ── 알림 상세 조회 응답 ──────────────────────────
+
+export interface NotificationDetail {
+  id: number;
+  type: NotificationType;
+  title: string;
+  body: string;
+  createdAt: string;
+  readAt: string | null;
+  // linkUrl: string;
+  sourceId: number;
+  payload: ArtistChangeRequestPayload | PenaltyPayload | Record<string, never>;
+}
