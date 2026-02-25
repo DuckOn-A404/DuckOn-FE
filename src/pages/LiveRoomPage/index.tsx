@@ -300,16 +300,10 @@ const LiveRoomPage = () => {
   const handleSubmitAnswer = async (answer: string) => {
     try {
       const data = await enterRoom(roomId!, answer);
-      const raw = data?.room ?? data;
-  
-      // 추가: 정답 오답 체크
-      if (raw?.locked === true) {
-        throw new Error("wrong_answer");
-      }
-  
       const normalized = normalizeRoomResponse(data);
       if (!normalized) return;
   
+      // 200 응답이면 정답 → 입장
       setRoom(normalized);
       if (normalized.hostNickname) setHostNickname(normalized.hostNickname);
       if ((data.room ?? data).artistNameEn) {
@@ -318,10 +312,8 @@ const LiveRoomPage = () => {
       setIsQuizModalOpen(false);
       joinedRef.current = true;
     } catch (error: any) {
-      // 기존 에러 처리 유지 (혹시 모를 403 대비)
-      if (error.message === "wrong_answer") throw error;
-  
       const status = error.response?.status;
+  
       if (status === 400) {
         setKickedOpen(true);
         return;
@@ -341,9 +333,16 @@ const LiveRoomPage = () => {
   // const handleSubmitAnswer = async (answer: string) => {
   //   try {
   //     const data = await enterRoom(roomId!, answer);
+  //     const raw = data?.room ?? data;
+  
+  //     // 추가: 정답 오답 체크
+  //     if (raw?.locked === true) {
+  //       throw new Error("wrong_answer");
+  //     }
+  
   //     const normalized = normalizeRoomResponse(data);
   //     if (!normalized) return;
-
+  
   //     setRoom(normalized);
   //     if (normalized.hostNickname) setHostNickname(normalized.hostNickname);
   //     if ((data.room ?? data).artistNameEn) {
@@ -352,23 +351,19 @@ const LiveRoomPage = () => {
   //     setIsQuizModalOpen(false);
   //     joinedRef.current = true;
   //   } catch (error: any) {
+  //     // 기존 에러 처리 유지 (혹시 모를 403 대비)
+  //     if (error.message === "wrong_answer") throw error;
+  
   //     const status = error.response?.status;
-
-  //     /** 재입장 시 백엔드 400(KICKED) 응답 처리 */
   //     if (status === 400) {
   //       setKickedOpen(true);
   //       return;
   //     }
-
   //     if (status === 401 || status === 403) {
   //       const data = error.response?.data || {};
   //       const msg = (data?.message ?? "").toString();
   //       if (msg.includes("정답")) throw new Error("wrong_answer");
-
-  //       const raw =
-  //         (data.entryQuestion ?? data.question ?? data.quizQuestion ?? "")
-  //           ?.toString()
-  //           ?.trim() || "";
+  //       const raw = (data.entryQuestion ?? data.question ?? "")?.toString()?.trim() || "";
   //       setEntryQuestion(raw || DEFAULT_QUIZ_PROMPT);
   //       setIsQuizModalOpen(true);
   //       return;
