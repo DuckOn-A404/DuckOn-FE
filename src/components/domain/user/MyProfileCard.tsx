@@ -345,6 +345,7 @@ type MyProfileCardProps = {
   onDeleteClick: () => void;
   onBlockListClick: () => void;
   onChangePasswordClick?: () => void;
+  onMyRequestsClick: () => void;
 };
 
 const MyProfileCard = ({
@@ -355,6 +356,7 @@ const MyProfileCard = ({
   onDeleteClick,
   onBlockListClick,
   onChangePasswordClick,
+  onMyRequestsClick,
 }: MyProfileCardProps) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -471,6 +473,16 @@ const MyProfileCard = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* 내 요청 목록 버튼 - 프로필 수정/비밀번호 변경 아래에 배치 */}
+      <div className="flex justify-end -mt-4 mb-4 px-1">
+        <button
+          className="text-[11px] md:text-xs text-gray-500 hover:text-purple-600 hover:underline transition"
+          onClick={onMyRequestsClick}
+        >
+          내 요청 목록
+        </button>
       </div>
 
       {/* 📱 모바일 인스타 스타일 */}

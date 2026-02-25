@@ -1,8 +1,9 @@
-// import {User, Pencil} from "lucide-react";
-// import {useEffect, useRef, useState} from "react";
-// import {Capacitor} from "@capacitor/core";
-// import {ScreenOrientation} from "@capacitor/screen-orientation";
+// import { User, Pencil } from "lucide-react";
+// import { useEffect, useRef, useState } from "react";
+// import { Capacitor } from "@capacitor/core";
+// import { ScreenOrientation } from "@capacitor/screen-orientation";
 // import NicknameWithRank from "../../components/common/NicknameWithRank";
+// import { useUiTranslate } from "../../hooks/useUiTranslate";
 
 // type LiveHeaderProps = {
 //   isHost: boolean;
@@ -29,6 +30,8 @@
 //   onSaveTitle,
 //   hostRankLevel,
 // }: LiveHeaderProps) => {
+//   const { t } = useUiTranslate();
+
 //   const [editing, setEditing] = useState(false);
 //   const [draft, setDraft] = useState(title);
 //   const [saving, setSaving] = useState(false);
@@ -80,7 +83,7 @@
 //   const resetOrientationIfNative = async () => {
 //     if (!isNativeApp) return;
 //     try {
-//       await ScreenOrientation.lock({orientation: "portrait"});
+//       await ScreenOrientation.lock({ orientation: "portrait" });
 //     } catch (e) {
 //       console.warn("세로 모드 복원 실패", e);
 //     }
@@ -109,12 +112,16 @@
 //               onKeyDown={onKeyDown}
 //               maxLength={50}
 //               className="text-xl font-bold tracking-tight bg-transparent text-white border border-purple-500/60 rounded-lg px-3 py-1 outline-none focus:border-purple-400"
-//               placeholder="방 제목을 입력하세요"
+//               placeholder={t(
+//                 "live.header.input.placeholderTitle",
+//                 "방 제목을 입력하세요"
+//               )}
 //               disabled={saving}
 //             />
 //           ) : (
 //             <h1 className="text-xl font-bold tracking-tight">
-//               {title || "제목 없음"}
+//               {title ||
+//                 t("live.header.title.empty", "제목 없음")}
 //             </h1>
 //           )}
 
@@ -123,7 +130,17 @@
 //             <button
 //               type="button"
 //               onClick={onPencilClick}
-//               title={editing ? "제목 저장" : "제목 수정"}
+//               title={
+//                 editing
+//                   ? t(
+//                       "live.header.button.saveTitle",
+//                       "제목 저장"
+//                     )
+//                   : t(
+//                       "live.header.button.editTitle",
+//                       "제목 수정"
+//                     )
+//               }
 //               className="ml-1 p-1 rounded-lg border border-purple-500/60 hover:border-purple-400 hover:bg-purple-500/10"
 //               disabled={saving}
 //             >
@@ -135,9 +152,17 @@
 //         {/* 제목 아래 보조 정보 */}
 //         <div className="text-sm text-gray-400 mt-1.5 flex items-center gap-x-4">
 //           <div className="flex items-center gap-x-1">
-//             <span>호스트:</span>
+//             <span>
+//               {t("live.header.label.host", "호스트:")}
+//             </span>
 //             <NicknameWithRank
-//               nickname={hostNickname || "알 수 없음"}
+//               nickname={
+//                 hostNickname ||
+//                 t(
+//                   "live.header.host.unknown",
+//                   "알 수 없음"
+//                 )
+//               }
 //               rankLevel={hostRankLevel ?? "GREEN"} // 기본 GREEN 처리
 //               badgeSize={14}
 //             />
@@ -159,7 +184,10 @@
 //               onClick={handleDeleteClick}
 //               className="bg-red-600 hover:bg-red-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
 //             >
-//               방 삭제
+//               {t(
+//                 "live.header.button.deleteRoom",
+//                 "방 삭제"
+//               )}
 //             </button>
 //           )
 //         ) : (
@@ -168,7 +196,10 @@
 //             onClick={handleExitClick}
 //             className="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-5 py-2.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-black"
 //           >
-//             나가기
+//             {t(
+//               "live.header.button.exitRoom",
+//               "나가기"
+//             )}
 //           </button>
 //         )}
 //       </div>
@@ -178,7 +209,7 @@
 
 // export default LiveHeader;
 
-import { User, Pencil } from "lucide-react";
+import { User, Pencil, Siren } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { ScreenOrientation } from "@capacitor/screen-orientation";
@@ -194,6 +225,7 @@ type LiveHeaderProps = {
   onExit: () => void;
   onDelete?: () => void;
   onSaveTitle: (nextTitle: string) => Promise<void> | void;
+  onReport?: () => void
 
   hostRankLevel?: "VIP" | "GOLD" | "PURPLE" | "YELLOW" | "GREEN";
 };
@@ -203,11 +235,13 @@ const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768;
 const LiveHeader = ({
   isHost,
   title,
+  hostId,
   hostNickname,
   participantCount,
   onExit,
   onDelete,
   onSaveTitle,
+  onReport,
   hostRankLevel,
 }: LiveHeaderProps) => {
   const { t } = useUiTranslate();
@@ -335,17 +369,40 @@ const LiveHeader = ({
             <span>
               {t("live.header.label.host", "호스트:")}
             </span>
-            <NicknameWithRank
-              nickname={
-                hostNickname ||
-                t(
-                  "live.header.host.unknown",
-                  "알 수 없음"
-                )
-              }
-              rankLevel={hostRankLevel ?? "GREEN"} // 기본 GREEN 처리
-              badgeSize={14}
-            />
+            {/* 호스트 닉네임: 방장이거나 게스트면 클릭 불가 */}
+            {isHost || (hostId && hostId.startsWith('guest:')) ? (
+              <span className="text-sm text-gray-400">
+                <NicknameWithRank
+                  nickname={
+                    hostNickname ||
+                    t(
+                      "live.header.host.unknown",
+                      "알 수 없음"
+                    )
+                  }
+                  rankLevel={hostRankLevel ?? "GREEN"}
+                  badgeSize={14}
+                />
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => window.open(`/user/${hostId}`, '_blank')}
+                className="hover:text-purple-400 transition-colors cursor-pointer"
+              >
+                <NicknameWithRank
+                  nickname={
+                    hostNickname ||
+                    t(
+                      "live.header.host.unknown",
+                      "알 수 없음"
+                    )
+                  }
+                  rankLevel={hostRankLevel ?? "GREEN"}
+                  badgeSize={14}
+                />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-x-1.5">
@@ -357,6 +414,17 @@ const LiveHeader = ({
 
       {/* 오른쪽 버튼들 */}
       <div className="flex items-center gap-x-3">
+        {/* 신고 버튼 (게스트만) */}
+        {!isHost && onReport && (
+          <button
+            type="button"
+            onClick={onReport}
+            className="p-2.5 rounded-lg border border-red-500/60 hover:border-red-400 hover:bg-red-500/10 transition-colors"
+            title={t("live.header.button.report", "방 신고")}
+          >
+            <Siren className="w-5 h-5 text-red-500" />
+          </button>
+        )}
         {isHost ? (
           onDelete && (
             <button

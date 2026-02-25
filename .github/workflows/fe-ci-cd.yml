@@ -40,7 +40,7 @@ jobs:
         run: npm run build
 
   # -------------------------
-  # Push: build + deploy
+  # Push: build + deploy (dev/prod)
   # -------------------------
   build-deploy:
     if: github.event_name == 'push'
@@ -55,18 +55,21 @@ jobs:
         run: |
           set -euo pipefail
           BR="${GITHUB_REF##*/}"
+
           if [ "$BR" = "main" ]; then
             echo "env_name=prod" >> $GITHUB_OUTPUT
             echo "s3_bucket=${{ vars.S3_BUCKET_FE_PROD }}" >> $GITHUB_OUTPUT
             echo "cf_dist=${{ vars.CF_DISTRIBUTION_ID_PROD }}" >> $GITHUB_OUTPUT
             echo "api=${{ vars.VITE_API_BASE_URL_PROD }}" >> $GITHUB_OUTPUT
             echo "oauth=${{ vars.VITE_OAUTH2_BASE_URL_PROD }}" >> $GITHUB_OUTPUT
+            echo "aws_region=${{ vars.AWS_REGION_PROD }}" >> $GITHUB_OUTPUT
           else
             echo "env_name=dev" >> $GITHUB_OUTPUT
             echo "s3_bucket=${{ vars.S3_BUCKET_FE_DEV }}" >> $GITHUB_OUTPUT
             echo "cf_dist=${{ vars.CF_DISTRIBUTION_ID_DEV }}" >> $GITHUB_OUTPUT
             echo "api=${{ vars.VITE_API_BASE_URL_DEV }}" >> $GITHUB_OUTPUT
             echo "oauth=${{ vars.VITE_OAUTH2_BASE_URL_DEV }}" >> $GITHUB_OUTPUT
+            echo "aws_region=${{ vars.AWS_REGION_DEV || vars.AWS_REGION_PROD }}" >> $GITHUB_OUTPUT
           fi
 
       - uses: actions/setup-node@v4
@@ -95,7 +98,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
-          aws-region: ${{ vars.AWS_REGION_PROD }}
+          aws-region: ${{ steps.vars.outputs.aws_region }}
 
       - name: Verify required vars
         run: |
@@ -106,14 +109,17 @@ jobs:
       - name: Upload assets to S3
         run: |
           set -euo pipefail
-          cd dist
 
-          aws s3 cp . "s3://${{ steps.vars.outputs.s3_bucket }}" --recursive \
+          # 1) 정적 파일(해시 파일)은 오래 캐시 + immutable
+          aws s3 sync dist "s3://${{ steps.vars.outputs.s3_bucket }}" \
+            --delete \
             --exclude "*.html" \
             --cache-control "public,max-age=31536000,immutable"
 
-          find . -name "*.html" -print0 | while IFS= read -r -d '' f; do
-            aws s3 cp "$f" "s3://${{ steps.vars.outputs.s3_bucket }}/${f#./}" \
+          # 2) HTML은 no-cache로 별도 업로드
+          find dist -name "*.html" -print0 | while IFS= read -r -d '' f; do
+            key="${f#dist/}"
+            aws s3 cp "$f" "s3://${{ steps.vars.outputs.s3_bucket }}/${key}" \
               --cache-control "no-cache" \
               --content-type "text/html; charset=utf-8"
           done
@@ -123,4 +129,4 @@ jobs:
           set -euo pipefail
           aws cloudfront create-invalidation \
             --distribution-id "${{ steps.vars.outputs.cf_dist }}" \
-            --paths "/index.html" "/"
+            --paths "/index.html" "/" "/assets/*"

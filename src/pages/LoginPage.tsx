@@ -1,5 +1,5 @@
 import {useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
+import {Link, useNavigate, useSearchParams} from "react-router-dom";
 import {logIn} from "../api/authService";
 import LoginSignupCard from "../components/common/LoginSignupCard";
 import {Mail, LockKeyhole, ArrowLeft} from "lucide-react";
@@ -10,6 +10,7 @@ import {emitTokenRefreshed} from "../api/axiosInstance";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -32,7 +33,21 @@ const LoginPage = () => {
         artistList: userData.artistList || [],
       };
       setUser(userForStore);
-      navigate("/");
+
+      // // returnUrl이 있으면 해당 페이지로, 없으면 홈으로
+      // const returnUrl = searchParams.get("returnUrl");
+      // if (returnUrl) {
+      //   navigate(decodeURIComponent(returnUrl));
+      // } else {
+      //   navigate("/");
+      // }
+      
+      // ✅ returnUrl이 있으면 해당 페이지로, 없으면 홈으로 (강제 덮어쓰기 방지)
+      const returnUrl = searchParams.get("returnUrl");
+      const target = returnUrl ? decodeURIComponent(returnUrl) : "/";
+
+      // 기존 navigate 대신 브라우저 레벨 이동으로 확정
+      window.location.replace(target);
     } catch (err: any) {
       setError(err.message || "로그인에 실패했습니다.");
     }

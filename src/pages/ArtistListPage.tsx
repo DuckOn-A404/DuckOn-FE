@@ -251,7 +251,7 @@ import SortSelect, {
   type SortOrder,
 } from "../components/common/SortSelect";
 import ArtistCard from "../components/domain/artist/ArtistCard";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useState,
   useEffect,
@@ -259,20 +259,32 @@ import {
   type TouchEvent,
   useMemo,
 } from "react";
-import { Search } from "lucide-react";
+import { Search, Plus, Users } from "lucide-react";
 import { useArtistList } from "../hooks/useArtistList";
 import { useDebounce } from "../hooks/useDebounce";
 import { createSlug } from "../utils/slugUtils";
 import { Capacitor } from "@capacitor/core"; // 앱 여부 확인용
 import { useUiTranslate } from "../hooks/useUiTranslate";
-import UIText from "../components/common/UIText";
+import AddRisingArtistModal from "../components/domain/artist/AddRisingArtistModal";
 
 const isNativeApp = Capacitor.isNativePlatform() || window.innerWidth <= 768; // 웹/앱 분기 값 (UI 용)
 const isRealNativeApp = Capacitor.isNativePlatform();
 
+type TabType = "artist" | "rising";
+
 const ArtistListPage = () => {
   const navigate = useNavigate();
   const { t } = useUiTranslate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabType>(
+    searchParams.get("tab") === "rising" ? "rising" : "artist"
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   // 스와이프 뒤로가기용 ref (훅은 상단에서 선언)
   const startXRef = useRef(0);
@@ -392,11 +404,12 @@ const ArtistListPage = () => {
   }, []);
 
   // 목록 데이터: 검색/정렬/사이즈를 한 API로 처리
-  const { artists, totalCount, fetchMore, hasMore, loading } = useArtistList({
+  const { artists, totalCount, fetchMore, hasMore, loading, error } = useArtistList({
     q: debouncedSearchText || undefined,
     sort,
     order,
     size: pageSize,
+    isRising: activeTab === "rising",
   });
 
   // 무한 스크롤
@@ -420,7 +433,15 @@ const ArtistListPage = () => {
 
   const handleCardClick = (artistId: number, nameEn: string) => {
     const slug = createSlug(nameEn);
-    navigate(`/artist/${slug}`, { state: { artistId } });
+    if (activeTab === "rising") {
+      navigate(`/rising-artist/${slug}`, { state: { emergingArtistId: artistId } });
+    } else {
+      navigate(`/artist/${slug}`, { state: { artistId } });
+    }
+  };
+
+  const handleArtistAdded = () => {
+    window.location.reload();
   };
 
   return (
@@ -431,22 +452,45 @@ const ArtistListPage = () => {
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* 제목 영역 */}
+      {/* 탭 영역 - 제목을 클릭 가능한 카드로 */}
       <div className="text-center py-8 mb-5">
-        <UIText
-          id="artistList.title"
-          as="h1"
-          className="text-4xl font-extrabold text-gray-800 mb-2"
-        >
-          아티스트
-        </UIText>
-        <UIText
-          id="artistList.subtitle"
-          as="p"
-          className="text-lg text-gray-500"
-        >
-          다양한 K-pop 아티스트를 만나보세요.
-        </UIText>
+        <div className="flex justify-center items-end gap-0">
+          <button
+            onClick={() => handleTabChange("artist")}
+            className={`
+              transition-all duration-300 text-center origin-bottom
+              ${activeTab === "artist"
+                ? ""
+                : "scale-[0.7] opacity-60"
+              }
+            `}
+          >
+            <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
+              아티스트
+            </h1>
+            <p className="text-lg text-gray-500">
+              다양한 K-pop 아티스트를 만나보세요.
+            </p>
+          </button>
+
+          <button
+            onClick={() => handleTabChange("rising")}
+            className={`
+              transition-all duration-300 text-center origin-bottom
+              ${activeTab === "rising"
+                ? ""
+                : "scale-[0.7] opacity-60"
+              }
+            `}
+          >
+            <h1 className="text-4xl font-extrabold text-gray-800 mb-2">
+              라이징 아티스트
+            </h1>
+            <p className="text-lg text-gray-500">
+              라이징 아티스트들 입니다, 아직은요.
+            </p>
+          </button>
+        </div>
       </div>
 
       {/* 검색 + 정렬 + 총 개수 */}
@@ -493,6 +537,24 @@ const ArtistListPage = () => {
             setOrder(v.order as SortOrder);
           }}
         />
+
+        {/* 라이징 아티스트 추가 버튼 (라이징 탭일 때만 표시) */}
+        {activeTab === "rising" && (
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="
+              flex items-center gap-2 px-4 h-12
+              bg-purple-600 hover:bg-purple-700
+              text-white font-semibold rounded-xl
+              shadow-sm hover:shadow-md
+              transition-all duration-200
+              active:scale-95
+            "
+          >
+            <Plus className="h-5 w-5" />
+            <span className="hidden md:inline">아티스트 추가</span>
+          </button>
+        )}
       </div>
 
       <p className="text-sm text-center mt-2 text-gray-600">
@@ -540,9 +602,17 @@ const ArtistListPage = () => {
                   />
                 </div>
               </div>
-              <p className="text-[11px] text-slate-900 font-semibold text-center leading-tight line-clamp-2">
-                {artist.nameKr || artist.nameEn}
-              </p>
+              <div className="flex flex-col items-center gap-0.5 w-full">
+                <p className="text-[12px] text-slate-900 font-bold text-center leading-tight line-clamp-1 px-1">
+                  {artist.nameKr || artist.nameEn}
+                </p>
+                {typeof artist.followerCount === "number" && (
+                  <div className="flex items-center gap-0.5 text-[10px] text-purple-600 font-medium">
+                    <Users className="h-3 w-3" />
+                    <span>{artist.followerCount.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
             </button>
           ))}
         </div>
@@ -557,6 +627,26 @@ const ArtistListPage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         </div>
       )}
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="flex flex-col justify-center items-center py-10 px-4 text-center">
+          <p className="text-gray-600 mb-4 font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+
+      {/* 라이징 아티스트 추가 모달 */}
+      <AddRisingArtistModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleArtistAdded}
+      />
     </div>
   );
 };
