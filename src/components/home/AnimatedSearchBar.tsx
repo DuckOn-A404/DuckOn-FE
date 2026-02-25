@@ -4,6 +4,7 @@ import {motion, AnimatePresence} from "framer-motion";
 import {useNavigate} from "react-router-dom";
 import {useDebounce} from "../../hooks/useDebounce";
 import {searchArtists} from "../../api/artistService";
+import {api} from "../../api/axiosInstance";
 import type {Artist} from "../../types/artist";
 
 interface AnimatedSearchBarProps {
@@ -11,13 +12,64 @@ interface AnimatedSearchBarProps {
 }
 
 const AnimatedSearchBar = ({onSearch}: AnimatedSearchBarProps) => {
-  const placeholders = [
-    "제니 MMA",
-    "지디 home sweet home",
-    "알파드라이브원 레전드 모음",
-  ];
+  const [placeholders, setPlaceholders] = useState<string[]>([
+    "어떤 영상을 찾으시나요?",
+  ]);
 
   const [currentPlaceholderIndex, setCurrentPlaceholderIndex] = useState(0);
+
+  // ETag 캐싱을 활용한 플레이스홀더 데이터 로드
+  useEffect(() => {
+    const fetchPlaceholders = async () => {
+      try {
+        const CACHE_KEY = "duckon_search_placeholders";
+        const ETAG_KEY = "duckon_search_placeholders_etag";
+        
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        const cachedETag = localStorage.getItem(ETAG_KEY);
+
+        // 캐시 데이터가 있으면 일단 화면에 렌더링 (빠른 반응성)
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (parsed && parsed.length > 0) {
+            setPlaceholders(parsed);
+          }
+        }
+
+        const headers: Record<string, string> = {};
+        if (cachedETag) {
+          headers["If-None-Match"] = cachedETag;
+        }
+
+        const response = await api.get("/home/search-placeholder", {
+          headers,
+          // 304 상태코드를 에러로 처리하지 않도록 설정
+          validateStatus: (status) => (status >= 200 && status < 300) || status === 304,
+        });
+
+        if (response.status === 200 && response.data?.data?.items) {
+          const newItems = response.data.data.items;
+          const newETag = response.headers["etag"] || response.headers["ETag"];
+
+          if (newItems.length > 0) {
+            setPlaceholders(newItems);
+            localStorage.setItem(CACHE_KEY, JSON.stringify(newItems));
+          }
+          if (newETag) {
+            localStorage.setItem(ETAG_KEY, newETag);
+          }
+        } else if (response.status === 304) {
+          // 304 Not Modified: 변경 없음, 기존 캐시 유지 (추가 동작 불필요)
+          // console.log("Placeholders not modified (304)");
+        }
+      } catch (error) {
+        console.error("Failed to fetch search placeholders:", error);
+      }
+    };
+
+    fetchPlaceholders();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Artist[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -39,12 +91,14 @@ const AnimatedSearchBar = ({onSearch}: AnimatedSearchBarProps) => {
   }, []);
 
   useEffect(() => {
+    if (placeholders.length <= 1) return;
+
     const interval = setInterval(() => {
       setCurrentPlaceholderIndex((prev) => (prev + 1) % placeholders.length);
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [placeholders.length]);
 
   // 연관 검색어 가져오기
   useEffect(() => {
