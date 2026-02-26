@@ -47,6 +47,28 @@ export const getEmergingArtistDetail = async (
 };
 
 /**
+ * 내가 팔로우한 라이징 아티스트 목록 조회
+ * @param page 1-base 페이지
+ * @param size 페이지 크기
+ * @returns 페이징 결과
+ */
+export interface FollowedEmergingArtistsResponse {
+  items: EmergingArtistDetail[];
+  page: number;
+  size: number;
+  totalPages: number;
+  totalElements: number;
+}
+
+export const getFollowedEmergingArtists = async (
+  page = 1,
+  size = 10
+): Promise<FollowedEmergingArtistsResponse> => {
+  if (!getAccessToken()) throw new Error("로그인이 필요합니다.");
+  const res = await api.get("/me/emerging-artists", { params: { page, size } });
+  return res.data.data as FollowedEmergingArtistsResponse;
+};
+/**
  * 라이징 아티스트 팔로우
  * @param emergingArtistId 팔로우할 라이징 아티스트 ID
  * @throws Error 로그인 필요 시

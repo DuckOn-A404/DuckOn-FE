@@ -5,15 +5,14 @@ import { useArtistFollowStore } from "../../store/useArtistFollowStore";
 import { useArtistRooms } from "../../hooks/useArtistRooms";
 import { getEmergingArtistDetail, followEmergingArtist, unfollowEmergingArtist } from "../../api/emergingArtistService";
 import VideoCard from "../../components/domain/video/VideoCard";
-import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSidebar";
-import type { Artist } from "../../types/artist";
 import { Video, Plus, Edit } from "lucide-react";
 import CreateRoomModal from "../../components/common/modal/CreateRoomModal";
 import ArtistChangeRequestModal from "../../components/domain/artist/ArtistChangeRequestModal";
 import { isNativeApp } from "../../utils/platform";
 import { Capacitor } from "@capacitor/core";
 import { useUiTranslate } from "../../hooks/useUiTranslate";
+import type { Artist } from "../../types/artist";
 
 const PLACEHOLDER_URL =
   "https://placehold.co/240x240/eeeeee/aaaaaa?text=No+Image&font=roboto";
@@ -91,9 +90,9 @@ const RisingArtistDetailPage = () => {
 
   const { myUser } = useUserStore();
   const {
-    isFollowing: followingSet,
-    addFollow,
-    removeFollow,
+    isFollowingEmerging: followingSet,
+    addFollowEmerging: addFollow,
+    removeFollowEmerging: removeFollow,
     fetchFollowedArtists,
   } = useArtistFollowStore();
 
@@ -155,7 +154,8 @@ const RisingArtistDetailPage = () => {
           </div>
         </main>
 
-        {artist && <RightSidebar artistId={artist.emergingArtistId} />}
+        {/* API 연결 전까지 우측 채팅 사이드바 숨김 */}
+        {/* {artist && <RightSidebar artistId={artist.emergingArtistId} />} */}
       </div>
     );
   }
@@ -565,9 +565,10 @@ const RisingArtistDetailPage = () => {
         </section>
       </main>
 
-      <div className="hidden lg:block">
+      {/* API 연결 전까지 우측 채팅 사이드바 숨김 */}
+      {/* <div className="hidden lg:block">
         <RightSidebar artistId={artist!.emergingArtistId} />
-      </div>
+      </div> */}
 
       <CreateRoomModal
         isOpen={isModalOpen}
