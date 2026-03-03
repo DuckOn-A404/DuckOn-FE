@@ -1,4 +1,4 @@
-import { api, buildRefreshHeaders } from "./axiosInstance";
+import { api } from "./axiosInstance";
 
 type ApiMessage = { message: string };
 
@@ -50,23 +50,23 @@ export interface LoginRequest {
   email?: string;
   userId?: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 // 로그인 응답 타입
 export interface LoginResponse {
   accessToken: string;
-  refreshToken: string;
 }
 
 export const logIn = async (
   credentials: LoginRequest
 ): Promise<LoginResponse> => {
   try {
-    const { email, userId, password } = credentials;
+    const { email, userId, password, rememberMe } = credentials;
 
     const response = await api.post<LoginResponse>(
       "/auth/login",
-      { email, userId, password },
+      { email, userId, password, rememberMe },
       {
         skipAuth: true,
         headers: { "Content-Type": "application/json" },
@@ -74,11 +74,10 @@ export const logIn = async (
     );
 
     // 응답에서 토큰 추출
-    const { accessToken, refreshToken } = response.data;
+    const { accessToken } = response.data;
 
     // 저장 및 Authorization 헤더 설정
     localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
     // api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
     return response.data;
@@ -104,11 +103,7 @@ export const getMyProfileAfterOAuth = async () => {
  */
 
 export const logoutUser = async (): Promise<ApiMessage> => {
-  const res = await api.post<ApiMessage>(
-    "/auth/logout",
-    null,
-    { headers: buildRefreshHeaders() }
-  );
+  const res = await api.post<ApiMessage>("/auth/logout", null);
   return res.data;
 };
 

@@ -6,7 +6,7 @@ export const API_BASE = RAW || "/api";
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 5000,
-  withCredentials: false, // 헤더 기반 인증
+  withCredentials: true, // 쿠키 기반 인증을 위해 true로 변경
 });
 
 export const buildApiUrl = (path: string) => {
@@ -23,22 +23,17 @@ export const getAccessToken = (): string | null => {
   return v;
 };
 
+// 리프레시 토큰은 HttpOnly 쿠키로 관리되므로 더 이상 프론트에서 직접 접근하지 않음
+// 기존 코드 호환성을 위해 함수 자체는 남겨두되 항상 null 반환 또는 제거
 export const getRefreshToken = (): string | null => {
-  const raw = localStorage.getItem("refreshToken");
-  if (!raw) return null;
-  const v = raw.trim();
-  if (!v || v === "null" || v === "undefined") return null;
-  return v;
+  return null;
 };
 
-// 리프레시 토큰 헤더 유틸
-export const buildRefreshHeaders = (override?: string) => {
-  const refresh = override ?? getRefreshToken();
-  const h: Record<string, string> = {
+// 리프레시 토큰 헤더 유틸 (더 이상 사용하지 않지만 호환성을 위해 남겨둠)
+export const buildRefreshHeaders = () => {
+  return {
     "Content-Type": "application/json",
   };
-  if (refresh) h["Authorization"] = `Bearer ${refresh}`;
-  return h;
 };
 
 // --- 토큰 갱신 이벤트 버스 ---
@@ -171,34 +166,28 @@ api.interceptors.response.use(
     emitRefreshState("start"); // 리프레시 시작 알림
 
     try {
-      const refresh = getRefreshToken();
-      if (!refresh) throw error;
-
-      // 헤더/바디 모두 전송(백엔드 구현 차이 커버)
+      // 쿠키 기반 인증이므로 바디나 헤더에 refreshToken을 명시적으로 넣지 않음
+      // withCredentials: true 설정에 의해 브라우저가 알아서 쿠키를 실어 보냄
       const resp = await api.post(
         "/auth/refresh",
-        { refreshToken: refresh },
+        {}, // body 없음
         {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${refresh}`,
-            "X-Refresh-Token": refresh,
           },
-          withCredentials: false,
+          withCredentials: true,
         }
       );
 
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-        (resp.data as any) ?? {};
+      // 응답 구조 변경: data 안에 accessToken이 있거나 최상단에 있을 수 있음
+      const newAccessToken = resp.data?.data?.accessToken || resp.data?.accessToken;
 
       if (!newAccessToken) {
         throw new Error("No accessToken in refresh response");
       }
 
       localStorage.setItem("accessToken", newAccessToken);
-      if (newRefreshToken) {
-        localStorage.setItem("refreshToken", newRefreshToken);
-      }
+      // refreshToken은 이제 localStorage에 저장하지 않음
 
       emitTokenRefreshed(newAccessToken);
       emitRefreshState("end"); // 성공 종료
@@ -211,7 +200,7 @@ api.interceptors.response.use(
       return api(original);
     } catch (e) {
       localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      // localStorage.removeItem("refreshToken"); // 더 이상 관리하지 않음
       emitTokenRefreshed(null);
       emitRefreshState("fail"); // 실패 종료
 
