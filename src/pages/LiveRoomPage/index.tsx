@@ -141,6 +141,10 @@ const LiveRoomPage = () => {
   const leavingRef = useRef(false);
   const isHostRef = useRef(false);
   const joinedRef = useRef(false);
+  // 게스트 입장 시 enterRoom이 중복 호출되면 서버가 '서로 다른 세션'으로 인식해 참가자 수가 +2 되는 문제가 발생할 수 있기에 roomId 기준 enterRoom 호출을 1회로 제한
+  const enterOnceRef = useRef<string | null>(null);
+  // StrictMode의 '가짜 cleanup' 타이밍에 지역 변수 isMounted가 false로 바뀌면 무한 로딩이 발생할 수 있다. setRoom이 스킵되지 않도록 ref로 마운트 상태를 관리해 응답 반영이 안정적으로 만들어줌.
+  const mountedRef = useRef(false);
 
   // 리프레시/WS 핸드오버 상태
   const wsHandoverRef = useRef(false);
@@ -928,35 +932,22 @@ const LiveRoomPage = () => {
 
   // 최초 입장 시도
   useEffect(() => {
-    let isMounted = true;
+    mountedRef.current = true;
+  
+    // enterRoom 1회 가드(이미 넣어둔 enterOnceRef 유지) -> effect가 2번 실행될 수 잇으므로 enterRoom 중복 호출 방지
+    const key = String(roomId ?? "");
+    if (!key) return;
+    if (enterOnceRef.current === key) return;
+    enterOnceRef.current = key;
+  
     const loadRoom = async () => {
       try {
         if (!roomId) return;
-
-        if (isHostFromNav) {
-          const data = await enterRoom(roomId, entryAnswerFromNav);
-          if (!isMounted) return;
-          const normalized = normalizeRoomResponse(data);
-          if (!normalized) return;
-
-          // 검색에서 여러 영상을 선택한 경우, playlist를 덮어씀
-          if (navState?.playlist && navState.playlist.length > 0) {
-            normalized.playlist = normalizePlaylist(navState.playlist);
-          }
-
-          setRoom(normalized);
-          if (normalized.hostNickname) setHostNickname(normalized.hostNickname);
-          if ((data.room ?? data).artistNameEn) {
-            setArtistSlug((data.room ?? data).artistNameEn);
-          }
-          joinedRef.current = true;
-          setIsQuizModalOpen(false);
-          return;
-        }
-
-        const data = await enterRoom(roomId, "");
-        if (!isMounted) return;
-        // const raw = data?.room ?? data;
+  
+        const data = await enterRoom(roomId, isHostFromNav ? entryAnswerFromNav : "");
+  
+        if (!mountedRef.current) return;
+  
         if (data?.locked === true) {
           const raw = data?.room ?? data;
           const question = (raw.entryQuestion ?? "")?.toString()?.trim();
@@ -964,31 +955,31 @@ const LiveRoomPage = () => {
           setIsQuizModalOpen(true);
           return;
         }
+  
         const normalized = normalizeRoomResponse(data);
         if (!normalized) return;
-
+  
+        if (navState?.playlist && navState.playlist.length > 0) {
+          normalized.playlist = normalizePlaylist(navState.playlist);
+        }
+  
         setRoom(normalized);
-        if (normalized && normalized.hostNickname)
-          setHostNickname(normalized.hostNickname);
+        if (normalized.hostNickname) setHostNickname(normalized.hostNickname);
         if ((data.room ?? data).artistNameEn) {
           setArtistSlug((data.room ?? data).artistNameEn);
         }
         joinedRef.current = true;
+        setIsQuizModalOpen(false);
       } catch (err: any) {
+        if (!mountedRef.current) return;
+  
         const status = err?.response?.status;
-
-        /** 재입장 시 백엔드 400(KICKED) 응답 처리 */
-        if (status === 400) {
-          setKickedOpen(true);
-          return;
-        }
-
+        if (status === 400) { setKickedOpen(true); return; }
         if (status === 401 || status === 403) {
           const data = err?.response?.data || {};
           const raw =
             (data.entryQuestion ?? data.question ?? data.quizQuestion ?? "")
-              ?.toString()
-              ?.trim() || "";
+              ?.toString()?.trim() || "";
           setEntryQuestion(raw || DEFAULT_QUIZ_PROMPT);
           setIsQuizModalOpen(true);
           return;
@@ -996,138 +987,18 @@ const LiveRoomPage = () => {
         console.error("방 정보 불러오기 실패:", err);
       }
     };
+  
     loadRoom();
+  
     return () => {
-      isMounted = false;
+      mountedRef.current = false;
     };
   }, [roomId, myUserId, isHostFromNav, entryAnswerFromNav]);
 
   // 액세스 토큰 갱신 → STOMP 재연결 (간단 버전)
-  useEffect(() => {
-    const unsubscribe = onTokenRefreshed(async (newToken) => {
-      if (lastTokenRef.current === newToken) return;
-      lastTokenRef.current = newToken;
-
-      if (!newToken) {
-        try {
-          await presenceRef.current?.deactivate();
-        } catch { }
-        try {
-          await syncRef.current?.deactivate();
-        } catch { }
-        presenceRef.current = null;
-        syncRef.current = null;
-        setStompClient(null);
-        return;
-      }
-
-      if (roomId) {
-        try {
-          await presenceRef.current?.deactivate();
-        } catch { }
-        const p = createStompClient(newToken);
-        presenceRef.current = p;
-        p.onConnect = () => {
-          p.subscribe(`/topic/room/${roomId}/presence`, (message: IMessage) => {
-            try {
-              const data = JSON.parse(message.body);
-              if (typeof data?.participantCount === "number") {
-                setParticipantCount(data.participantCount);
-              }
-            } catch (e) {
-              console.error("참가자 수 메시지 파싱 실패:", e);
-            }
-          });
-        };
-        p.activate();
-      }
-
-      if (myUser && !isQuizModalOpen && roomId) {
-        try {
-          await syncRef.current?.deactivate();
-        } catch { }
-        const s = createStompClient(newToken);
-        syncRef.current = s;
-        setStompClient(s);
-
-        s.onConnect = () => {
-          s.subscribe(`/topic/room/${roomId}`, (message: IMessage) => {
-            try {
-              const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
-              const t = evt?.eventType;
-
-              if (typeof (evt as any)?.participantCount === "number") {
-                setParticipantCount((evt as any).participantCount);
-              }
-
-              switch (t) {
-                case "ROOM_DELETED":
-                  setRoomDeletedOpen(true);
-                  return;
-                case "ROOM_UPDATE":
-                  setRoom((prev: any) =>
-                    prev
-                      ? {
-                          ...prev,
-                          title: evt.title ?? prev.title,
-                          hostNickname: evt.hostNickname ?? prev.hostNickname,
-                        }
-                      : prev
-                  );
-                  return;
-                case "SYNC_STATE":
-                  setRoom((prev: any) =>
-                    prev
-                      ? {
-                          ...prev,
-                          title: evt.title ?? prev.title,
-                          hostNickname: evt.hostNickname ?? prev.hostNickname,
-                          roomId: evt.roomId ?? prev.roomId,
-                          hostId: evt.hostId ?? prev.hostId,
-                          playlist: normalizePlaylist(
-                            evt.playlist ?? prev.playlist
-                          ),
-                          currentVideoIndex:
-                            typeof evt.currentVideoIndex === "number"
-                              ? evt.currentVideoIndex
-                              : prev.currentVideoIndex,
-                          currentTime:
-                            typeof evt.currentTime === "number"
-                              ? evt.currentTime
-                              : prev.currentTime,
-                          playing:
-                            typeof evt.playing === "boolean"
-                              ? evt.playing
-                              : prev.playing,
-                          lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                        }
-                      : prev
-                  );
-                  return;
-                default:
-                  return;
-              }
-            } catch (error) {
-              console.error("방 상태 업데이트 메시지 파싱 실패:", error);
-            }
-          });
-
-          s.subscribe("/user/queue/kick", (message: IMessage) => {
-            const kickedRoomId = message.body?.toString()?.trim();
-            if (kickedRoomId && String(kickedRoomId) === String(roomId)) {
-              setIsKicked(true);
-            }
-          });
-        };
-
-        s.activate();
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [roomId, myUser, isQuizModalOpen]);
+  // 이건 삭제. 위에도 무중단 재연결 버전이 있는데 이 두 개가 존재하면 useEffect가 동시에 실행된다.
+  // 그래서 각각 presenceRef, syncRef를 새로 만들거나 deacitvate를 activate로 만들어줘서 websocket 연결, 구독이 중복 생성될 가능성이 있다.
+  // 그래서 카운팅이 2개씩 늘어난다. 그래서 중복 버전인 이걸 제거한 것!
 
   // 방장 최초 1회 SYNC 강제 송출
   useEffect(() => {
@@ -1183,7 +1054,7 @@ const LiveRoomPage = () => {
     return () => {
       window.removeEventListener("pagehide", onPageHide);
       window.removeEventListener("beforeunload", onPageHide);
-      onPageHide();
+      // onPageHide(); -> 실제 pagehide, beforeunload 이벤트에서만 onPageHide가 실행되도록 설정 -> cleanup에서 onPageHide() 직접 호출 금지!
     };
   }, [roomId, resolvedArtistId]);
 
