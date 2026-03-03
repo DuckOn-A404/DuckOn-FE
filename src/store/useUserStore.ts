@@ -113,7 +113,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "../types";
-import { emitTokenRefreshed } from "../api/axiosInstance";
+import { emitTokenRefreshed, onTokenRefreshed } from "../api/axiosInstance";
 import { getBlockedUsers } from "../api/userService";
 
 // 공용 유틸 (이미지 보존용)
@@ -149,7 +149,7 @@ type UserState = {
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       myUser: null,
       otherUser: null,
 
@@ -210,9 +210,11 @@ export const useUserStore = create<UserState>()(
       },
 
       logout: () => {
+        const currentUser = get().myUser;
+        
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
-        emitTokenRefreshed(null);
+        
         // last-img 캐시는 남겨둠(다음 로그인 복원용)
         try {
           if (typeof window !== "undefined") {
@@ -221,7 +223,13 @@ export const useUserStore = create<UserState>()(
         } catch {
           // 세션 접근 불가면 무시
         }
+        
         set({ myUser: null, otherUser: null, blockedSet: new Set() });
+
+        // 무한 루프 방지: 기존에 유저가 있을 때만 이벤트를 방출
+        if (currentUser !== null) {
+          emitTokenRefreshed(null);
+        }
       },
     }),
     {
@@ -233,17 +241,18 @@ export const useUserStore = create<UserState>()(
       merge: (persisted, current) => {
         const p = persisted as any;
 
-        // 토큰이 없으면 myUser는 복원하지 않음 (비로그인 시 예전 유저로 인식되는 문제 방지)
-        let hasToken = false;
+        // 리프레시 토큰이 유효한 형태로 존재하는지 확인하여 복원 결정
+        let hasValidToken = false;
         try {
           if (typeof window !== "undefined") {
-            hasToken = !!localStorage.getItem("accessToken");
+            const rt = localStorage.getItem("refreshToken");
+            hasValidToken = !!rt && rt !== "null" && rt !== "undefined" && rt.length > 20;
           }
         } catch {
-          hasToken = false;
+          hasValidToken = false;
         }
 
-        const safeMyUser = hasToken ? p?.myUser ?? null : null;
+        const safeMyUser = hasValidToken ? p?.myUser ?? null : null;
 
         return {
           ...current,
@@ -255,3 +264,13 @@ export const useUserStore = create<UserState>()(
     }
   )
 );
+
+// 토큰 갱신 실패 등 전역 로그아웃 이벤트 발생 시 스토어 초기화 (좀비 상태 방지)
+onTokenRefreshed((token) => {
+  if (token === null) {
+    const state = useUserStore.getState();
+    if (state.myUser !== null) {
+      state.logout();
+    }
+  }
+});
