@@ -2,12 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Plus, Trash2, Save, MoveUp, MoveDown, Search } from "lucide-react";
 import { api } from "../../api/axiosInstance";
 import { useToast } from "../../hooks/useToast";
+import Toast from "../../components/common/Toast";
 
 const PlaceholderManagePage: React.FC = () => {
   const [items, setItems] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const { showToast } = useToast();
+  const { toast, showToast, hideToast } = useToast();
 
   useEffect(() => {
     fetchPlaceholders();
@@ -171,6 +172,14 @@ const PlaceholderManagePage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
     </div>
   );
 };
