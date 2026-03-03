@@ -9,12 +9,14 @@
 
 export const buildLoginCredentials = (
   loginInput: string,
-  password: string
+  password: string,
+  rememberMe?: boolean
 ) => {
   const isEmail = loginInput.includes('@')
   return {
     email: isEmail ? loginInput : undefined,
     userId: isEmail ? undefined : loginInput,
     password,
+    ...(rememberMe !== undefined && { rememberMe })
   }
 }

@@ -13,6 +13,7 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
   const setUser = useUserStore((state) => state.setMyUser);
@@ -21,7 +22,7 @@ const LoginPage = () => {
 
   const handleLogin = async () => {
     setError("");
-    const credentials = buildLoginCredentials(loginInput.trim(), password);
+    const credentials = buildLoginCredentials(loginInput.trim(), password, rememberMe);
 
     try {
       await logIn(credentials);
@@ -86,7 +87,7 @@ const LoginPage = () => {
           </div>
         </div>
         {/* 비밀번호 입력 */}
-        <div className="w-full mb-6">
+        <div className="w-full mb-4">
           <label className="block mb-2 text-sm font-medium text-gray-700">
             비밀번호
           </label>
@@ -102,6 +103,21 @@ const LoginPage = () => {
             />
           </div>
         </div>
+
+        {/* 자동 로그인 체크박스 */}
+        <div className="w-full flex items-center mb-6">
+          <input
+            type="checkbox"
+            id="rememberMe"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 cursor-pointer"
+          />
+          <label htmlFor="rememberMe" className="ml-2 text-sm font-medium text-gray-700 cursor-pointer">
+            자동 로그인
+          </label>
+        </div>
+
         {/* 에러 메시지 */}
         {error && (
           <p className="text-red-500 text-sm mb-4 text-center">

@@ -213,7 +213,7 @@ export const useUserStore = create<UserState>()(
         const currentUser = get().myUser;
         
         localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
+        // refreshToken은 이제 쿠키로 관리되므로 프론트에서 삭제하지 않음
         
         // last-img 캐시는 남겨둠(다음 로그인 복원용)
         try {
@@ -241,12 +241,12 @@ export const useUserStore = create<UserState>()(
       merge: (persisted, current) => {
         const p = persisted as any;
 
-        // 리프레시 토큰이 유효한 형태로 존재하는지 확인하여 복원 결정
+        // 토큰이 유효한 형태로 존재하는지 확인하여 복원 결정 (이제 refreshToken 대신 accessToken 기준)
         let hasValidToken = false;
         try {
           if (typeof window !== "undefined") {
-            const rt = localStorage.getItem("refreshToken");
-            hasValidToken = !!rt && rt !== "null" && rt !== "undefined" && rt.length > 20;
+            const at = localStorage.getItem("accessToken");
+            hasValidToken = !!at && at !== "null" && at !== "undefined" && at.length > 20;
           }
         } catch {
           hasValidToken = false;
