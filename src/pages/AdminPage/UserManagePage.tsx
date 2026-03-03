@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Search, Ban, Trash2, Mail, Calendar } from "lucide-react";
 import { api } from "../../api/axiosInstance";
 
@@ -17,7 +17,7 @@ interface ApiUser {
 }
 
 interface ApiPageData {
-  page: number; // 0-base
+  page: number;
   size: number;
   totalElements: number;
   totalPages: number;
@@ -30,15 +30,36 @@ interface ApiResponse<T> {
   data: T;
 }
 
+interface ApiUserDetail {
+  id: number;
+  userId: string;
+  email: string;
+  nickname: string;
+  imgUrl: string | null;
+  role: ApiRole;
+  deleted: boolean;
+  deletedAt: string | null;
+  provider: string;
+  createdAt: string;
+  lastLoginAt: string | null;
+  reportedCount: number;
+  reporterCount: number;
+  penaltyCount: number;
+  blockedByCount: number;
+  roomCount: number;
+  memeCount: number;
+}
+
 type UiRole = "전체 역할" | "관리자" | "일반 사용자";
 
 interface UiUser {
   id: number;
-  name: string; // nickname 표시
+  userId: string;
+  name: string;
   email: string;
   role: "관리자" | "일반 사용자";
-  jointedAt: string; // YYYY-MM-DD
-  lastLogin: string; // YYYY-MM-DD HH:mm or "-"
+  jointedAt: string;
+  lastLogin: string;
   status: "정상" | "탈퇴";
 }
 
@@ -49,17 +70,15 @@ const formatYmd = (iso?: string | null) => {
 
 const formatLocalYmdHm = (iso?: string | null) => {
   if (!iso) return "-";
-  const d = new Date(iso); // Z(UTC) 포함이면 로컬로 변환됨
+  const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
-
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
-    d.getHours()
-  )}:${pad(d.getMinutes())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const mapApiToUiUser = (u: ApiUser): UiUser => ({
   id: u.id,
+  userId: u.userId,
   name: u.nickname,
   email: u.email,
   role: u.role === "ADMIN" ? "관리자" : "일반 사용자",
@@ -68,13 +87,26 @@ const mapApiToUiUser = (u: ApiUser): UiUser => ({
   status: u.deleted ? "탈퇴" : "정상",
 });
 
+const mapUiRoleToApi = (role: UiRole): string | undefined => {
+  if (role === "관리자") return "ADMIN";
+  if (role === "일반 사용자") return "USER";
+  return undefined;
+};
+
+const Row = ({ label, value }: { label: string; value: string | number }) => (
+  <div className="flex justify-between">
+    <span className="text-gray-500">{label}</span>
+    <span className="text-gray-900 font-medium">{value}</span>
+  </div>
+);
+
 const UserManagePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<UiRole>("전체 역할");
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
   // pagination
-  const [page, setPage] = useState(0); // 0-base
+  const [page, setPage] = useState(0);
   const [size] = useState(20);
 
   // api data
@@ -85,6 +117,15 @@ const UserManagePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // 슬라이드 패널
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [detailUser, setDetailUser] = useState<ApiUserDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  useEffect(() => {
+    setPage(0);
+  }, [searchQuery, filterRole]);
+
   useEffect(() => {
     let alive = true;
 
@@ -93,8 +134,14 @@ const UserManagePage: React.FC = () => {
       setErrorMsg(null);
 
       try {
-        const res = await api.get<ApiResponse<ApiPageData>>("/admin/users", {
-          params: { page: page + 1, size },
+        const params: Record<string, any> = { page: page + 1, size };
+        const keyword = searchQuery.trim();
+        if (keyword) params.keyword = keyword;
+        const apiRole = mapUiRoleToApi(filterRole);
+        if (apiRole) params.role = apiRole;
+
+        const res = await api.get<ApiResponse<ApiPageData>>("/admin/users/search", {
+          params,
         });
 
         if (!alive) return;
@@ -103,8 +150,6 @@ const UserManagePage: React.FC = () => {
         setUsers((data.items ?? []).map(mapApiToUiUser));
         setTotalPages(data.totalPages ?? 0);
         setTotalElements(data.totalElements ?? 0);
-
-        // 페이지 변경 시 선택 초기화
         setSelectedUsers([]);
       } catch (e: any) {
         if (!alive) return;
@@ -122,27 +167,29 @@ const UserManagePage: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, [page, size]);
+  }, [page, size, searchQuery, filterRole]);
 
-  // 현재 페이지 내에서만 검색/필터 (서버 검색 파라미터 없으니 FE에서 처리)
-  const filteredUsers = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+  const fetchUserDetail = async (userId: string) => {
+    setSelectedUserId(userId);
+    setDetailUser(null);
+    setDetailLoading(true);
+    try {
+      const res = await api.get<ApiResponse<ApiUserDetail>>(`/admin/users/${userId}`);
+      setDetailUser(res.data.data);
+    } catch {
+      setDetailUser(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
-    return users.filter((user) => {
-      const matchesSearch =
-        !q ||
-        user.name.toLowerCase().includes(q) ||
-        user.email.toLowerCase().includes(q);
-
-      const matchesRole =
-        filterRole === "전체 역할" || user.role === filterRole;
-
-      return matchesSearch && matchesRole;
-    });
-  }, [users, searchQuery, filterRole]);
+  const closePanel = () => {
+    setSelectedUserId(null);
+    setDetailUser(null);
+  };
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) setSelectedUsers(filteredUsers.map((u) => u.id));
+    if (checked) setSelectedUsers(users.map((u) => u.id));
     else setSelectedUsers([]);
   };
 
@@ -151,7 +198,6 @@ const UserManagePage: React.FC = () => {
     else setSelectedUsers((prev) => prev.filter((id) => id !== userId));
   };
 
-  // 아직 차단/삭제 API 없으니 버튼은 “disabled”로 두기
   const handleUserAction = (action: string) => {
     console.log(`Action: ${action}`, selectedUsers);
   };
@@ -161,6 +207,98 @@ const UserManagePage: React.FC = () => {
 
   return (
     <div className="p-8">
+      {/* 슬라이드 패널 */}
+      {selectedUserId && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/30 z-40"
+            onClick={closePanel}
+          />
+          <div className="fixed right-0 top-0 h-full w-[420px] bg-white shadow-2xl z-50 flex flex-col overflow-y-auto">
+            {/* 패널 헤더 */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900">사용자 상세</h2>
+              <button
+                onClick={closePanel}
+                className="text-gray-400 hover:text-gray-700 text-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {detailLoading && (
+              <div className="flex-1 flex items-center justify-center text-gray-400">
+                불러오는 중...
+              </div>
+            )}
+
+            {!detailLoading && detailUser && (
+              <div className="p-6 flex flex-col gap-6">
+                {/* 프로필 */}
+                <div className="flex items-center gap-4">
+                  {detailUser.imgUrl ? (
+                    <img
+                      src={detailUser.imgUrl}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-2xl text-purple-600 font-bold">
+                      {detailUser.nickname?.[0] ?? "?"}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-lg font-bold text-gray-900">{detailUser.nickname}</p>
+                    <p className="text-sm text-gray-500">{detailUser.email}</p>
+                    <span
+                      className={`inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        detailUser.role === "ADMIN"
+                          ? "bg-purple-100 text-purple-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {detailUser.role === "ADMIN" ? "관리자" : "일반 사용자"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 기본 정보 */}
+                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3 text-sm">
+                  <h3 className="font-semibold text-gray-700 mb-1">기본 정보</h3>
+                  <Row label="User ID" value={detailUser.userId} />
+                  <Row label="가입일" value={formatLocalYmdHm(detailUser.createdAt)} />
+                  <Row label="마지막 로그인" value={formatLocalYmdHm(detailUser.lastLoginAt)} />
+                  <Row label="가입 방식" value={detailUser.provider} />
+                  <Row
+                    label="상태"
+                    value={detailUser.deleted ? `탈퇴 (${formatYmd(detailUser.deletedAt)})` : "정상"}
+                  />
+                </div>
+
+                {/* 활동 통계 */}
+                <div>
+                  <h3 className="font-semibold text-gray-700 mb-3 text-sm">활동 통계</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "만든 방", value: detailUser.roomCount },
+                      { label: "밈 수", value: detailUser.memeCount },
+                      { label: "신고 당함", value: detailUser.reportedCount },
+                      { label: "신고 함", value: detailUser.reporterCount },
+                      { label: "패널티", value: detailUser.penaltyCount },
+                      { label: "차단 당함", value: detailUser.blockedByCount },
+                    ].map((stat) => (
+                      <div key={stat.label} className="bg-gray-50 rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                        <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">사용자 관리</h1>
@@ -195,13 +333,11 @@ const UserManagePage: React.FC = () => {
           </select>
         </div>
 
-        {/* Bulk Actions (현재는 API 없으니 비활성) */}
         {selectedUsers.length > 0 && (
           <div className="mt-4 flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
             <span className="text-sm font-medium text-purple-900">
               {selectedUsers.length}명 선택됨
             </span>
-
             <button
               disabled
               onClick={() => handleUserAction("block")}
@@ -211,7 +347,6 @@ const UserManagePage: React.FC = () => {
               <Ban size={16} />
               차단
             </button>
-
             <button
               disabled
               onClick={() => handleUserAction("delete")}
@@ -234,12 +369,9 @@ const UserManagePage: React.FC = () => {
 
       {/* Users Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        {/* top bar: count + pagination */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            총{" "}
-            <span className="font-semibold text-gray-900">{totalElements}</span>
-            명
+            총 <span className="font-semibold text-gray-900">{totalElements}</span>명
             {loading && <span className="ml-2 text-gray-400">불러오는 중...</span>}
           </div>
 
@@ -258,12 +390,10 @@ const UserManagePage: React.FC = () => {
             >
               이전
             </button>
-
             <div className="px-3 py-1.5 text-sm text-gray-700">
               <span className="font-semibold">{page + 1}</span> /{" "}
               <span>{Math.max(totalPages, 1)}</span>
             </div>
-
             <button
               onClick={() => canNext && setPage((p) => p + 1)}
               disabled={!canNext || loading}
@@ -288,45 +418,29 @@ const UserManagePage: React.FC = () => {
                 <th className="px-6 py-4 text-left w-12">
                   <input
                     type="checkbox"
-                    checked={
-                      selectedUsers.length === filteredUsers.length &&
-                      filteredUsers.length > 0
-                    }
+                    checked={selectedUsers.length === users.length && users.length > 0}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                     className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                   />
                 </th>
-
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-20">
-                  ID
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-32">
-                  이름
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-48">
-                  이메일
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-28">
-                  역할
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-32">
-                  가입일
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-40">
-                  마지막 로그인
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-24">
-                  상태
-                </th>
-
-                {/* 작업 컬럼 완전 제거 */}
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-20">ID</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-32">이름</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-48">이메일</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-28">역할</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-32">가입일</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-40">마지막 로그인</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 w-24">상태</th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4">
+              {users.map((user) => (
+                <tr
+                  key={user.id}
+                  className="hover:bg-gray-50 transition cursor-pointer"
+                  onClick={() => fetchUserDetail(user.userId)}
+                >
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     <input
                       type="checkbox"
                       checked={selectedUsers.includes(user.id)}
@@ -334,17 +448,14 @@ const UserManagePage: React.FC = () => {
                       className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                     />
                   </td>
-
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                     #{user.id}
                   </td>
-
                   <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                     <div className="max-w-[120px] truncate" title={user.name}>
                       {user.name}
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Mail size={14} className="flex-shrink-0" />
@@ -353,7 +464,6 @@ const UserManagePage: React.FC = () => {
                       </span>
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
@@ -365,18 +475,15 @@ const UserManagePage: React.FC = () => {
                       {user.role}
                     </span>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar size={14} />
                       {user.jointedAt}
                     </div>
                   </td>
-
                   <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                     {user.lastLogin}
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
@@ -394,7 +501,7 @@ const UserManagePage: React.FC = () => {
           </table>
         </div>
 
-        {!loading && filteredUsers.length === 0 && (
+        {!loading && users.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">검색 결과가 없습니다</p>
           </div>
