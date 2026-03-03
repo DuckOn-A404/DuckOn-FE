@@ -24,6 +24,7 @@ interface Artist {
   nameEn: string;
   debutDate: string; // "YYYY-MM-DD"
   imgUrl: string;
+  followerCount?: number;
 }
 
 interface ApiPageData<T> {
@@ -39,16 +40,6 @@ interface ApiResponse<T> {
   message: string;
   data: T;
 }
-
-// interface UploadResult {
-//   key: string;
-//   cdnUrl: string;
-// }
-// interface UploadResponse {
-//   status: number;
-//   message: string;
-//   data: UploadResult;
-// }
 
 const PAGE_SIZE = 21;
 const PAGE_WINDOW = 5;
@@ -164,6 +155,11 @@ const ArtistManagePage: React.FC = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
 
+  /** ===== Search State ===== */
+  const [searchResults, setSearchResults] = useState<Artist[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const isSearchMode = searchQuery.trim().length > 0;
+
   /** 삭제 confirm 모달 상태 */
   const [deleteTarget, setDeleteTarget] = useState<Artist | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -197,13 +193,11 @@ const ArtistManagePage: React.FC = () => {
   const [editUploading, setEditUploading] = useState(false);
   const [editUploadStatusText, setEditUploadStatusText] = useState<string | null>(null);
 
-  // const [imageFile, setImageFile] = useState<File | null>(null);
-
   // File input refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editFileInputRef = useRef<HTMLInputElement>(null);
 
-  /** ===== Fetch ===== */
+  /** ===== Fetch (페이지네이션) ===== */
   const fetchArtists = async () => {
     setLoading(true);
     try {
@@ -230,31 +224,39 @@ const ArtistManagePage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  /** ===== Search ===== */
-  const filteredArtists = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return artists;
-    return artists.filter((a) => {
-      const kr = (a.nameKr ?? "").toLowerCase();
-      const en = (a.nameEn ?? "").toLowerCase();
-      return kr.includes(q) || en.includes(q);
-    });
-  }, [artists, searchQuery]);
+  /** ===== 검색 API (디바운스 300ms) ===== */
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults([]);
+      return;
+    }
 
-  /** ===== new upload to S3 ===== */
-  // const uploadArtistImage = async (file: File) => {
-  //   const form = new FormData();
-  //   form.append("file", file);
+    const timer = setTimeout(async () => {
+      setSearchLoading(true);
+      try {
+        const res = await api.get<ApiResponse<Artist[]>>(
+          "/admin/artists/search",
+          { params: { keyword: q } }
+        );
+        setSearchResults(res.data.data ?? []);
+      } catch (e) {
+        console.error("아티스트 검색 실패:", e);
+        showToast("아티스트 검색에 실패했습니다.", "error");
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
 
-  //   const res = await api.post<UploadResponse>("/memes/upload-s3-only", form, {
-  //     headers: { "Content-Type": "multipart/form-data" },
-  //   });
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
-  //   const cdnUrl = res.data?.data?.cdnUrl;
-  //   if (!cdnUrl) throw new Error("cdnUrl not found in upload response");
-  //   return cdnUrl;
-  // };
+  /** 현재 표시할 아티스트 목록 */
+  const displayArtists = isSearchMode ? searchResults : artists;
 
+  /** ===== 이미지 업로드 (등록) ===== */
   const handlePickImageFile = async (file: File | null) => {
     if (!file) return;
 
@@ -266,8 +268,6 @@ const ArtistManagePage: React.FC = () => {
     setUploading(true);
     setUploadStatusText("이미지 업로드 중...");
     try {
-      // const cdnUrl = await uploadArtistImage(file);
-      // setImageUrl(cdnUrl);
       const { fileUrl } = await uploadImage({
         file,
         purpose: "RISING_ARTIST_IMAGE_TEMP",
@@ -287,28 +287,15 @@ const ArtistManagePage: React.FC = () => {
     }
   };
 
-  // const handlePickImageFile = async (file: File | null) => {
-  //   if (!file) return;
-  
-  //   if (!file.type.startsWith("image/")) {
-  //     showToast("이미지 파일만 업로드할 수 있습니다.", "error");
-  //     return;
-  //   }
-  
-  //   setImageFile(file); // 파일 저장
-  //   setImageUrl(URL.createObjectURL(file)); // 미리보기용 URL
-  //   setImageFileName(file.name);
-  // };
-
   const handleRemoveImage = () => {
     setImageUrl("");
     setImageFileName("");
-    // setImageFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
+  /** ===== 이미지 업로드 (수정) ===== */
   const handlePickEditImageFile = async (file: File | null) => {
     if (!file) return;
 
@@ -320,12 +307,10 @@ const ArtistManagePage: React.FC = () => {
     setEditUploading(true);
     setEditUploadStatusText("이미지 업로드 중...");
     try {
-      // const cdnUrl = await uploadArtistImage(file);
-      // setEditImageUrl(cdnUrl);
       const { fileUrl } = await uploadImage({
         file,
         purpose: "RISING_ARTIST_IMAGE_TEMP",
-        refId: editingArtist!.artistId, // ← 수정 시엔 id 있으니 다시 전송
+        refId: editingArtist!.artistId,
       });
       setEditImageUrl(fileUrl);
       setEditImageFileName(file.name);
@@ -390,60 +375,11 @@ const ArtistManagePage: React.FC = () => {
     }
   };
 
-  // const handleCreateArtist = async () => {
-  //   if (!nameKr.trim() || !nameEn.trim() || !debutDate.trim()) {
-  //     showToast("이름(한/영), 데뷔일은 필수입니다.", "error");
-  //     return;
-  //   }
-  
-  //   setSubmitting(true);
-  //   try {
-  //     // 1) 아티스트 먼저 생성 → artistId 발급
-  //     const createRes = await api.post("/admin/artists", {
-  //       nameKr: nameKr.trim(),
-  //       nameEn: nameEn.trim(),
-  //       debutDate: debutDate.trim(),
-  //     });
-  
-  //     const newArtistId = createRes.data.data.artistId;
-  
-  //     // 2) 이미지 있으면 presign → S3 업로드
-  //     if (imageFile) {
-  //       const { fileUrl } = await uploadImage({
-  //         file: imageFile,
-  //         purpose: "ARTIST_IMAGE_TEMP",
-  //         refId: newArtistId, // 이제 ID 있음!
-  //       });
-  
-  //       // 3) 이미지 URL 업데이트
-  //       await api.patch(`/admin/artists/${newArtistId}`, null, {
-  //         params: { imgUrl: fileUrl },
-  //       });
-  //     }
-  
-  //     showToast("아티스트가 등록되었습니다.", "success");
-  //     setShowAddModal(false);
-  //     setNameKr("");
-  //     setNameEn("");
-  //     setDebutDate("");
-  //     setImageUrl("");
-  //     setImageFileName("");
-  //     setImageFile(null);
-  //     if (fileInputRef.current) fileInputRef.current.value = "";
-  //     fetchArtists();
-  //   } catch (e) {
-  //     showToast("아티스트 등록에 실패했습니다.", "error");
-  //   } finally {
-  //     setSubmitting(false);
-  //   }
-  // };
-
-  // Delete: 모달 열기
+  /** ===== Delete ===== */
   const openDeleteModal = (artist: Artist) => {
     setDeleteTarget(artist);
   };
 
-  // Delete: 실제 API 호출
   const confirmDelete = async () => {
     if (!deleteTarget) return;
 
@@ -453,17 +389,23 @@ const ArtistManagePage: React.FC = () => {
 
       showToast("아티스트가 삭제되었습니다.", "success");
 
-      setArtists((prev) =>
-        prev.filter((a) => a.artistId !== deleteTarget.artistId)
-      );
-
-      const remainingAfterDelete = filteredArtists.length - 1;
+      const remainingAfterDelete = displayArtists.length - 1;
       setDeleteTarget(null);
 
-      if (remainingAfterDelete <= 0 && page > 1) {
-        setPage((p) => p - 1);
+      if (isSearchMode) {
+        // 검색 모드: 검색 결과에서 제거
+        setSearchResults((prev) =>
+          prev.filter((a) => a.artistId !== deleteTarget.artistId)
+        );
       } else {
-        fetchArtists();
+        setArtists((prev) =>
+          prev.filter((a) => a.artistId !== deleteTarget.artistId)
+        );
+        if (remainingAfterDelete <= 0 && page > 1) {
+          setPage((p) => p - 1);
+        } else {
+          fetchArtists();
+        }
       }
     } catch (e) {
       console.error("아티스트 삭제 실패:", e);
@@ -473,15 +415,14 @@ const ArtistManagePage: React.FC = () => {
     }
   };
 
+  /** ===== Edit ===== */
   const openEditModal = (artist: Artist) => {
     setEditingArtist(artist);
-
     setEditNameKr(artist.nameKr ?? "");
     setEditNameEn(artist.nameEn ?? "");
     setEditDebutDate(artist.debutDate ?? "");
     setEditImageUrl(artist.imgUrl ?? "");
     setEditImageFileName("");
-
     setShowEditModal(true);
   };
 
@@ -510,6 +451,24 @@ const ArtistManagePage: React.FC = () => {
       });
 
       showToast("아티스트 정보가 수정되었습니다.", "success");
+
+      // 검색 모드면 검색 결과도 업데이트
+      if (isSearchMode) {
+        setSearchResults((prev) =>
+          prev.map((a) =>
+            a.artistId === editingArtist.artistId
+              ? {
+                  ...a,
+                  nameKr: editNameKr.trim(),
+                  nameEn: editNameEn.trim(),
+                  debutDate: editDebutDate.trim(),
+                  imgUrl: editImageUrl.trim() || a.imgUrl,
+                }
+              : a
+          )
+        );
+      }
+
       await fetchArtists();
       setShowEditModal(false);
       setEditingArtist(null);
@@ -591,26 +550,41 @@ const ArtistManagePage: React.FC = () => {
           />
           <input
             type="text"
-            placeholder="아티스트 이름(한/영)으로 검색..."
+            placeholder="아티스트 이름(한/영)으로 검색... (전체 검색)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
+          {isSearchMode && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
+        {isSearchMode && !searchLoading && (
+          <p className="mt-2 text-sm text-gray-500">
+            검색 결과 <span className="font-semibold text-purple-600">{searchResults.length}</span>건
+          </p>
+        )}
       </div>
 
       {/* Loading */}
-      {loading && (
+      {(loading || searchLoading) && (
         <div className="text-center py-12">
-          <p className="text-gray-500">아티스트 목록을 불러오는 중입니다...</p>
+          <p className="text-gray-500">
+            {searchLoading ? "검색 중입니다..." : "아티스트 목록을 불러오는 중입니다..."}
+          </p>
         </div>
       )}
 
       {/* Grid */}
-      {!loading && (
+      {!loading && !searchLoading && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredArtists.map((artist) => (
+            {displayArtists.map((artist) => (
               <div
                 key={artist.artistId}
                 className="bg-white rounded-xl shadow-sm hover:shadow-lg transition overflow-hidden"
@@ -662,14 +636,16 @@ const ArtistManagePage: React.FC = () => {
           </div>
 
           {/* Empty */}
-          {filteredArtists.length === 0 && (
+          {displayArtists.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500">검색 결과가 없습니다</p>
+              <p className="text-gray-500">
+                {isSearchMode ? "검색 결과가 없습니다" : "아티스트가 없습니다"}
+              </p>
             </div>
           )}
 
-          {/* Pagination */}
-          {totalPages > 0 && (
+          {/* Pagination - 검색 모드일 때 숨김 */}
+          {!isSearchMode && totalPages > 0 && (
             <div className="flex items-center justify-center gap-2 mt-10">
               <button
                 onClick={handleFirst}
@@ -803,7 +779,7 @@ const ArtistManagePage: React.FC = () => {
                 />
               </div>
 
-              {/* 개선된 이미지 업로드 UI */}
+              {/* 이미지 업로드 UI */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   이미지 *
@@ -863,8 +839,7 @@ const ArtistManagePage: React.FC = () => {
                         alt="preview"
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display =
-                            "none";
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
                         }}
                       />
                     </div>
@@ -983,7 +958,7 @@ const ArtistManagePage: React.FC = () => {
                 />
               </div>
 
-              {/* 개선된 이미지 업로드 UI (수정) */}
+              {/* 이미지 업로드 UI (수정) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   이미지 (선택)
@@ -1043,8 +1018,7 @@ const ArtistManagePage: React.FC = () => {
                         alt="preview"
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display =
-                            "none";
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
                         }}
                       />
                     </div>
@@ -1124,10 +1098,10 @@ const ArtistManagePage: React.FC = () => {
 
       {/* Toast */}
       {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={hideToast} 
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
         />
       )}
     </div>
