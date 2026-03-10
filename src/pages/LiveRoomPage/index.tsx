@@ -666,6 +666,7 @@ const LiveRoomPage = () => {
 
             switch (t) {
               case "ROOM_DELETED":
+                if (isHostRef.current) return;
                 setRoomDeletedOpen(true);
                 return;
 
