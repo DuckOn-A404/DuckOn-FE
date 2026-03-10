@@ -188,6 +188,14 @@ const UserManagePage: React.FC = () => {
     setDetailUser(null);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closePanel();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedUserId]);
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) setSelectedUsers(users.map((u) => u.id));
     else setSelectedUsers([]);
@@ -207,94 +215,91 @@ const UserManagePage: React.FC = () => {
 
   return (
     <div className="p-8">
-      {/* 슬라이드 패널 */}
+      {/* 모달 */}
       {selectedUserId && (
         <>
           <div
-            className="fixed inset-0 bg-black/30 z-40"
+            className="fixed inset-0 bg-black/50 z-40"
             onClick={closePanel}
           />
-          <div className="fixed right-0 top-0 h-full w-[420px] bg-white shadow-2xl z-50 flex flex-col overflow-y-auto">
-            {/* 패널 헤더 */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900">사용자 상세</h2>
-              <button
-                onClick={closePanel}
-                className="text-gray-400 hover:text-gray-700 text-xl font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {detailLoading && (
-              <div className="flex-1 flex items-center justify-center text-gray-400">
-                불러오는 중...
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={closePanel}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              {/* 모달 헤더 */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+                <h2 className="text-lg font-bold text-gray-900">사용자 상세</h2>
+                <button
+                  onClick={closePanel}
+                  className="text-gray-400 hover:text-gray-700 text-xl font-bold"
+                >
+                  ✕
+                </button>
               </div>
-            )}
 
-            {!detailLoading && detailUser && (
-              <div className="p-6 flex flex-col gap-6">
-                {/* 프로필 */}
-                <div className="flex items-center gap-4">
-                  {detailUser.imgUrl ? (
+              {detailLoading && (
+                <div className="flex-1 flex items-center justify-center text-gray-400 py-16">
+                  불러오는 중...
+                </div>
+              )}
+
+              {!detailLoading && detailUser && (
+                <div className="p-6 flex flex-col gap-6 overflow-y-auto">
+                  {/* 프로필 */}
+                  <div className="flex items-center gap-4">
                     <img
-                      src={detailUser.imgUrl}
+                      src={detailUser.imgUrl || "/default_image.png"}
+                      onError={(e) => { e.currentTarget.src = "/default_image.png"; }}
                       className="w-16 h-16 rounded-full object-cover"
                     />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-2xl text-purple-600 font-bold">
-                      {detailUser.nickname?.[0] ?? "?"}
+                    <div>
+                      <p className="text-lg font-bold text-gray-900">{detailUser.nickname}</p>
+                      <p className="text-sm text-gray-500">{detailUser.email}</p>
+                      <span
+                        className={`inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          detailUser.role === "ADMIN"
+                            ? "bg-purple-100 text-purple-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {detailUser.role === "ADMIN" ? "관리자" : "일반 사용자"}
+                      </span>
                     </div>
-                  )}
+                  </div>
+
+                  {/* 기본 정보 */}
+                  <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3 text-sm">
+                    <h3 className="font-semibold text-gray-700 mb-1">기본 정보</h3>
+                    <Row label="User ID" value={detailUser.userId} />
+                    <Row label="가입일" value={formatLocalYmdHm(detailUser.createdAt)} />
+                    <Row label="마지막 로그인" value={formatLocalYmdHm(detailUser.lastLoginAt)} />
+                    <Row label="가입 방식" value={detailUser.provider} />
+                    <Row
+                      label="상태"
+                      value={detailUser.deleted ? `탈퇴 (${formatYmd(detailUser.deletedAt)})` : "정상"}
+                    />
+                  </div>
+
+                  {/* 활동 통계 */}
                   <div>
-                    <p className="text-lg font-bold text-gray-900">{detailUser.nickname}</p>
-                    <p className="text-sm text-gray-500">{detailUser.email}</p>
-                    <span
-                      className={`inline-flex mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                        detailUser.role === "ADMIN"
-                          ? "bg-purple-100 text-purple-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {detailUser.role === "ADMIN" ? "관리자" : "일반 사용자"}
-                    </span>
+                    <h3 className="font-semibold text-gray-700 mb-3 text-sm">활동 통계</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        { label: "만든 방", value: detailUser.roomCount },
+                        { label: "밈 수", value: detailUser.memeCount },
+                        { label: "신고 당함", value: detailUser.reportedCount },
+                        { label: "신고 함", value: detailUser.reporterCount },
+                        { label: "패널티", value: detailUser.penaltyCount },
+                        { label: "차단 당함", value: detailUser.blockedByCount },
+                      ].map((stat) => (
+                        <div key={stat.label} className="bg-gray-50 rounded-xl p-3 text-center">
+                          <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                          <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-
-                {/* 기본 정보 */}
-                <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-3 text-sm">
-                  <h3 className="font-semibold text-gray-700 mb-1">기본 정보</h3>
-                  <Row label="User ID" value={detailUser.userId} />
-                  <Row label="가입일" value={formatLocalYmdHm(detailUser.createdAt)} />
-                  <Row label="마지막 로그인" value={formatLocalYmdHm(detailUser.lastLoginAt)} />
-                  <Row label="가입 방식" value={detailUser.provider} />
-                  <Row
-                    label="상태"
-                    value={detailUser.deleted ? `탈퇴 (${formatYmd(detailUser.deletedAt)})` : "정상"}
-                  />
-                </div>
-
-                {/* 활동 통계 */}
-                <div>
-                  <h3 className="font-semibold text-gray-700 mb-3 text-sm">활동 통계</h3>
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: "만든 방", value: detailUser.roomCount },
-                      { label: "밈 수", value: detailUser.memeCount },
-                      { label: "신고 당함", value: detailUser.reportedCount },
-                      { label: "신고 함", value: detailUser.reporterCount },
-                      { label: "패널티", value: detailUser.penaltyCount },
-                      { label: "차단 당함", value: detailUser.blockedByCount },
-                    ].map((stat) => (
-                      <div key={stat.label} className="bg-gray-50 rounded-xl p-3 text-center">
-                        <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-                        <p className="text-xs text-gray-500 mt-1">{stat.label}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </>
       )}
