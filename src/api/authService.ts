@@ -76,8 +76,14 @@ export const logIn = async (
     // 응답에서 토큰 추출
     const { accessToken } = response.data;
 
-    // 저장 및 Authorization 헤더 설정
-    localStorage.setItem("accessToken", accessToken);
+    // rememberMe 여부에 따라 저장소 분기 (체크 시 localStorage, 미체크 시 sessionStorage)
+    if (rememberMe) {
+      localStorage.setItem("accessToken", accessToken);
+      sessionStorage.removeItem("accessToken"); // 기존 세션 찌꺼기 제거
+    } else {
+      sessionStorage.setItem("accessToken", accessToken);
+      localStorage.removeItem("accessToken"); // 기존 로컬 찌꺼기 제거
+    }
     // api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
     return response.data;

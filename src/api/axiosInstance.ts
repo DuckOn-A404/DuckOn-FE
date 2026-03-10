@@ -16,11 +16,18 @@ export const buildApiUrl = (path: string) => {
 
 // --- 유틸: 안전하게 토큰 꺼내기 ---
 export const getAccessToken = (): string | null => {
-  const raw = localStorage.getItem("accessToken");
-  if (!raw) return null;
-  const v = raw.trim();
-  if (!v || v === "null" || v === "undefined") return null;
-  return v;
+  // sessionStorage를 먼저 확인하고, 없으면 localStorage 확인
+  const rawSession = sessionStorage.getItem("accessToken");
+  if (rawSession && rawSession.trim() && rawSession !== "null" && rawSession !== "undefined") {
+    return rawSession.trim();
+  }
+  
+  const rawLocal = localStorage.getItem("accessToken");
+  if (rawLocal && rawLocal.trim() && rawLocal !== "null" && rawLocal !== "undefined") {
+    return rawLocal.trim();
+  }
+  
+  return null;
 };
 
 // 리프레시 토큰은 HttpOnly 쿠키로 관리되므로 더 이상 프론트에서 직접 접근하지 않음
@@ -186,7 +193,12 @@ api.interceptors.response.use(
         throw new Error("No accessToken in refresh response");
       }
 
-      localStorage.setItem("accessToken", newAccessToken);
+      // 갱신된 토큰을 기존에 저장되어 있던 스토리지에 맞게 덮어쓰기
+      if (localStorage.getItem("accessToken")) {
+        localStorage.setItem("accessToken", newAccessToken);
+      } else {
+        sessionStorage.setItem("accessToken", newAccessToken);
+      }
       // refreshToken은 이제 localStorage에 저장하지 않음
 
       emitTokenRefreshed(newAccessToken);
@@ -200,6 +212,7 @@ api.interceptors.response.use(
       return api(original);
     } catch (e) {
       localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken");
       // localStorage.removeItem("refreshToken"); // 더 이상 관리하지 않음
       emitTokenRefreshed(null);
       emitRefreshState("fail"); // 실패 종료
