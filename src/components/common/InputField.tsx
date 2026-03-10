@@ -12,6 +12,7 @@ type InputFieldProps = {
   error?: string;
   success?: string;
   disabled?: boolean;
+  maxLength?: number;
 };
 
 const InputField = ({
@@ -26,6 +27,7 @@ const InputField = ({
   error,
   success,
   disabled = false,
+  maxLength,
 }: InputFieldProps) => {
   return (
     <div>
@@ -52,6 +54,7 @@ const InputField = ({
           value={value}
           onChange={onChange}
           disabled={disabled}
+          maxLength={maxLength}
           className="w-full h-12 pl-12 pr-4 py-3 bg-white rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           placeholder={placeholder}
         />

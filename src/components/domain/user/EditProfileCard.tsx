@@ -369,6 +369,7 @@ const EditProfileCard = ({
   onUpdate,
 }: EditProfileCardProps) => {
   const [nickname, setNickname] = useState(user.nickname);
+  const [nicknameError, setNicknameError] = useState("");
   const [language, setLanguage] = useState(user.language || "ko");
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(
@@ -384,6 +385,16 @@ const EditProfileCard = ({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useUiTranslate();
+
+  const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length > 15) {
+      setNicknameError(t("mypage.profile.error.nicknameLength", "닉네임은 최대 15자까지 입력 가능합니다."));
+    } else {
+      setNicknameError("");
+      setNickname(value);
+    }
+  };
 
   const handleImageClick = () => {
     fileInputRef.current?.click();
@@ -668,10 +679,15 @@ const EditProfileCard = ({
               <div className="min-w-0">
                 <input
                   id="nickname"
-                  className="w-full rounded-lg border border-gray-200 px-2 py-1"
+                  className={`w-full rounded-lg border px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                    nicknameError ? "border-red-500" : "border-gray-200"
+                  }`}
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={handleNicknameChange}
                 />
+                {nicknameError && (
+                  <p className="text-xs text-red-500 mt-1">{nicknameError}</p>
+                )}
               </div>
             </div>
 
