@@ -6,7 +6,7 @@ import {Mail, LockKeyhole, ArrowLeft} from "lucide-react";
 import {useUserStore} from "../store/useUserStore";
 import {buildLoginCredentials} from "../utils/authUtils";
 import {fetchMyProfile} from "../api/userService";
-import {emitTokenRefreshed} from "../api/axiosInstance";
+import { getAccessToken, emitTokenRefreshed } from "../api/axiosInstance";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const LoginPage = () => {
     try {
       await logIn(credentials);
 
-      emitTokenRefreshed(localStorage.getItem("accessToken"));
+      emitTokenRefreshed(getAccessToken());
       const userData = await fetchMyProfile();
       const userForStore = {
         ...userData,

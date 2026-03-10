@@ -1,10 +1,9 @@
-import { api } from "../axiosInstance";
+import { api, getAccessToken } from "../axiosInstance";
 import type { FollowUser } from "../../types/follow";
-
-const token = localStorage.getItem("accessToken") || "";
 
 // 팔로워 목록 조회
 export const fetchFollowList = async (): Promise<FollowUser[]> => {
+  const token = getAccessToken() || "";
   const res = await api.get("/me/followers", {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -27,6 +26,7 @@ export const fetchFollowList = async (): Promise<FollowUser[]> => {
 
 // 팔로잉 목록 조회
 export const fetchFollowingList = async (): Promise<FollowUser[]> => {
+  const token = getAccessToken() || "";
   const res = await api.get("/me/following", {
     headers: {
       Authorization: `Bearer ${token}`,

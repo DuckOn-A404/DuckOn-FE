@@ -23,7 +23,7 @@ import RightSidebar from "./RightSidebar";
 import {useChatSubscription} from "../../hooks/useChatSubscription";
 import RoomDeletedModal from "../../components/common/modal/RoomDeletedModal";
 import ConfirmModal from "../../components/common/modal/ConfirmModal";
-import {onTokenRefreshed, onRefreshState} from "../../api/axiosInstance";
+import { getAccessToken, onRefreshState, onTokenRefreshed } from "../../api/axiosInstance";
 import {fireAndForget} from "../../utils/fireAndForget";
 import {blockUser, getBlockedUsers} from "../../api/userService";
 import type {LiveRoomSyncDTO} from "../../types/room";
@@ -136,7 +136,7 @@ const LiveRoomPage = () => {
   const presenceRef = useRef<Client | null>(null);
   const syncRef = useRef<Client | null>(null);
   const lastTokenRef = useRef<string | null>(
-    localStorage.getItem("accessToken") || null
+    getAccessToken()
   );
   const leavingRef = useRef(false);
   const isHostRef = useRef(false);
@@ -614,7 +614,7 @@ const LiveRoomPage = () => {
   useEffect(() => {
     if (!roomId) return;
 
-    const token = localStorage.getItem("accessToken") || "";
+    const token = getAccessToken() || "";
     const presenceClient = createStompClient(token);
     presenceRef.current = presenceClient;
 
@@ -645,7 +645,7 @@ const LiveRoomPage = () => {
   useEffect(() => {
     if (isQuizModalOpen || !roomId) return;
 
-    const token = localStorage.getItem("accessToken") || "";
+    const token = getAccessToken() || "";
     const syncClient = createStompClient(token);
     let sub: StompSubscription | null = null;
 

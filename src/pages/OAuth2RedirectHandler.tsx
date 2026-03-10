@@ -25,8 +25,11 @@ const OAuth2RedirectHandler = () => {
           throw new Error("토큰이 존재하지 않습니다.");
         }
 
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
+        // OAuth 로그인 시 자동 로그인(rememberMe) 옵션이 없으므로
+        // 기본적으로 세션 스토리지에 저장하여 보안성 강화 (필요시 기획에 따라 localStorage로 변경)
+        sessionStorage.setItem("accessToken", accessToken);
+        // localStorage.setItem("accessToken", accessToken);
+        // localStorage.setItem("refreshToken", refreshToken); // 리프레시 토큰은 이제 쿠키로 관리
 
         emitTokenRefreshed(accessToken);
 
