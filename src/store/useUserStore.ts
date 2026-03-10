@@ -213,6 +213,7 @@ export const useUserStore = create<UserState>()(
         const currentUser = get().myUser;
         
         localStorage.removeItem("accessToken");
+        sessionStorage.removeItem("accessToken");
         // refreshToken은 이제 쿠키로 관리되므로 프론트에서 삭제하지 않음
         
         // last-img 캐시는 남겨둠(다음 로그인 복원용)
@@ -245,7 +246,9 @@ export const useUserStore = create<UserState>()(
         let hasValidToken = false;
         try {
           if (typeof window !== "undefined") {
-            const at = localStorage.getItem("accessToken");
+            const atLocal = localStorage.getItem("accessToken");
+            const atSession = sessionStorage.getItem("accessToken");
+            const at = atLocal || atSession;
             hasValidToken = !!at && at !== "null" && at !== "undefined" && at.length > 20;
           }
         } catch {
