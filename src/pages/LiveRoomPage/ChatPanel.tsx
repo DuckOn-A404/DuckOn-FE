@@ -1265,6 +1265,7 @@ import NicknameWithRank from "../../components/common/NicknameWithRank";
 import { translateChatMessage } from "../../api/translateService";
 import { useUiTranslate } from "../../hooks/useUiTranslate";
 import { createReport, ReportType } from "../../api/reportApi";
+import Toast from "../../components/common/Toast";
 
 type ChatPanelProps = {
   messages: ChatMessage[];
@@ -1328,7 +1329,7 @@ const ConfirmModal = ({
   const isEject = variant === "eject";
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[400]">
       <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
         <h3 className="text-lg font-bold text-white">
           {isEject
@@ -1375,47 +1376,47 @@ const ConfirmModal = ({
   );
 };
 
-//  AlertModal (알림용)
-const AlertModal = ({
-  isOpen,
-  onClose,
-  title,
-  message,
-  type = "info",
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  message: string;
-  type?: "info" | "success" | "error";
-}) => {
-  const { t } = useUiTranslate();
+// //  AlertModal (알림용)
+// const AlertModal = ({
+//   isOpen,
+//   onClose,
+//   title,
+//   message,
+//   type = "info",
+// }: {
+//   isOpen: boolean;
+//   onClose: () => void;
+//   title: string;
+//   message: string;
+//   type?: "info" | "success" | "error";
+// }) => {
+//   const { t } = useUiTranslate();
 
-  if (!isOpen) return null;
+//   if (!isOpen) return null;
 
-  const bgColor = {
-    info: "bg-blue-500",
-    success: "bg-green-500",
-    error: "bg-red-500",
-  };
+//   const bgColor = {
+//     info: "bg-blue-500",
+//     success: "bg-green-500",
+//     error: "bg-red-500",
+//   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
-      <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
-        <h3 className="text-lg font-bold text-white">{title}</h3>
-        <p className="text-sm text-gray-300 mt-2 whitespace-pre-line">{message}</p>
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={onClose}
-            className={`px-4 py-2 text-sm font-medium text-white ${bgColor[type]} hover:opacity-90 rounded-md transition-colors`}
-          >
-            {t("chat.button.confirm", "확인")}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+//   return (
+//     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
+//       <div className="bg-gray-700 rounded-lg p-6 shadow-xl w-full max-w-sm">
+//         <h3 className="text-lg font-bold text-white">{title}</h3>
+//         <p className="text-sm text-gray-300 mt-2 whitespace-pre-line">{message}</p>
+//         <div className="mt-6 flex justify-end">
+//           <button
+//             onClick={onClose}
+//             className={`px-4 py-2 text-sm font-medium text-white ${bgColor[type]} hover:opacity-90 rounded-md transition-colors`}
+//           >
+//             {t("chat.button.confirm", "확인")}
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
 
 const ChatPanel = ({
   messages,
@@ -1475,25 +1476,36 @@ const ChatPanel = ({
   const [reportReason, setReportReason] = useState("");
   const [reportDone, setReportDone] = useState(false);
 
-  // 알림 모달 상태
-  const [alertModal, setAlertModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    type: "info" | "success" | "error";
-  }>({
-    isOpen: false,
-    title: "",
-    message: "",
-    type: "info",
-  });
+  // // 알림 모달 상태
+  // const [alertModal, setAlertModal] = useState<{
+  //   isOpen: boolean;
+  //   title: string;
+  //   message: string;
+  //   type: "info" | "success" | "error";
+  // }>({
+  //   isOpen: false,
+  //   title: "",
+  //   message: "",
+  //   type: "info",
+  // });
 
-  const showAlert = (
-    title: string,
-    message: string,
-    type: "info" | "success" | "error" = "info"
-  ) => {
-    setAlertModal({ isOpen: true, title, message, type });
+  // const showAlert = (
+  //   title: string,
+  //   message: string,
+  //   type: "info" | "success" | "error" = "info"
+  // ) => {
+  //   setAlertModal({ isOpen: true, title, message, type });
+  // };
+
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({show: false, message: "", type: "success"});
+
+  const showToast = (message: string, type: "success" | "error" = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
   };
 
   const [atBottom, setAtBottom] = useState(true);
@@ -1881,15 +1893,15 @@ const ChatPanel = ({
   // 차단 확정
   const confirmBlock = async () => {
     if (!blockConfirm.user) return;
-    const id = String(blockConfirm.user.id);
-
+    const { id, nickname } = blockConfirm.user;
     try {
-      const res = await blockUser(id);
-      onBlockUser(id);
+      await blockUser(String(id));
+      onBlockUser(String(id));
       refreshBlockedList().catch(() => {});
-      console.log(res.message);
+      showToast(`${nickname}님을 차단했습니다`);
     } catch (err) {
       console.error("차단 실패:", err);
+      showToast("차단에 실패했습니다", "error");
     } finally {
       setBlockConfirm({ isOpen: false, user: null });
     }
@@ -1904,6 +1916,7 @@ const ChatPanel = ({
   const confirmEject = () => {
     if (ejectConfirm.user && onEjectUser) {
       onEjectUser(ejectConfirm.user);
+      showToast(`${ejectConfirm.user.nickname}님을 강퇴했습니다`);
     }
     setEjectConfirm({ isOpen: false, user: null });
   };
@@ -1941,37 +1954,22 @@ const ChatPanel = ({
       });
 
       setReportDone(true);
-      showAlert(
-        t("chat.report.success.title", "신고 완료"),
-        t("chat.report.success.message", "신고가 접수되었습니다.\n빠른 시일 내로 조치를 취하겠습니다."),
-        "success"
-      );
+      closeReportModal();
+      showToast(t("chat.report.success.title", "신고가 접수되었습니다."));
 
-      // 2초 후 모달 자동 닫기
-      setTimeout(() => {
-        closeReportModal();
-      }, 2000);
+      // // 2초 후 모달 자동 닫기
+      // setTimeout(() => {
+      //   closeReportModal();
+      // }, 500);
     } catch (error: any) {
       console.error("신고 실패:", error);
       
       if (error.response?.data?.code === 'DUPLICATE_REPORT') {
-        showAlert(
-          t("chat.report.error.duplicate.title", "중복 신고"),
-          t("chat.report.error.duplicate.message", "이미 신고한 콘텐츠입니다."),
-          "info"
-        );
+        showToast(t("chat.report.error.duplicate.message", "이미 신고한 콘텐츠입니다."), "error");
       } else if (error.response?.status === 401) {
-        showAlert(
-          t("chat.report.error.auth.title", "로그인 필요"),
-          t("chat.report.error.auth.message", "로그인이 필요합니다."),
-          "error"
-        );
+        showToast(t("chat.report.error.auth.message", "로그인이 필요합니다."), "error");
       } else {
-        showAlert(
-          t("chat.report.error.general.title", "신고 실패"),
-          t("chat.report.error.general.message", "신고 접수에 실패했습니다.\n다시 시도해주세요."),
-          "error"
-        );
+        showToast(t("chat.report.error.general.message", "신고 접수에 실패했습니다."), "error");
       }
     }
   };
@@ -2039,13 +2037,21 @@ const ChatPanel = ({
       />
 
       {/* AlertModal */}
-      <AlertModal
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          position="top-center"
+          onClose={() => setToast(prev => ({ ...prev, show: false }))}
+        />
+      )}
+      {/* <AlertModal
         isOpen={alertModal.isOpen}
         onClose={() => setAlertModal({ ...alertModal, isOpen: false })}
         title={alertModal.title}
         message={alertModal.message}
         type={alertModal.type}
-      />
+      /> */}
 
       {/* 신고 모달 */}
       {reportTarget && (
