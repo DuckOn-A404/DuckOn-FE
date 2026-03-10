@@ -79,12 +79,10 @@ export const useSignupForm = () => {
     return undefined;
   };
 
-  // 닉네임 바이트 검사 함수
+  // 닉네임 길이 검사 함수 (최대 15자)
   const validateNickname = (nickname: string): string | undefined => {
-    // TextEncoder를 사용하면 브라우저 표준 API로 정확한 UTF-8 바이트 길이를 계산할 수 있습니다.
-    const byteLength = new TextEncoder().encode(nickname).length;
-    if (byteLength > 24) {
-      return "닉네임은 한글 8자, 영문 24자까지 가능합니다.";
+    if (nickname.length > 15) {
+      return "닉네임은 최대 15자까지 입력 가능합니다.";
     }
     return undefined;
   };
