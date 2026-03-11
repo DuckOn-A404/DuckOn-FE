@@ -21,6 +21,7 @@ import {useEffect} from "react";
 import {sendPageView} from "./analytics";
 import RoomListPage from "./pages/RoomListPage";
 import TitleManager from "./TitleManager";
+import { useUserActivity } from "./hooks/useUserActivity"; // 추가: 유저 활동 감지 훅
 import AppChatRecommandPage from "./pages/ArtistDetailPage/AppChatRecommandPage";
 import FollowedArtistsPage from "./pages/ArtistDetailPage/FollowedArtistsPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -48,11 +49,17 @@ function RouteChangeTracker() {
   return null; // UI 없음
 }
 
+function GlobalHooks() {
+  useUserActivity(); // 사용자 활동 감지 & 자동 로그아웃 & 토큰 갱신
+  return null;
+}
+
 function App() {
   return (
     <>
       <BrowserRouter>
         <RouteChangeTracker />
+        <GlobalHooks />
         <TitleManager />
         <ScrollToTop />
         <Routes>
