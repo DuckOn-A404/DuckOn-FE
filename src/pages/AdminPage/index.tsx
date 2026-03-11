@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   LogOut,
   Menu,
-  FileEdit
+  FileEdit,
+  ShieldBan
 } from 'lucide-react';
 
 const AdminPage: React.FC = () => {
@@ -24,6 +25,7 @@ const AdminPage: React.FC = () => {
     { path: '/admin/artists', icon: Palette, label: '아티스트 관리' },
     { path: '/admin/artists-requests', icon: FileEdit, label: '아티스트 정보 변경 요청' },
     { path: '/admin/reports', icon: Flag, label: '신고 관리' },
+    { path: '/admin/penalties', icon: ShieldBan, label: '패널티 관리' },
     { path: '/admin/search-placeholder', icon: Search, label: '검색어 추천 관리' },
     { path: '/admin/settings', icon: Settings, label: '설정' },
   ];
