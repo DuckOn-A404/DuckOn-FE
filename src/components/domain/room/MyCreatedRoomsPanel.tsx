@@ -5,7 +5,7 @@ import RangeCalendar from "../../common/RangeCalendar";
 import UIText from "../../common/UIText";
 import { useUiTranslate } from "../../../hooks/useUiTranslate";
 
-type QuickRange = "all" | "7d" | "30d" | "thisYear";
+type QuickRange = "all" | "7d" | "30d" | "1y";
 
 type Props = {
   rooms: RoomHistory[];
@@ -15,10 +15,6 @@ type Props = {
   onLoadMore?: () => void;
 };
 
-function startOfThisYear() {
-  const d = new Date();
-  return new Date(d.getFullYear(), 0, 1);
-}
 function addDays(base: Date, days: number) {
   const d = new Date(base);
   d.setDate(d.getDate() + days);
@@ -76,9 +72,8 @@ const MyCreatedRoomsPanel = ({
       setTo(now.toISOString().slice(0, 10));
       return;
     }
-    if (q === "thisYear") {
-      const s = startOfThisYear();
-      setFrom(s.toISOString().slice(0, 10));
+    if (q === "1y") {
+      setFrom(addDays(now, -365).toISOString().slice(0, 10));
       setTo(now.toISOString().slice(0, 10));
     }
   };
@@ -170,9 +165,9 @@ const MyCreatedRoomsPanel = ({
               fallback: "최근 30일",
             },
             {
-              k: "thisYear",
-              labelKey: "mypage.myRooms.filter.quick.thisYear",
-              fallback: "올해",
+              k: "1y",
+              labelKey: "mypage.myRooms.filter.quick.1y",
+              fallback: "1년",
             },
           ].map(({ k, labelKey, fallback }) => (
             <button
