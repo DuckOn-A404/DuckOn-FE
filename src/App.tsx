@@ -39,6 +39,7 @@ import ReportManagePage from "./pages/AdminPage/ReportManagePage";
 import SettingsManagePage from "./pages/AdminPage/SettingsManagePage";
 import ArtistChangeRequestManagePage from "./pages/AdminPage/ArtistChangeRequestManagePage";
 import PlaceholderManagePage from "./pages/AdminPage/PlaceholderManagePage";
+import PenaltyManagePage from "./pages/AdminPage/PenaltyManagePage";
 
 import NotificationDetailPage from "./pages/NotificationDetailPage";
 
@@ -105,6 +106,7 @@ function App() {
               <Route path="artists" element={<ArtistManagePage />} />
               <Route path="artists-requests" element={<ArtistChangeRequestManagePage />} />
               <Route path="reports" element={<ReportManagePage />} />
+              <Route path="penalties" element={<PenaltyManagePage />} />
               <Route path="search-placeholder" element={<PlaceholderManagePage />} />
               <Route path="settings" element={<SettingsManagePage />} />
             </Route>
