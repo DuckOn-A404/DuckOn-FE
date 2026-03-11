@@ -1380,7 +1380,7 @@ const LiveRoomPage = () => {
               title={room.title}
               hostId={room.hostId}
               hostNickname={hostNickname ?? room.hostNickname}
-              hostRankLevel={room.hostRank?.rankLevel ?? "GREEN"}
+              // hostRankLevel={room.hostRank?.rankLevel ?? "GREEN"}
               participantCount={participantCount ?? room.participantCount ?? 0}
               onExit={handleExit}
               onDelete={
