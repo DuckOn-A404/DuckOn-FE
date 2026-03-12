@@ -13,7 +13,7 @@ import {
   updateRoomTitle,
 } from "../../api/roomService";
 import {useUserStore} from "../../store/useUserStore";
-import {Client, type IMessage, type StompSubscription} from "@stomp/stompjs";
+import {Client, type IMessage} from "@stomp/stompjs";
 import {createStompClient} from "../../socket";
 
 import EntryQuizModal from "./EntryQuizModal";
@@ -104,6 +104,9 @@ const LiveRoomPage = () => {
   const entryAnswerFromNav = navState?.entryAnswer ?? "";
 
   const [room, setRoom] = useState<any>(null);
+  // 방 입장 및 퇴장 관련 강화
+  const [hasJoined, setHasJoined] = useState(false);
+
   const [hostNickname, setHostNickname] = useState<string | null>(null);
   /** 아티스트 영어 경로 보관 */
   const [artistSlug, setArtistSlug] = useState<string | null>(null);
@@ -151,6 +154,10 @@ const LiveRoomPage = () => {
   const isRefreshingRef = useRef(false);
 
   const initialSyncSentRef = useRef(false);
+
+  // 게스트 입장, 퇴장 로직 강화
+  const connectingRef = useRef(false);
+  const connectedRef = useRef(false);
 
   const isHostView = !!(room && myUser && room.hostId === myUser.userId);
 
@@ -320,6 +327,7 @@ const LiveRoomPage = () => {
       }
       setIsQuizModalOpen(false);
       joinedRef.current = true;
+      setHasJoined(true);
     } catch (error: any) {
       const status = error.response?.status;
   
@@ -610,230 +618,169 @@ const LiveRoomPage = () => {
     }
   };
 
-  // 참가자 수 구독
+  // // 참가자 수 구독
+  // useEffect(() => {
+  //   if (!roomId || !hasJoined) return;  // hasJoined 추가
+
+  //   const token = getAccessToken() || "";
+  //   const presenceClient = createStompClient(token);
+  //   presenceRef.current = presenceClient;
+
+  //   presenceClient.onConnect = () => {
+  //     presenceClient.subscribe(
+  //       `/topic/room/${roomId}/presence`,
+  //       (message: IMessage) => {
+  //         try {
+  //           const data = JSON.parse(message.body);
+  //           setParticipantCount(data.participantCount);
+  //         } catch (e) {
+  //           console.error("참가자 수 메시지 파싱 실패:", e);
+  //         }
+  //       }
+  //     );
+  //   };
+
+  //   presenceClient.activate();
+  //   return () => {
+  //     try {
+  //       presenceClient.deactivate();
+  //     } catch { }
+  //     presenceRef.current = null;
+  //   };
+  // }, [roomId, hasJoined]);
+
+  // // 영상/채팅 동기화 + 강퇴 구독
+  // useEffect(() => {
+  //   if (isQuizModalOpen || !roomId || !hasJoined) return;
+
+  //   const token = getAccessToken() || "";
+  //   const syncClient = createStompClient(token);
+  //   let sub: StompSubscription | null = null;
+
+  //   syncClient.onConnect = () => {
+  //     setStompClient(syncClient);
+  //     syncRef.current = syncClient;
+
+  //     sub = syncClient.subscribe(
+  //       `/topic/room/${roomId}`,
+  //       async (message: IMessage) => {
+  //         try {
+  //           const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
+  //           const t = evt?.eventType;
+
+  //           if (typeof (evt as any)?.participantCount === "number") {
+  //             setParticipantCount((evt as any).participantCount);
+  //           }
+
+  //           switch (t) {
+  //             case "ROOM_DELETED":
+  //               if (isHostRef.current) return;
+  //               setRoomDeletedOpen(true);
+  //               return;
+
+  //             case "ROOM_UPDATE":
+  //               setRoom((prev: any) => {
+  //                 if (!prev) return prev;
+  //                 if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
+  //                   return prev;
+  //                 return {
+  //                   ...prev,
+  //                   title: evt.title ?? prev.title,
+  //                   hostNickname: evt.hostNickname ?? prev.hostNickname,
+  //                   lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+  //                 };
+  //               });
+  //               return;
+
+  //             case "SYNC_STATE":
+  //               setRoom((prev: any) => {
+  //                 if (!prev) return prev;
+  //                 if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
+  //                   return prev;
+  //                 return {
+  //                   ...prev,
+  //                   roomId: evt.roomId ?? prev.roomId,
+  //                   hostId: evt.hostId ?? prev.hostId,
+  //                   // 여기서도 playlist 정규화
+  //                   playlist: normalizePlaylist(evt.playlist ?? prev.playlist),
+  //                   currentVideoIndex:
+  //                     typeof evt.currentVideoIndex === "number"
+  //                       ? evt.currentVideoIndex
+  //                       : prev.currentVideoIndex,
+  //                   currentTime:
+  //                     typeof evt.currentTime === "number"
+  //                       ? evt.currentTime
+  //                       : prev.currentTime,
+  //                   playing:
+  //                     typeof evt.playing === "boolean"
+  //                       ? evt.playing
+  //                       : prev.playing,
+  //                   lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+  //                 };
+  //               });
+  //               return;
+
+  //             default:
+  //               return;
+  //           }
+  //         } catch (error) {
+  //           console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+  //         }
+  //       }
+  //     );
+
+  //     // 2) 강퇴 알림 구독
+  //     syncClient.subscribe("/user/queue/kick", (message: IMessage) => {
+  //       const kickedRoomId = message.body?.toString()?.trim();
+  //       console.log("[KICK] recv:", kickedRoomId);
+  //       if (!kickedRoomId) return;
+  //       if (String(kickedRoomId) === String(roomId)) {
+  //         setIsKicked(true);
+  //       }
+  //     });
+  //   };
+
+  //   syncClient.activate();
+
+  //   return () => {
+  //     try {
+  //       sub?.unsubscribe();
+  //     } catch { }
+  //     try {
+  //       syncClient.deactivate();
+  //     } catch { }
+  //     syncRef.current = null;
+  //   };
+  // }, [myUserId, isQuizModalOpen, roomId, navigate, hasJoined]);
+
+  // 참가자 수 + 영상 동기화 + 강퇴 — 단일 클라이언트로 통합
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !hasJoined) return;
+    if (connectingRef.current || connectedRef.current) return;
 
     const token = getAccessToken() || "";
-    const presenceClient = createStompClient(token);
-    presenceRef.current = presenceClient;
+    const client = createStompClient(token);
 
-    presenceClient.onConnect = () => {
-      presenceClient.subscribe(
-        `/topic/room/${roomId}/presence`,
-        (message: IMessage) => {
-          try {
-            const data = JSON.parse(message.body);
-            setParticipantCount(data.participantCount);
-          } catch (e) {
-            console.error("참가자 수 메시지 파싱 실패:", e);
-          }
-        }
-      );
-    };
+    connectingRef.current = true;
+    presenceRef.current = client;
+    syncRef.current = client;
 
-    presenceClient.activate();
-    return () => {
-      try {
-        presenceClient.deactivate();
-      } catch { }
-      presenceRef.current = null;
-    };
-  }, [roomId]);
+    client.onConnect = () => {
+      connectingRef.current = false;
+      connectedRef.current = true;
 
-  // 영상/채팅 동기화 + 강퇴 구독
-  useEffect(() => {
-    if (isQuizModalOpen || !roomId) return;
-
-    const token = getAccessToken() || "";
-    const syncClient = createStompClient(token);
-    let sub: StompSubscription | null = null;
-
-    syncClient.onConnect = () => {
-      setStompClient(syncClient);
-      syncRef.current = syncClient;
-
-      sub = syncClient.subscribe(
-        `/topic/room/${roomId}`,
-        async (message: IMessage) => {
-          try {
-            const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
-            const t = evt?.eventType;
-
-            if (typeof (evt as any)?.participantCount === "number") {
-              setParticipantCount((evt as any).participantCount);
-            }
-
-            switch (t) {
-              case "ROOM_DELETED":
-                if (isHostRef.current) return;
-                setRoomDeletedOpen(true);
-                return;
-
-              case "ROOM_UPDATE":
-                setRoom((prev: any) => {
-                  if (!prev) return prev;
-                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
-                    return prev;
-                  return {
-                    ...prev,
-                    title: evt.title ?? prev.title,
-                    hostNickname: evt.hostNickname ?? prev.hostNickname,
-                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                  };
-                });
-                return;
-
-              case "SYNC_STATE":
-                setRoom((prev: any) => {
-                  if (!prev) return prev;
-                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
-                    return prev;
-                  return {
-                    ...prev,
-                    roomId: evt.roomId ?? prev.roomId,
-                    hostId: evt.hostId ?? prev.hostId,
-                    // 여기서도 playlist 정규화
-                    playlist: normalizePlaylist(evt.playlist ?? prev.playlist),
-                    currentVideoIndex:
-                      typeof evt.currentVideoIndex === "number"
-                        ? evt.currentVideoIndex
-                        : prev.currentVideoIndex,
-                    currentTime:
-                      typeof evt.currentTime === "number"
-                        ? evt.currentTime
-                        : prev.currentTime,
-                    playing:
-                      typeof evt.playing === "boolean"
-                        ? evt.playing
-                        : prev.playing,
-                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
-                  };
-                });
-                return;
-
-              default:
-                return;
-            }
-          } catch (error) {
-            console.error("방 상태 업데이트 메시지 파싱 실패:", error);
-          }
-        }
-      );
-
-      // 2) 강퇴 알림 구독
-      syncClient.subscribe("/user/queue/kick", (message: IMessage) => {
-        const kickedRoomId = message.body?.toString()?.trim();
-        console.log("[KICK] recv:", kickedRoomId);
-        if (!kickedRoomId) return;
-        if (String(kickedRoomId) === String(roomId)) {
-          setIsKicked(true);
+      // 1) 참가자 수
+      client.subscribe(`/topic/room/${roomId}/presence`, (message: IMessage) => {
+        try {
+          const data = JSON.parse(message.body);
+          setParticipantCount(data.participantCount);
+        } catch (e) {
+          console.error("참가자 수 메시지 파싱 실패:", e);
         }
       });
-    };
 
-    syncClient.activate();
-
-    return () => {
-      try {
-        sub?.unsubscribe();
-      } catch { }
-      try {
-        syncClient.deactivate();
-      } catch { }
-      syncRef.current = null;
-    };
-  }, [myUserId, isQuizModalOpen, roomId, navigate]);
-
-  // 리프레시 상태 구독
-  useEffect(() => {
-    const off = onRefreshState((st) => {
-      isRefreshingRef.current = st === "start";
-    });
-    return () => {
-      off();
-    };
-  }, []);
-
-  // 무중단 재연결 유틸
-  const seamlessReconnect = useCallback(
-    async (
-      oldClient: Client | null,
-      token: string,
-      topic: string,
-      onMsg: (m: IMessage) => void
-    ) => {
-      return new Promise<Client>((resolve) => {
-        const next = createStompClient(token);
-        wsHandoverRef.current = true;
-
-        next.onConnect = () => {
-          next.subscribe(topic, onMsg);
-          next.subscribe("/user/queue/kick", (message: IMessage) => {
-            const kickedRoomId = message.body?.toString()?.trim();
-            if (kickedRoomId && String(kickedRoomId) === String(roomId)) {
-              setIsKicked(true);
-            }
-          });
-
-          (async () => {
-            try {
-              await oldClient?.deactivate();
-            } catch { }
-            wsHandoverRef.current = false;
-          })();
-          resolve(next);
-        };
-        next.activate();
-      });
-    },
-    [roomId]
-  );
-
-  // 액세스 토큰 갱신 → STOMP 무중단 재연결
-  useEffect(() => {
-    const unsubscribe = onTokenRefreshed(async (newToken) => {
-      const prevToken = lastTokenRef.current;
-      if (prevToken === newToken) return;
-      lastTokenRef.current = newToken;
-
-      // ---- Presence ----
-      if (roomId) {
-        const topic = `/topic/room/${roomId}/presence`;
-        const onPresence = (message: IMessage) => {
-          try {
-            const data = JSON.parse(message.body);
-            if (typeof data?.participantCount === "number") {
-              setParticipantCount(data.participantCount);
-            }
-          } catch { }
-        };
-
-        if (!newToken) {
-          try {
-            await presenceRef.current?.deactivate();
-          } catch { }
-          const p = createStompClient("");
-          presenceRef.current = p;
-          p.onConnect = () => {
-            p.subscribe(topic, onPresence);
-          };
-          p.activate();
-        } else {
-          presenceRef.current = await seamlessReconnect(
-            presenceRef.current,
-            newToken,
-            topic,
-            onPresence
-          );
-        }
-      }
-
-      // ---- Sync ----
-      if (!roomId || isQuizModalOpen) return;
-
-      const topic = `/topic/room/${roomId}`;
-      const onSync = (message: IMessage) => {
+      // 2) 영상 동기화
+      client.subscribe(`/topic/room/${roomId}`, (message: IMessage) => {
         try {
           const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
           const t = evt?.eventType;
@@ -844,15 +791,13 @@ const LiveRoomPage = () => {
 
           switch (t) {
             case "ROOM_DELETED":
-              if (isRefreshingRef.current || wsHandoverRef.current) return;
+              if (isHostRef.current) return;
               setRoomDeletedOpen(true);
               return;
-
             case "ROOM_UPDATE":
               setRoom((prev: any) => {
                 if (!prev) return prev;
-                if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
-                  return prev;
+                if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
                 return {
                   ...prev,
                   title: evt.title ?? prev.title,
@@ -861,16 +806,12 @@ const LiveRoomPage = () => {
                 };
               });
               return;
-
             case "SYNC_STATE":
               setRoom((prev: any) => {
                 if (!prev) return prev;
-                if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
-                  return prev;
+                if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
                 return {
                   ...prev,
-                  title: evt.title ?? prev.title,
-                  hostNickname: evt.hostNickname ?? prev.hostNickname,
                   roomId: evt.roomId ?? prev.roomId,
                   hostId: evt.hostId ?? prev.hostId,
                   playlist: normalizePlaylist(evt.playlist ?? prev.playlist),
@@ -890,47 +831,327 @@ const LiveRoomPage = () => {
                 };
               });
               return;
-
             default:
               return;
           }
-        } catch { }
-      };
+        } catch (error) {
+          console.error("방 상태 업데이트 메시지 파싱 실패:", error);
+        }
+      });
 
-      if (!newToken) {
-        try {
-          await syncRef.current?.deactivate();
-        } catch { }
-        const s = createStompClient("");
-        syncRef.current = s;
-        setStompClient(s);
-        s.onConnect = () => {
-          s.subscribe(topic, onSync);
-          s.subscribe("/user/queue/kick", (message: IMessage) => {
-            const kickedRoomId = message.body?.toString()?.trim();
-            if (kickedRoomId && String(kickedRoomId) === String(roomId)) {
-              setIsKicked(true);
-            }
-          });
-        };
-        s.activate();
-      } else {
-        const newSync = await seamlessReconnect(
-          syncRef.current,
-          newToken,
-          topic,
-          onSync
-        );
-        syncRef.current = newSync;
-        setStompClient(newSync);
-      }
-    });
+      // 3) 강퇴
+      client.subscribe("/user/queue/kick", (message: IMessage) => {
+        const kickedRoomId = message.body?.toString()?.trim();
+        if (!kickedRoomId) return;
+        if (String(kickedRoomId) === String(roomId)) {
+          setIsKicked(true);
+        }
+      });
+
+      setStompClient(client);
+    };
+
+    client.activate();
 
     return () => {
-      unsubscribe();
+      connectingRef.current = false;
+      connectedRef.current = false;
+      presenceRef.current = null;
+      syncRef.current = null;
+      try { client.deactivate(); } catch {}
     };
-  }, [roomId, isQuizModalOpen, seamlessReconnect]);
+  }, [roomId, hasJoined]);
+  // 리프레시 상태 구독
+  useEffect(() => {
+    const off = onRefreshState((st) => {
+      isRefreshingRef.current = st === "start";
+    });
+    return () => {
+      off();
+    };
+  }, []);
 
+  // // 무중단 재연결 유틸
+  // const seamlessReconnect = useCallback(
+  //   async (
+  //     oldClient: Client | null,
+  //     token: string,
+  //     topic: string,
+  //     onMsg: (m: IMessage) => void
+  //   ) => {
+  //     return new Promise<Client>((resolve) => {
+  //       const next = createStompClient(token);
+  //       wsHandoverRef.current = true;
+
+  //       next.onConnect = () => {
+  //         next.subscribe(topic, onMsg);
+  //         next.subscribe("/user/queue/kick", (message: IMessage) => {
+  //           const kickedRoomId = message.body?.toString()?.trim();
+  //           if (kickedRoomId && String(kickedRoomId) === String(roomId)) {
+  //             setIsKicked(true);
+  //           }
+  //         });
+
+  //         (async () => {
+  //           try {
+  //             await oldClient?.deactivate();
+  //           } catch { }
+  //           wsHandoverRef.current = false;
+  //         })();
+  //         resolve(next);
+  //       };
+  //       next.activate();
+  //     });
+  //   },
+  //   [roomId]
+  // );
+
+  // // 액세스 토큰 갱신 → STOMP 무중단 재연결
+  // useEffect(() => {
+  //   const unsubscribe = onTokenRefreshed(async (newToken) => {
+  //     const prevToken = lastTokenRef.current;
+  //     if (prevToken === newToken) return;
+  //     lastTokenRef.current = newToken;
+
+  //     // ---- Presence ----
+  //     if (roomId) {
+  //       const topic = `/topic/room/${roomId}/presence`;
+  //       const onPresence = (message: IMessage) => {
+  //         try {
+  //           const data = JSON.parse(message.body);
+  //           if (typeof data?.participantCount === "number") {
+  //             setParticipantCount(data.participantCount);
+  //           }
+  //         } catch { }
+  //       };
+
+  //       if (!newToken) {
+  //         try {
+  //           await presenceRef.current?.deactivate();
+  //         } catch { }
+  //         const p = createStompClient("");
+  //         presenceRef.current = p;
+  //         p.onConnect = () => {
+  //           p.subscribe(topic, onPresence);
+  //         };
+  //         p.activate();
+  //       } else {
+  //         presenceRef.current = await seamlessReconnect(
+  //           presenceRef.current,
+  //           newToken,
+  //           topic,
+  //           onPresence
+  //         );
+  //       }
+  //     }
+
+  //     // ---- Sync ----
+  //     if (!roomId || isQuizModalOpen) return;
+
+  //     const topic = `/topic/room/${roomId}`;
+  //     const onSync = (message: IMessage) => {
+  //       try {
+  //         const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
+  //         const t = evt?.eventType;
+
+  //         if (typeof (evt as any)?.participantCount === "number") {
+  //           setParticipantCount((evt as any).participantCount);
+  //         }
+
+  //         switch (t) {
+  //           case "ROOM_DELETED":
+  //             if (isRefreshingRef.current || wsHandoverRef.current) return;
+  //             setRoomDeletedOpen(true);
+  //             return;
+
+  //           case "ROOM_UPDATE":
+  //             setRoom((prev: any) => {
+  //               if (!prev) return prev;
+  //               if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
+  //                 return prev;
+  //               return {
+  //                 ...prev,
+  //                 title: evt.title ?? prev.title,
+  //                 hostNickname: evt.hostNickname ?? prev.hostNickname,
+  //                 lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+  //               };
+  //             });
+  //             return;
+
+  //           case "SYNC_STATE":
+  //             setRoom((prev: any) => {
+  //               if (!prev) return prev;
+  //               if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated))
+  //                 return prev;
+  //               return {
+  //                 ...prev,
+  //                 title: evt.title ?? prev.title,
+  //                 hostNickname: evt.hostNickname ?? prev.hostNickname,
+  //                 roomId: evt.roomId ?? prev.roomId,
+  //                 hostId: evt.hostId ?? prev.hostId,
+  //                 playlist: normalizePlaylist(evt.playlist ?? prev.playlist),
+  //                 currentVideoIndex:
+  //                   typeof evt.currentVideoIndex === "number"
+  //                     ? evt.currentVideoIndex
+  //                     : prev.currentVideoIndex,
+  //                 currentTime:
+  //                   typeof evt.currentTime === "number"
+  //                     ? evt.currentTime
+  //                     : prev.currentTime,
+  //                 playing:
+  //                   typeof evt.playing === "boolean"
+  //                     ? evt.playing
+  //                     : prev.playing,
+  //                 lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+  //               };
+  //             });
+  //             return;
+
+  //           default:
+  //             return;
+  //         }
+  //       } catch { }
+  //     };
+
+  //     if (!newToken) {
+  //       try {
+  //         await syncRef.current?.deactivate();
+  //       } catch { }
+  //       const s = createStompClient("");
+  //       syncRef.current = s;
+  //       setStompClient(s);
+  //       s.onConnect = () => {
+  //         s.subscribe(topic, onSync);
+  //         s.subscribe("/user/queue/kick", (message: IMessage) => {
+  //           const kickedRoomId = message.body?.toString()?.trim();
+  //           if (kickedRoomId && String(kickedRoomId) === String(roomId)) {
+  //             setIsKicked(true);
+  //           }
+  //         });
+  //       };
+  //       s.activate();
+  //     } else {
+  //       const newSync = await seamlessReconnect(
+  //         syncRef.current,
+  //         newToken,
+  //         topic,
+  //         onSync
+  //       );
+  //       syncRef.current = newSync;
+  //       setStompClient(newSync);
+  //     }
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  // }, [roomId, isQuizModalOpen, seamlessReconnect]);
+
+  // 액세스 토큰 갱신 → STOMP 단일 클라이언트 무중단 재연결
+  useEffect(() => {
+    const unsubscribe = onTokenRefreshed(async (newToken) => {
+      const prevToken = lastTokenRef.current;
+      if (prevToken === newToken) return;
+      lastTokenRef.current = newToken;
+
+      if (!roomId || isQuizModalOpen) return;
+
+      const token = newToken ?? "";
+      const oldClient = syncRef.current;
+      const next = createStompClient(token);
+      wsHandoverRef.current = true;
+
+      next.onConnect = async () => {
+        // 참가자 수
+        next.subscribe(`/topic/room/${roomId}/presence`, (message: IMessage) => {
+          try {
+            const data = JSON.parse(message.body);
+            if (typeof data?.participantCount === "number") {
+              setParticipantCount(data.participantCount);
+            }
+          } catch {}
+        });
+
+        // 영상 동기화
+        next.subscribe(`/topic/room/${roomId}`, (message: IMessage) => {
+          try {
+            const evt = JSON.parse(message.body) as LiveRoomSyncDTO;
+            const t = evt?.eventType;
+
+            if (typeof (evt as any)?.participantCount === "number") {
+              setParticipantCount((evt as any).participantCount);
+            }
+
+            switch (t) {
+              case "ROOM_DELETED":
+                if (isRefreshingRef.current || wsHandoverRef.current) return;
+                setRoomDeletedOpen(true);
+                return;
+              case "ROOM_UPDATE":
+                setRoom((prev: any) => {
+                  if (!prev) return prev;
+                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
+                  return {
+                    ...prev,
+                    title: evt.title ?? prev.title,
+                    hostNickname: evt.hostNickname ?? prev.hostNickname,
+                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                  };
+                });
+                return;
+              case "SYNC_STATE":
+                setRoom((prev: any) => {
+                  if (!prev) return prev;
+                  if (!isNewerOrEqual(evt.lastUpdated, prev.lastUpdated)) return prev;
+                  return {
+                    ...prev,
+                    roomId: evt.roomId ?? prev.roomId,
+                    hostId: evt.hostId ?? prev.hostId,
+                    playlist: normalizePlaylist(evt.playlist ?? prev.playlist),
+                    currentVideoIndex:
+                      typeof evt.currentVideoIndex === "number"
+                        ? evt.currentVideoIndex
+                        : prev.currentVideoIndex,
+                    currentTime:
+                      typeof evt.currentTime === "number"
+                        ? evt.currentTime
+                        : prev.currentTime,
+                    playing:
+                      typeof evt.playing === "boolean"
+                        ? evt.playing
+                        : prev.playing,
+                    lastUpdated: evt.lastUpdated ?? prev.lastUpdated,
+                  };
+                });
+                return;
+              default:
+                return;
+            }
+          } catch {}
+        });
+
+        // 강퇴
+        next.subscribe("/user/queue/kick", (message: IMessage) => {
+          const kickedRoomId = message.body?.toString()?.trim();
+          if (kickedRoomId && String(kickedRoomId) === String(roomId)) {
+            setIsKicked(true);
+          }
+        });
+
+        try { await oldClient?.deactivate(); } catch {}
+        wsHandoverRef.current = false;
+
+        presenceRef.current = next;
+        syncRef.current = next;
+        connectedRef.current = true;
+        setStompClient(next);
+      };
+
+      next.activate();
+    });
+
+    return () => { unsubscribe(); }
+  }, [roomId, isQuizModalOpen]);
   // 최초 입장 시도
   useEffect(() => {
     mountedRef.current = true;
@@ -970,6 +1191,7 @@ const LiveRoomPage = () => {
           setArtistSlug((data.room ?? data).artistNameEn);
         }
         joinedRef.current = true;
+        setHasJoined(true);
         setIsQuizModalOpen(false);
       } catch (err: any) {
         if (!mountedRef.current) return;
