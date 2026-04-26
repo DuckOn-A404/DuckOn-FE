@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuckOn FE — 개발 위키</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3250;
+      --accent: #6c8cff;
+      --accent2: #a78bfa;
+      --accent3: #34d399;
+      --accent4: #fb923c;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --code-bg: #141720;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a1d27 0%, #0f1117 60%, #1a0a2e 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 48px 24px 36px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -80px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(108,140,255,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .logo {
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span { -webkit-text-fill-color: var(--accent2); }
+    header p {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 1rem;
+    }
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .badge {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent3);
+      flex-shrink: 0;
+    }
+
+    /* ── Layout ── */
+    .layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      position: sticky;
+      top: 24px;
+    }
+    .toc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .toc h3 {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .toc a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: all 0.15s;
+      margin-bottom: 2px;
+    }
+    .toc a:hover {
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .toc a .icon { font-size: 1rem; flex-shrink: 0; }
+
+    /* ── Main ── */
+    main { min-width: 0; }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .section-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .icon-blue  { background: rgba(108,140,255,0.15); }
+    .icon-purple{ background: rgba(167,139,250,0.15); }
+    .icon-green { background: rgba(52,211,153,0.15); }
+    .icon-orange{ background: rgba(251,146,60,0.15); }
+    .icon-pink  { background: rgba(244,114,182,0.15); }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Commands ── */
+    .cmd-list { display: flex; flex-direction: column; gap: 8px; }
+    .cmd {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Consolas', 'Fira Code', monospace;
+    }
+    .cmd-key {
+      color: var(--accent);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .cmd-desc {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* ── Env vars ── */
+    .env-list { display: flex; flex-direction: column; gap: 8px; }
+    .env {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      align-items: start;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    .env-key {
+      font-family: 'Consolas', monospace;
+      font-size: 0.82rem;
+      color: var(--accent3);
+    }
+    .env-val { color: var(--muted); font-size: 0.82rem; }
+
+    /* ── Stack pills ── */
+    .pill-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.82rem;
+      color: var(--text);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .pill-accent { border-color: rgba(108,140,255,0.4); color: var(--accent); }
+    .pill-green  { border-color: rgba(52,211,153,0.4); color: var(--accent3); }
+    .pill-orange { border-color: rgba(251,146,60,0.4); color: var(--accent4); }
+    .pill-purple { border-color: rgba(167,139,250,0.4); color: var(--accent2); }
+
+    /* ── Layer cards ── */
+    .layer-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .layer {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .layer-title {
+      font-family: 'Consolas', monospace;
+      font-size: 0.88rem;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .layer-desc { color: var(--muted); font-size: 0.84rem; }
+    .layer-desc code {
+      font-family: 'Consolas', monospace;
+      color: var(--accent2);
+      font-size: 0.82rem;
+    }
+
+    /* ── Route table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+    }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      background: var(--code-bg);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(46,50,80,0.5);
+      color: var(--text);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    td code {
+      font-family: 'Consolas', monospace;
+      color: var(--accent);
+      font-size: 0.82rem;
+      background: rgba(108,140,255,0.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .role-public  { background: rgba(52,211,153,0.1); color: var(--accent3); }
+    .role-private { background: rgba(108,140,255,0.1); color: var(--accent); }
+    .role-admin   { background: rgba(251,146,60,0.1);  color: var(--accent4); }
+    .role-guest   { background: rgba(167,139,250,0.1); color: var(--accent2); }
+
+    /* ── Auth / Chat cards ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .info-card {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .info-card h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .info-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .info-card li {
+      font-size: 0.83rem;
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .info-card li::before {
+      content: '▸';
+      color: var(--accent);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── CI/CD pipeline ── */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pipe-row {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 14px;
+      align-items: center;
+    }
+    .pipe-trigger {
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 6px;
+      text-align: center;
+    }
+    .pipe-pr     { background: rgba(108,140,255,0.12); color: var(--accent); }
+    .pipe-dev    { background: rgba(52,211,153,0.12);  color: var(--accent3); }
+    .pipe-main   { background: rgba(251,146,60,0.12);  color: var(--accent4); }
+    .pipe-steps {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .step {
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 10px;
+    }
+    .arrow { color: var(--border); font-size: 0.8rem; }
+
+    /* ── Pattern cards ── */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .pattern-card {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .pattern-card h4 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .pattern-card p {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .pattern-card code {
+      font-family: 'Consolas', monospace;
+      color: var(--accent2);
+      font-size: 0.78rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; }
+      .info-grid { grid-template-columns: 1fr; }
+      .pattern-grid { grid-template-columns: 1fr; }
+      .cmd { grid-template-columns: 1fr; }
+      .env { grid-template-columns: 1fr; }
+      .pipe-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Duck<span>On</span> FE</div>
+  <p>K-POP 팬 커뮤니티 프론트엔드 — 개발자 위키</p>
+  <div class="badge-row">
+    <div class="badge"><span class="dot"></span>React 19 + TypeScript</div>
+    <div class="badge"><span class="dot" style="background:var(--accent2)"></span>Vite 7</div>
+    <div class="badge"><span class="dot" style="background:var(--accent4)"></span>Tailwind CSS 4</div>
+    <div class="badge"><span class="dot" style="background:var(--accent)"></span>Zustand</div>
+    <div class="badge"><span class="dot" style="background:#f472b6"></span>Capacitor 7</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside>
+    <div class="toc">
+      <h3>목차</h3>
+      <a href="#commands"><span class="icon">⚡</span>명령어</a>
+      <a href="#env"><span class="icon">🔑</span>환경 변수</a>
+      <a href="#stack"><span class="icon">📦</span>기술 스택</a>
+      <a href="#layers"><span class="icon">🗂</span>주요 레이어</a>
+      <a href="#routing"><span class="icon">🔀</span>라우팅</a>
+      <a href="#auth"><span class="icon">🔐</span>인증</a>
+      <a href="#chat"><span class="icon">💬</span>실시간 채팅</a>
+      <a href="#proxy"><span class="icon">🔁</span>개발 서버 프록시</a>
+      <a href="#state"><span class="icon">🧩</span>상태 관리 패턴</a>
+      <a href="#cicd"><span class="icon">🚀</span>CI/CD</a>
+      <a href="#mobile"><span class="icon">📱</span>모바일</a>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main>
+
+    <!-- Commands -->
+    <section id="commands">
+      <div class="section-header">
+        <div class="section-icon icon-blue">⚡</div>
+        <h2>명령어</h2>
+      </div>
+      <div class="cmd-list">
+        <div class="cmd">
+          <span class="cmd-key">npm run dev</span>
+          <span class="cmd-desc">Vite 개발 서버 실행</span>
+        </div>
+        <div class="cmd">
+          <span class="cmd-key">npm run build</span>
+          <span class="cmd-desc">TypeScript 검사 + Vite 프로덕션 빌드 (tsc -b && vite build)</span>
+        </div>
+        <div class="cmd">
+          <span class="cmd-key">npm run lint</span>
+          <span class="cmd-desc">ESLint 검사</span>
+        </div>
+        <div class="cmd">
+          <span class="cmd-key">npm run preview</span>
+          <span class="cmd-desc">프로덕션 빌드 로컬 미리보기</span>
+        </div>
+      </div>
+      <p style="margin-top:14px;font-size:0.82rem;color:var(--muted);">
+        테스트 러너는 설정되지 않음. 타입 검사는 <span style="color:var(--accent2);font-family:monospace">build</span> 과정의 <span style="color:var(--accent2);font-family:monospace">tsc -b</span>로 수행.
+      </p>
+    </section>
+
+    <!-- Env Vars -->
+    <section id="env">
+      <div class="section-header">
+        <div class="section-icon icon-green">🔑</div>
+        <h2>환경 변수</h2>
+      </div>
+      <div class="env-list">
+        <div class="env">
+          <span class="env-key">VITE_API_BASE_URL</span>
+          <span class="env-val">http://localhost:8080/api — API 기본 URL</span>
+        </div>
+        <div class="env">
+          <span class="env-key">VITE_OAUTH2_BASE_URL</span>
+          <span class="env-val">http://localhost:8080 — OAuth2 기본 URL</span>
+        </div>
+        <div class="env">
+          <span class="env-key">VITE_YOUTUBE_API_KEY</span>
+          <span class="env-val">YouTube 기능에 필요 — CI에서 시크릿으로 관리</span>
+        </div>
+      </div>
+      <p style="margin-top:12px;font-size:0.82rem;color:var(--muted);">로컬 개발 시 루트에 <span style="color:var(--accent2);font-family:monospace">.env</span> 파일 생성 필요.</p>
+    </section>
+
+    <!-- Stack -->
+    <section id="stack">
+      <div class="section-header">
+        <div class="section-icon icon-purple">📦</div>
+        <h2>기술 스택</h2>
+      </div>
+      <div class="pill-grid">
+        <div class="pill pill-accent">React 19</div>
+        <div class="pill pill-accent">TypeScript</div>
+        <div class="pill pill-accent">Vite 7</div>
+        <div class="pill pill-orange">Tailwind CSS 4</div>
+        <div class="pill pill-accent">React Router v7</div>
+        <div class="pill pill-purple">Zustand</div>
+        <div class="pill pill-green">Axios</div>
+        <div class="pill pill-green">STOMP / WebSocket</div>
+        <div class="pill pill-purple">Capacitor 7 (Android)</div>
+      </div>
+    </section>
+
+    <!-- Layers -->
+    <section id="layers">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🗂</div>
+        <h2>주요 레이어</h2>
+      </div>
+      <div class="layer-grid">
+        <div class="layer">
+          <div class="layer-title">/src/api/</div>
+          <div class="layer-desc">도메인별 Axios 서비스 모듈 (<code>artistService.ts</code>, <code>roomService.ts</code>, <code>userService.ts</code> 등). 모든 HTTP 요청은 <code>axiosInstance.ts</code>를 통해 처리 — 토큰 주입 · 401 자동 갱신 · <code>/translate</code> 엔드포인트 50초 타임아웃.</div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">/src/store/</div>
+          <div class="layer-desc">Zustand 스토어 2개.<br>
+            <code>useUserStore</code> — 인증된 사용자 정보, 차단 유저 Set, 로그아웃; <code>localStorage</code> 커스텀 merge 영속화.<br>
+            <code>useArtistFollowStore</code> — 팔로우한 아티스트 목록; 세션당 1회 지연 로딩.
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">/src/hooks/</div>
+          <div class="layer-desc">데이터 페칭을 커스텀 훅으로 캡슐화 (React Query 미사용).<br>
+            <code>useArtistList</code> — 무한 스크롤 + IntersectionObserver + 3회 재시도.<br>
+            <code>useChatSubscription</code> — STOMP 구독.<br>
+            <code>useUserActivity</code> — 15분 비활동 로그아웃 + 14분 토큰 갱신.
+          </div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">/src/pages/</div>
+          <div class="layer-desc">라우트 단위 컴포넌트. 관리자 페이지는 <code>/src/pages/AdminPage/</code> 하위.</div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">/src/types/</div>
+          <div class="layer-desc">공용 TypeScript 인터페이스. <code>index.ts</code>에 핵심 <code>User</code> / <code>RecommendedUser</code> 타입, 도메인 타입은 <code>artist.ts</code>, <code>room.ts</code>, <code>chat.ts</code> 등에 분리.</div>
+        </div>
+        <div class="layer">
+          <div class="layer-title">/src/socket.ts</div>
+          <div class="layer-desc">STOMP 클라이언트 팩토리. <code>VITE_API_BASE_URL</code>을 변환(http → ws, <code>/api</code> → <code>/ws-chat</code>), 5초마다 재연결, 액세스 토큰을 쿼리 파라미터로 전달.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Routing -->
+    <section id="routing">
+      <div class="section-header">
+        <div class="section-icon icon-blue">🔀</div>
+        <h2>라우팅</h2>
+      </div>
+      <p style="font-size:0.84rem;color:var(--muted);margin-bottom:16px;"><code>App.tsx</code>에서 React Router v7 <code>BrowserRouter</code> 사용.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>레이아웃</th>
+            <th>접근 제한</th>
+            <th>페이지</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MainLayout<br><small style="color:var(--muted)">(헤더 + 푸터)</small></td>
+            <td><span class="role-badge role-private">로그인</span></td>
+            <td>홈, 아티스트 상세, 유저 프로필</td>
+          </tr>
+          <tr>
+            <td>LayoutWithoutFooter</td>
+            <td><span class="role-badge role-private">로그인</span></td>
+            <td>아티스트 목록, 채팅룸 목록, 팔로우 아티스트</td>
+          </tr>
+          <tr>
+            <td>PublicRoute</td>
+            <td><span class="role-badge role-public">비로그인 전용</span></td>
+            <td><code>/login</code>, <code>/signup</code></td>
+          </tr>
+          <tr>
+            <td>AdminRouteGuard</td>
+            <td><span class="role-badge role-admin">ADMIN 권한</span></td>
+            <td><code>/admin/*</code> 전체</td>
+          </tr>
+          <tr>
+            <td>레이아웃 없음</td>
+            <td><span class="role-badge role-guest">공개</span></td>
+            <td><code>/live/:roomId</code>, <code>/oauth2/success</code>, 법적 고지</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Auth -->
+    <section id="auth">
+      <div class="section-header">
+        <div class="section-icon icon-green">🔐</div>
+        <h2>인증</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>토큰 저장</h4>
+          <ul>
+            <li>액세스 토큰 → <code style="color:var(--accent3)">localStorage</code></li>
+            <li>게스트 토큰 → <code style="color:var(--accent3)">sessionStorage</code></li>
+            <li>리프레시 토큰 → HttpOnly 쿠키 (서버 관리)</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>토큰 갱신</h4>
+          <ul>
+            <li>Axios 인터셉터가 401 발생 시 자동 갱신</li>
+            <li>갱신 실패 시 로그아웃 이벤트 발행</li>
+            <li>useUserActivity — 14분마다 선제적 갱신</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>게스트 유저</h4>
+          <ul>
+            <li>ID가 <code style="color:var(--accent3)">guest:</code> 접두사로 시작</li>
+            <li>sessionStorage에 저장 (탭 닫으면 소멸)</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>OAuth2 흐름</h4>
+          <ul>
+            <li>백엔드가 <code style="color:var(--accent3)">/oauth2/success</code>로 리다이렉트</li>
+            <li>OAuth2RedirectHandler가 토큰 추출</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat -->
+    <section id="chat">
+      <div class="section-header">
+        <div class="section-icon icon-purple">💬</div>
+        <h2>실시간 채팅</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-card">
+          <h4>연결</h4>
+          <ul>
+            <li>WebSocket + STOMP via <code style="color:var(--accent3)">/ws-chat</code></li>
+            <li>5초마다 자동 재연결</li>
+            <li>액세스 토큰을 쿼리 파라미터로 전달</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h4>메시지 흐름</h4>
+          <ul>
+            <li>구독: <code style="color:var(--accent3)">/topic/chat/{roomId}</code></li>
+            <li>발행: <code style="color:var(--accent3)">/app/room/chat</code></li>
+            <li>메모리에 최근 100개 메시지 유지</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Proxy -->
+    <section id="proxy">
+      <div class="section-header">
+        <div class="section-icon icon-orange">🔁</div>
+        <h2>개발 서버 프록시</h2>
+      </div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px;"><code>vite.config.ts</code>에 설정된 프록시.</p>
+      <table>
+        <thead>
+          <tr><th>경로</th><th>대상</th><th>비고</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/ws-chat</code></td><td>localhost:8080</td><td>WebSocket 프록시</td></tr>
+          <tr><td><code>/api</code></td><td>localhost:8080</td><td>HTTP 프록시, <code>/api</code> 접두사 제거</td></tr>
+          <tr><td><code>/oauth2</code></td><td>localhost:8080</td><td>OAuth2 프록시</td></tr>
+          <tr><td><code>/login/oauth2</code></td><td>localhost:8080</td><td>OAuth2 콜백 프록시</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- State -->
+    <section id="state">
+      <div class="section-header">
+        <div class="section-icon icon-pink">🧩</div>
+        <h2>상태 관리 패턴</h2>
+      </div>
+      <div class="pattern-grid">
+        <div class="pattern-card">
+          <h4>낙관적 업데이트</h4>
+          <p>팔로우·차단은 서버 응답 전에 Zustand 상태를 먼저 업데이트하여 빠른 UX 제공.</p>
+        </div>
+        <div class="pattern-card">
+          <h4>이미지 URL 캐싱</h4>
+          <p>유저 프로필 이미지 URL을 API 실패 대비 폴백으로 <code>localStorage</code>에 캐싱.</p>
+        </div>
+        <div class="pattern-card">
+          <h4>차단 유저 Set</h4>
+          <p>채팅 메시지 필터링 시 O(1) 조회를 위해 <code>Set&lt;string&gt;</code>으로 <code>blockedSet</code> 관리.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CI/CD -->
+    <section id="cicd">
+      <div class="section-header">
+        <div class="section-icon icon-green">🚀</div>
+        <h2>CI/CD</h2>
+      </div>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px;">GitHub Actions (<code>.github/workflows/fe-ci-cd.yml</code>)</p>
+      <div class="pipeline">
+        <div class="pipe-row">
+          <span class="pipe-trigger pipe-pr">PR</span>
+          <div class="pipe-steps">
+            <span class="step">빌드 검사</span>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <span class="pipe-trigger pipe-dev">develop 푸시</span>
+          <div class="pipe-steps">
+            <span class="step">빌드</span>
+            <span class="arrow">→</span>
+            <span class="step">dev S3 배포</span>
+            <span class="arrow">→</span>
+            <span class="step">CloudFront 무효화</span>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <span class="pipe-trigger pipe-main">main 푸시</span>
+          <div class="pipe-steps">
+            <span class="step">빌드</span>
+            <span class="arrow">→</span>
+            <span class="step">prod S3 배포</span>
+            <span class="arrow">→</span>
+            <span class="step">CloudFront 무효화</span>
+          </div>
+        </div>
+      </div>
+      <div class="info-grid" style="margin-top:16px;">
+        <div class="info-card">
+          <h4>HTML 파일</h4>
+          <ul><li>캐시 정책: <code style="color:var(--accent3)">no-cache</code></li></ul>
+        </div>
+        <div class="info-card">
+          <h4>정적 에셋</h4>
+          <ul><li>캐시 정책: 1년 <code style="color:var(--accent3)">immutable</code></li></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mobile -->
+    <section id="mobile">
+      <div class="section-header">
+        <div class="section-icon icon-orange">📱</div>
+        <h2>모바일</h2>
+      </div>
+      <div class="layer-grid">
+        <div class="layer">
+          <div class="layer-title">Capacitor 7 — Android</div>
+          <div class="layer-desc">앱 ID: <code>com.teamduck.duckon</code>. 웹/네이티브 분기 시 <code>Capacitor.isNativePlatform()</code> 사용. 빌드 아웃풋(<code>dist/</code>)이 Capacitor 웹 디렉토리.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  DuckOn FE — 개발자 위키 &nbsp;·&nbsp; CLAUDE.md 기반 자동 생성
+</footer>
+
+</body>
+</html>
